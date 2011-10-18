@@ -24,9 +24,9 @@ public interface PropsKeys {
 	public static final String ADMIN_DEFAULT_ROLE_NAMES = "admin.default.role.names";
 
 	public static final String ADMIN_DEFAULT_USER_GROUP_NAMES = "admin.default.user.group.names";
-
+	
 	public static final String ADMIN_EMAIL_FROM_ADDRESS = "admin.email.from.address";
-
+	
 	public static final String ADMIN_EMAIL_FROM_NAME = "admin.email.from.name";
 
 	public static final String ADMIN_EMAIL_PASSWORD_RESET_BODY = "admin.email.password.reset.body";
@@ -347,6 +347,10 @@ public interface PropsKeys {
 
 	public static final String COMPANY_DEFAULT_HOME_URL = "company.default.home.url";
 
+	public static final String COMPANY_DEFAULT_LOCALE = "company.default.locale";
+
+	public static final String COMPANY_DEFAULT_TIME_ZONE = "company.default.time.zone";
+
 	public static final String COMPANY_DEFAULT_WEB_ID = "company.default.web.id";
 
 	public static final String COMPANY_ENCRYPTION_ALGORITHM = "company.encryption.algorithm";
@@ -406,6 +410,8 @@ public interface PropsKeys {
 	public static final String CUSTOM_SQL_FUNCTION_ISNULL = "custom.sql.function.isnull";
 
 	public static final String DATABASE_MYSQL_ENGINE = "database.mysql.engine";
+
+	public static final String DEFAULT_ADMIN_EMAIL_ADDRESS = "default.admin.email.address";
 
 	public static final String DEFAULT_ADMIN_EMAIL_ADDRESS_PREFIX = "default.admin.email.address.prefix";
 
@@ -493,6 +499,8 @@ public interface PropsKeys {
 
 	public static final String DIRECT_SERVLET_CONTEXT_RELOAD = "direct.servlet.context.reload";
 
+	public static final String DISCUSSION_COMMENTS_ALWAYS_EDITABLE_BY_OWNER = "discussion.comments.always.editable.by.owner";
+
 	public static final String DISCUSSION_EMAIL_BODY = "discussion.email.body";
 
 	public static final String DISCUSSION_EMAIL_COMMENTS_ADDED_ENABLED = "discussion.email.comments.added.enabled";
@@ -505,11 +513,15 @@ public interface PropsKeys {
 
 	public static final String DL_COMPARABLE_FILE_EXTENSIONS = "dl.comparable.file.extensions";
 
+	public static final String DL_DEFAULT_DISPLAY_VIEW = "dl.default.display.view";
+
 	public static final String DL_DISPLAY_VIEWS = "dl.display.views";
 
 	public static final String DL_FILE_ENTRY_COMMENTS_ENABLED = "dl.file.entry.comments.enabled";
 
 	public static final String DL_FILE_ENTRY_DRAFTS_ENABLED = "dl.file.entry.drafts.enabled";
+
+	public static final String DL_FILE_ENTRY_PREVIEW_AUDIO_MIME_TYPES = "dl.file.entry.preview.audio.mime.types";
 
 	public static final String DL_FILE_ENTRY_PREVIEW_DOCUMENT_DEPTH = "dl.file.entry.preview.document.depth";
 
@@ -522,6 +534,8 @@ public interface PropsKeys {
 	public static final String DL_FILE_ENTRY_PREVIEW_ENABLED = "dl.file.entry.preview.enabled";
 
 	public static final String DL_FILE_ENTRY_PREVIEW_VIDEO_HEIGHT = "dl.file.entry.preview.video.height";
+
+	public static final String DL_FILE_ENTRY_PREVIEW_VIDEO_MIME_TYPES = "dl.file.entry.preview.video.mime.types";
 
 	public static final String DL_FILE_ENTRY_PREVIEW_VIDEO_WIDTH = "dl.file.entry.preview.video.width";
 
@@ -564,6 +578,10 @@ public interface PropsKeys {
 	public static final String DL_REPOSITORY_CMIS_DELETE_DEPTH = "dl.repository.cmis.delete.depth";
 
 	public static final String DL_REPOSITORY_IMPL = "dl.repository.impl";
+
+	public static final String DL_STORE_ANTIVIRUS_ENABLED = "dl.store.antivirus.enabled";
+
+	public static final String DL_STORE_ANTIVIRUS_IMPL = "dl.store.antivirus.impl";
 
 	public static final String DL_STORE_CMIS_CREDENTIALS_PASSWORD = "dl.store.cmis.credentials.password";
 
@@ -733,6 +751,8 @@ public interface PropsKeys {
 
 	public static final String IG_IMAGE_THUMBNAIL_MAX_DIMENSION = "ig.image.thumbnail.max.dimension";
 
+	public static final String IG_IMAGE_THUMBNAIL_MIME_TYPES = "ig.image.thumbnail.mime.types";
+
 	public static final String IG_PUBLISH_TO_LIVE_BY_DEFAULT = "ig.publish.to.live.by.default";
 
 	public static final String IMAGE_AUTO_SCALE = "image.auto.scale";
@@ -821,7 +841,15 @@ public interface PropsKeys {
 
 	public static final String JCR_WORKSPACE_NAME = "jcr.workspace.name";
 
+	public static final String JDBC_DEFAULT_DRIVER_CLASS_NAME = "jdbc.default.driverClassName";
+
 	public static final String JDBC_DEFAULT_LIFERAY_POOL_PROVIDER = "jdbc.default.liferay.pool.provider";
+
+	public static final String JDBC_DEFAULT_PASSWORD = "jdbc.default.password";
+
+	public static final String JDBC_DEFAULT_URL = "jdbc.default.url";
+
+	public static final String JDBC_DEFAULT_USERNAME = "jdbc.default.username";
 
 	public static final String JOURNAL_ARTICLE_CHECK_INTERVAL = "journal.article.check.interval";
 
@@ -1125,6 +1153,12 @@ public interface PropsKeys {
 
 	public static final String LIFERAY_HOME = "liferay.home";
 
+	public static final String LIFERAY_LIB_GLOBAL_DIR = "liferay.lib.global.dir";
+
+	public static final String LIFERAY_LIB_PORTAL_DIR = "liferay.lib.portal.dir";
+
+	public static final String LIFERAY_WEB_PORTAL_DIR = "liferay.web.portal.dir";
+
 	public static final String LIVE_USERS_ENABLED = "live.users.enabled";
 
 	public static final String LOCALE_DEFAULT_REQUEST = "locale.default.request";
@@ -1176,6 +1210,8 @@ public interface PropsKeys {
 	public static final String LUCENE_STORE_JDBC_DIALECT = "lucene.store.jdbc.dialect.";
 
 	public static final String LUCENE_STORE_TYPE = "lucene.store.type";
+
+	public static final String LUCENE_STORE_TYPE_FILE_FORCE_MMAP = "lucene.store.type.file.force.mmap";
 
 	public static final String MAIL_AUDIT_TRAIL = "mail.audit.trail";
 
@@ -1299,6 +1335,8 @@ public interface PropsKeys {
 
 	public static final String MINIFIER_INLINE_CONTENT_CACHE_SKIP_JAVASCRIPT = "minifier.inline.content.cache.skip.javascript";
 
+	public static final String MOBILE_DEVICE_RULES_RULE_GROUP_COPY_POSTFIX = "mobile.device.rules.rule.group.copy.postfix";
+
 	public static final String MODEL_HINTS_CONFIGS = "model.hints.configs";
 
 	public static final String MONITORING_DATA_SAMPLE_THREAD_LOCAL = "monitoring.data.sample.thread.local";
@@ -1321,17 +1359,17 @@ public interface PropsKeys {
 
 	public static final String MULTI_VALUE_MAP = "multi.value.map.";
 
-	public static final String MY_PLACES_DISPLAY_STYLE = "my.places.display.style";
+	public static final String MY_SITES_DISPLAY_STYLE = "my.sites.display.style";
 
-	public static final String MY_PLACES_MAX_ELEMENTS = "my.places.max.elements";
+	public static final String MY_SITES_MAX_ELEMENTS = "my.sites.max.elements";
 
-	public static final String MY_PLACES_SHOW_PRIVATE_SITES_WITH_NO_LAYOUTS = "my.places.show.community.private.sites.with.no.layouts";
+	public static final String MY_SITES_SHOW_PRIVATE_SITES_WITH_NO_LAYOUTS = "my.sites.show.private.sites.with.no.layouts";
 
-	public static final String MY_PLACES_SHOW_PUBLIC_SITES_WITH_NO_LAYOUTS = "my.places.show.community.public.sites.with.no.layouts";
+	public static final String MY_SITES_SHOW_PUBLIC_SITES_WITH_NO_LAYOUTS = "my.sites.show.public.sites.with.no.layouts";
 
-	public static final String MY_PLACES_SHOW_USER_PRIVATE_SITES_WITH_NO_LAYOUTS = "my.places.show.user.private.sites.with.no.layouts";
+	public static final String MY_SITES_SHOW_USER_PRIVATE_SITES_WITH_NO_LAYOUTS = "my.sites.show.user.private.sites.with.no.layouts";
 
-	public static final String MY_PLACES_SHOW_USER_PUBLIC_SITES_WITH_NO_LAYOUTS = "my.places.show.user.public.sites.with.no.layouts";
+	public static final String MY_SITES_SHOW_USER_PUBLIC_SITES_WITH_NO_LAYOUTS = "my.sites.show.user.public.sites.with.no.layouts";
 
 	public static final String NAVIGATION_DISPLAY_STYLE_OPTIONS = "navigation.display.style.options";
 
@@ -1346,6 +1384,8 @@ public interface PropsKeys {
 	public static final String NOTIFICATIONS_MAX_EVENTS = "notifications.max.events";
 
 	public static final String NTLM_AUTH_ENABLED = "ntlm.auth.enabled";
+
+	public static final String NTLM_AUTH_NEGOTIATE_FLAGS = "ntlm.auth.negotiate.flags";
 
 	public static final String NTLM_DOMAIN = "ntlm.auth.domain";
 
@@ -1425,6 +1465,14 @@ public interface PropsKeys {
 
 	public static final String ORGANIZATIONS_USER_GROUP_MEMBERSHIP_ENABLED = "organizations.user.group.membership.enabled";
 
+	public static final String OSGI_FRAMEWORK_BEGINNING_START_LEVEL = "osgi.framework.beginning.start.level";
+
+	public static final String OSGI_FRAMEWORK_STORAGE = "osgi.framework.storage";
+
+	public static final String OSGI_SYSTEM_BUNDLE_EXPORT_PACKAGES = "osgi.system.bundle.export.packages";
+
+	public static final String OSGI_SYSTEM_PACKAGES_EXTRA = "osgi.system.packages.extra";
+
 	public static final String PASSWORDS_DEFAULT_POLICY_NAME = "passwords.default.policy.name";
 
 	public static final String PASSWORDS_DIGEST_ENCODING = "passwords.digest.encoding";
@@ -1453,11 +1501,19 @@ public interface PropsKeys {
 
 	public static final String PERMISSIONS_CHECKER = "permissions.checker";
 
+	public static final String PERMISSIONS_CUSTOM_ATTRIBUTE_READ_CHECK_BY_DEFAULT = "permissions.custom.attribute.read.check.by.default";
+
+	public static final String PERMISSIONS_CUSTOM_ATTRIBUTE_WRITE_CHECK_BY_DEFAULT = "permissions.custom.attribute.write.check.by.default";
+
 	public static final String PERMISSIONS_INLINE_SQL_CHECK_ENABLED = "permissions.inline.sql.check.enabled";
 
 	public static final String PERMISSIONS_LIST_FILTER = "permissions.list.filter";
 
 	public static final String PERMISSIONS_OBJECT_BLOCKING_CACHE = "permissions.object.blocking.cache";
+
+	public static final String PERMISSIONS_PROPAGATION_ENABLED = "permissions.propagation.enabled";
+
+	public static final String PERMISSIONS_ROLE_RESOURCE_PERMISSION_QUERY_THRESHOLD = "permissions.role.resource.permission.query.threshold";
 
 	public static final String PERMISSIONS_THREAD_LOCAL_CACHE_MAX_SIZE = "permissions.thread.local.cache.max.size";
 
@@ -1607,6 +1663,8 @@ public interface PropsKeys {
 
 	public static final String SCRIPTING_JRUBY_COMPILE_THRESHOLD = "scripting.jruby.compile.threshold";
 
+	public static final String SCRIPTING_JRUBY_LOAD_PATHS = "scripting.jruby.load.paths";
+
 	public static final String SEARCH_CONTAINER_PAGE_DEFAULT_DELTA = "search.container.page.default.delta";
 
 	public static final String SEARCH_CONTAINER_PAGE_DELTA_VALUES = "search.container.page.delta.values";
@@ -1668,6 +1726,14 @@ public interface PropsKeys {
 	public static final String SESSION_TRACKER_PERSISTENCE_ENABLED = "session.tracker.persistence.enabled";
 
 	public static final String SESSION_VERIFY_SERIALIZABLE_ATTRIBUTE = "session.verify.serializable.attribute";
+
+	public static final String SETUP_DATABASE_DRIVER_CLASS_NAME = "setup.database.driverClassName";
+
+	public static final String SETUP_DATABASE_TYPES = "setup.database.types";
+
+	public static final String SETUP_DATABASE_URL = "setup.database.url";
+
+	public static final String SETUP_WIZARD_ENABLED = "setup.wizard.enabled";
 
 	public static final String SHARD_DEFAULT_NAME = "shard.default.name";
 
@@ -1745,6 +1811,8 @@ public interface PropsKeys {
 
 	public static final String SITES_FORM_UPDATE_SEO = "sites.form.update.seo";
 
+	public static final String SOCIAL_ACTIVITY_COUNTER_PERIOD_LENGTH = "social.activity.counter.period.length";
+
 	public static final String SOCIAL_BOOKMARK_JSP = "social.bookmark.jsp";
 
 	public static final String SOCIAL_BOOKMARK_POST_URL = "social.bookmark.post.url";
@@ -1768,6 +1836,8 @@ public interface PropsKeys {
 	public static final String SPRITE_FILE_NAME = "sprite.file.name";
 
 	public static final String SPRITE_PROPERTIES_FILE_NAME = "sprite.properties.file.name";
+
+	public static final String SPRITE_ROOT_DIR = "sprite.root.dir";
 
 	public static final String SQL_DATA_COM_LIFERAY_PORTAL_MODEL_COUNTRY_COUNTRY_ID = "sql.data.com.liferay.portal.model.Country.country.id";
 
@@ -1897,8 +1967,6 @@ public interface PropsKeys {
 
 	public static final String USERS_LIST_VIEWS = "users.list.views";
 
-	public static final String USERS_LIST_VIEWS_DEFAULT = "users.list.views.default";
-
 	public static final String USERS_REMINDER_QUERIES_CUSTOM_QUESTION_ENABLED = "users.reminder.queries.custom.question.enabled";
 
 	public static final String USERS_REMINDER_QUERIES_ENABLED = "users.reminder.queries.enabled";
@@ -1976,6 +2044,8 @@ public interface PropsKeys {
 	public static final String WEB_SERVER_PROXY_LEGACY_MODE = "web.server.proxy.legacy.mode";
 
 	public static final String WEBDAV_IGNORE = "webdav.ignore";
+
+	public static final String WEBDAV_NONCE_EXPIRATION = "webdav.nonce.expiration";
 
 	public static final String WIDGET_SERVLET_MAPPING = "widget.servlet.mapping";
 

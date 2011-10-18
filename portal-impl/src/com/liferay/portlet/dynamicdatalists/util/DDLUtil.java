@@ -18,27 +18,38 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.templateparser.Transformer;
+import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.StreamUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
+import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.theme.ThemeDisplay;
+import com.liferay.portal.util.PortalUtil;
+import com.liferay.portlet.documentlibrary.NoSuchFileEntryException;
+import com.liferay.portlet.documentlibrary.service.DLAppServiceUtil;
 import com.liferay.portlet.dynamicdatalists.model.DDLRecord;
 import com.liferay.portlet.dynamicdatalists.model.DDLRecordSet;
 import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
 import com.liferay.portlet.dynamicdatamapping.model.DDMTemplate;
 import com.liferay.portlet.dynamicdatamapping.service.DDMTemplateLocalServiceUtil;
 import com.liferay.portlet.dynamicdatamapping.storage.Field;
+import com.liferay.portlet.dynamicdatamapping.storage.FieldConstants;
 import com.liferay.portlet.dynamicdatamapping.storage.Fields;
-import com.liferay.portlet.dynamicdatamapping.util.DDMFieldConstants;
 import com.liferay.portlet.dynamicdatamapping.util.DDMXMLUtil;
 import com.liferay.portlet.journal.util.JournalUtil;
+import com.liferay.util.PwdGenerator;
 import com.liferay.util.portlet.PortletRequestUtil;
 
+import java.io.InputStream;
+
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -73,6 +84,18 @@ public class DDLUtil {
 			String.valueOf(recordSet.getDDMStructureId()));
 	}
 
+	public static JSONObject getRecordFileJSONObject(FileEntry fileEntry) {
+		JSONObject recordFileJSONObject = JSONFactoryUtil.createJSONObject();
+
+		if (fileEntry != null) {
+			recordFileJSONObject.put("groupId", fileEntry.getGroupId());
+			recordFileJSONObject.put("uuid", fileEntry.getUuid());
+			recordFileJSONObject.put("version", fileEntry.getVersion());
+		}
+
+		return recordFileJSONObject;
+	}
+
 	public static JSONObject getRecordJSONObject(DDLRecord record)
 		throws Exception {
 
@@ -97,18 +120,25 @@ public class DDLUtil {
 			Field field = itr.next();
 
 			String fieldName = field.getName();
-			String fieldValue = String.valueOf(field.getValue());
+			Object fieldValue = field.getValue();
 
-			if (ddmStructure.getFieldDisplayChildLabelAsValue(fieldName)) {
-				Map<String, String> childFields = ddmStructure.getFields(
-					fieldName, DDMFieldConstants.VALUE, fieldValue);
-
-				if (childFields != null) {
-					fieldValue = childFields.get(DDMFieldConstants.LABEL);
-				}
+			if (fieldValue instanceof Date) {
+				jsonObject.put(fieldName, ((Date)fieldValue).getTime());
 			}
+			else {
+				fieldValue = String.valueOf(fieldValue);
 
-			jsonObject.put(fieldName, fieldValue);
+				if (ddmStructure.getFieldDisplayChildLabelAsValue(fieldName)) {
+					Map<String, String> childFields = ddmStructure.getFields(
+						fieldName, FieldConstants.VALUE, (String)fieldValue);
+
+					if (childFields != null) {
+						fieldValue = childFields.get(FieldConstants.LABEL);
+					}
+				}
+
+				jsonObject.put(fieldName, (String)fieldValue);
+			}
 		}
 
 		return jsonObject;
@@ -127,34 +157,34 @@ public class DDLUtil {
 		for (Map<String, String> fields : fieldsMap.values()) {
 			JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
 
-			String dataType = fields.get(DDMFieldConstants.DATA_TYPE);
+			String dataType = fields.get(FieldConstants.DATA_TYPE);
 
 			jsonObject.put("dataType", dataType);
 
 			boolean editable = GetterUtil.getBoolean(
-				fields.get(DDMFieldConstants.EDITABLE), true);
+				fields.get(FieldConstants.EDITABLE), true);
 
 			jsonObject.put("editable", editable);
 
-			String label = fields.get(DDMFieldConstants.LABEL);
+			String label = fields.get(FieldConstants.LABEL);
 
 			jsonObject.put("label", label);
 
-			String name = fields.get(DDMFieldConstants.NAME);
+			String name = fields.get(FieldConstants.NAME);
 
 			jsonObject.put("name", name);
 
 			boolean required = GetterUtil.getBoolean(
-				fields.get(DDMFieldConstants.REQUIRED));
+				fields.get(FieldConstants.REQUIRED));
 
 			jsonObject.put("required", required);
 
 			boolean sortable = GetterUtil.getBoolean(
-				fields.get(DDMFieldConstants.SORTABLE), true);
+				fields.get(FieldConstants.SORTABLE), true);
 
 			jsonObject.put("sortable", sortable);
 
-			String type = fields.get(DDMFieldConstants.TYPE);
+			String type = fields.get(FieldConstants.TYPE);
 
 			jsonObject.put("type", type);
 
@@ -224,6 +254,69 @@ public class DDLUtil {
 		return _transformer.transform(
 			themeDisplay, tokens, viewMode, languageId, xml,
 			template.getScript(), template.getLanguage());
+	}
+
+	public static FileEntry uploadFieldFile(
+			DDMStructure ddmStructure, String fieldName,
+			JSONObject fileJSONObject,
+			UploadPortletRequest uploadPortletRequest,
+			ServiceContext serviceContext)
+		throws Exception {
+
+		FileEntry fileEntry = null;
+
+		long size = uploadPortletRequest.getSize(fieldName);
+		long groupId = PortalUtil.getScopeGroupId(uploadPortletRequest);
+		InputStream inputStream = uploadPortletRequest.getFileAsStream(
+			fieldName);
+		String contentType = uploadPortletRequest.getContentType(fieldName);
+		String sourceFileName = uploadPortletRequest.getFileName(fieldName);
+
+		if (fileJSONObject != null) {
+			try {
+				fileEntry = DLAppServiceUtil.getFileEntryByUuidAndGroupId(
+					fileJSONObject.getString("uuid"),
+					fileJSONObject.getLong("groupId"));
+			}
+			catch (NoSuchFileEntryException e) {
+			}
+		}
+
+		if (size <= 0) {
+			return fileEntry;
+		}
+
+		if (fileEntry != null) {
+			fileEntry = DLAppServiceUtil.updateFileEntry(
+				fileEntry.getFileEntryId(), sourceFileName, contentType,
+				fileEntry.getTitle(), fileEntry.getDescription(),
+				StringPool.BLANK, false, inputStream, size, serviceContext);
+		}
+		else {
+			String folder = ddmStructure.getFieldProperty(fieldName, "folder");
+
+			JSONObject folderJSONObject = JSONFactoryUtil.createJSONObject(
+				folder);
+
+			String fieldLabel = ddmStructure.getFieldLabel(
+				fieldName, uploadPortletRequest.getLocale());
+
+			String randomSuffix =
+				PwdGenerator.getPassword(PwdGenerator.KEY3, 4);
+
+			String title = fieldLabel.concat(
+				StringPool.SPACE).concat(randomSuffix);
+
+			long folderId = folderJSONObject.getLong("folderId");
+
+			fileEntry = DLAppServiceUtil.addFileEntry(
+				groupId, folderId, sourceFileName, contentType, title, title,
+				StringPool.BLANK, inputStream, size, serviceContext);
+		}
+
+		StreamUtil.cleanUp(inputStream);
+
+		return fileEntry;
 	}
 
 	private static Transformer _transformer = new DDLTransformer();

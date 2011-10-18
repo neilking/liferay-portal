@@ -21,10 +21,12 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.scheduler.JobState;
+import com.liferay.portal.kernel.scheduler.JobStateSerializeUtil;
 import com.liferay.portal.kernel.scheduler.SchedulerEngine;
 import com.liferay.portal.kernel.scheduler.StorageType;
 import com.liferay.portal.kernel.scheduler.TriggerState;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
+import com.liferay.portal.util.PropsValues;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -64,6 +66,10 @@ public class UpgradeScheduler extends UpgradeProcess {
 
 	@Override
 	protected void doUpgrade() throws Exception {
+		if (!PropsValues.SCHEDULER_ENABLED) {
+			return;
+		}
+
 		List<Object[]> arrays = getUpgradeQuartzData();
 
 		if (arrays.isEmpty()) {
@@ -142,10 +148,11 @@ public class UpgradeScheduler extends UpgradeProcess {
 					continue;
 				}
 
-				JobState jobState = (JobState)jobDataMap.get(
-					SchedulerEngine.JOB_STATE);
+				Map<String, Object> jobStateMap =
+					(Map<String, Object>)jobDataMap.get(
+						SchedulerEngine.JOB_STATE);
 
-				if (jobState == null) {
+				if (jobStateMap == null) {
 					jobDataMap.put(
 						SchedulerEngine.STORAGE_TYPE,
 						StorageType.PERSISTED.toString());
@@ -159,10 +166,12 @@ public class UpgradeScheduler extends UpgradeProcess {
 					int exceptionsMaxSize = message.getInteger(
 						SchedulerEngine.EXCEPTIONS_MAX_SIZE);
 
-					jobState = new JobState(
+					JobState jobState = new JobState(
 						TriggerState.NORMAL, exceptionsMaxSize);
 
-					jobDataMap.put(SchedulerEngine.JOB_STATE, jobState);
+					jobDataMap.put(
+						SchedulerEngine.JOB_STATE,
+						JobStateSerializeUtil.serialize(jobState));
 				}
 
 				UnsyncByteArrayOutputStream newJobDataOutputStream =

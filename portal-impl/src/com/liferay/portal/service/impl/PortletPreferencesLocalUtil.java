@@ -30,8 +30,22 @@ import java.util.Map;
  */
 public class PortletPreferencesLocalUtil {
 
-	public static final String CACHE_NAME =
-		PortletPreferencesLocalUtil.class.getName();
+	public static Map<Serializable, BasePreferencesImpl> getPreferencesPool(
+		long ownerId, int ownerType) {
+
+		Serializable key = new PreferencesPoolKey(ownerId, ownerType);
+
+		Map<Serializable, BasePreferencesImpl> preferencesPool =
+			(Map<Serializable, BasePreferencesImpl>)_portalCache.get(key);
+
+		if (preferencesPool == null) {
+			preferencesPool = new HashMap<Serializable, BasePreferencesImpl>();
+
+			_portalCache.put(key, preferencesPool);
+		}
+
+		return preferencesPool;
+	}
 
 	protected static void clearPreferencesPool() {
 		_portalCache.removeAll();
@@ -43,25 +57,11 @@ public class PortletPreferencesLocalUtil {
 		_portalCache.remove(key);
 	}
 
-	protected static Map<String, BasePreferencesImpl> getPreferencesPool(
-		long ownerId, int ownerType) {
-
-		Serializable key = new PreferencesPoolKey(ownerId, ownerType);
-
-		Map<String, BasePreferencesImpl> preferencesPool =
-			(Map<String, BasePreferencesImpl>)_portalCache.get(key);
-
-		if (preferencesPool == null) {
-			preferencesPool = new HashMap<String, BasePreferencesImpl>();
-
-			_portalCache.put(key, preferencesPool);
-		}
-
-		return preferencesPool;
-	}
+	public static final String _CACHE_NAME =
+		PortletPreferencesLocalUtil.class.getName();
 
 	private static PortalCache _portalCache = MultiVMPoolUtil.getCache(
-		CACHE_NAME);
+		_CACHE_NAME);
 
 	private static class PreferencesPoolKey implements Serializable {
 
@@ -70,6 +70,7 @@ public class PortletPreferencesLocalUtil {
 			_ownerType = ownerType;
 		}
 
+		@Override
 		public boolean equals(Object obj) {
 			PreferencesPoolKey preferencesPoolKey = (PreferencesPoolKey)obj;
 
@@ -83,6 +84,7 @@ public class PortletPreferencesLocalUtil {
 			}
 		}
 
+		@Override
 		public int hashCode() {
 			return (int)(_ownerId * 11 + _ownerType);
 		}

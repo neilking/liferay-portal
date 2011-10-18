@@ -16,6 +16,9 @@ package com.liferay.portal.service.impl;
 
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.Subscription;
 import com.liferay.portal.model.SubscriptionConstants;
@@ -23,6 +26,10 @@ import com.liferay.portal.model.User;
 import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portal.service.base.SubscriptionLocalServiceBaseImpl;
 import com.liferay.portal.util.PortalUtil;
+import com.liferay.portlet.asset.model.AssetEntry;
+import com.liferay.portlet.messageboards.model.MBMessage;
+import com.liferay.portlet.messageboards.model.MBThread;
+import com.liferay.portlet.social.model.SocialActivityConstants;
 
 import java.util.Date;
 import java.util.List;
@@ -83,13 +90,34 @@ public class SubscriptionLocalServiceImpl
 			}
 			catch (Exception e) {
 				assetEntryLocalService.updateEntry(
-					userId, groupId, className, classPK, null,
+					userId, groupId, className, classPK, null, 0,
 					null, null, false, null, null, null, null, null,
 					String.valueOf(groupId), null, null, null, null, 0, 0, null,
 					false);
 			}
 
 			// Social
+
+			if (className.equals(MBThread.class.getName())) {
+				MBThread mbThread = mbThreadLocalService.getMBThread(classPK);
+
+				JSONObject extraDataJSONObject =
+					JSONFactoryUtil.createJSONObject();
+
+				extraDataJSONObject.put("threadId", classPK);
+
+				socialActivityLocalService.addActivity(
+					userId, groupId, MBMessage.class.getName(),
+					mbThread.getRootMessageId(),
+					SocialActivityConstants.TYPE_SUBSCRIBE,
+					extraDataJSONObject.toString(), 0);
+			}
+			else {
+				socialActivityLocalService.addActivity(
+					userId, groupId, className, classPK,
+					SocialActivityConstants.TYPE_SUBSCRIBE, StringPool.BLANK,
+					0);
+			}
 
 			socialEquityLogLocalService.addEquityLogs(
 				userId, className, classPK, ActionKeys.SUBSCRIBE,
@@ -130,13 +158,19 @@ public class SubscriptionLocalServiceImpl
 
 		subscriptionPersistence.remove(subscription);
 
-		// Social equity
+		// Social
 
-		if (assetEntryPersistence.countByC_C(
-				subscription.getClassNameId(), subscription.getClassPK()) > 0) {
+		AssetEntry assetEntry = assetEntryPersistence.fetchByC_C(
+			subscription.getClassNameId(), subscription.getClassPK());
 
+		if (assetEntry != null) {
 			String className = PortalUtil.getClassName(
 				subscription.getClassNameId());
+
+			socialActivityLocalService.addActivity(
+				subscription.getUserId(), assetEntry.getGroupId(), className,
+				subscription.getClassPK(),
+				SocialActivityConstants.TYPE_UNSUBSCRIBE, StringPool.BLANK, 0);
 
 			socialEquityLogLocalService.deactivateEquityLogs(
 				subscription.getUserId(), className, subscription.getClassPK(),
@@ -190,12 +224,25 @@ public class SubscriptionLocalServiceImpl
 	}
 
 	public List<Subscription> getUserSubscriptions(
+			long userId, int start, int end,
+			OrderByComparator orderByComparator)
+		throws SystemException {
+
+		return subscriptionPersistence.findByUserId(
+			userId, start, end, orderByComparator);
+	}
+
+	public List<Subscription> getUserSubscriptions(
 			long userId, String className)
 		throws SystemException {
 
 		long classNameId = PortalUtil.getClassNameId(className);
 
 		return subscriptionPersistence.findByU_C(userId, classNameId);
+	}
+
+	public int getUserSubscriptionsCount(long userId) throws SystemException {
+		return subscriptionPersistence.countByUserId(userId);
 	}
 
 	public boolean isSubscribed(

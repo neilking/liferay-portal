@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.documentlibrary.model;
 
+import com.liferay.portal.model.ModelWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link DLSync}.
@@ -23,7 +25,7 @@ package com.liferay.portlet.documentlibrary.model;
  * @see       DLSync
  * @generated
  */
-public class DLSyncWrapper implements DLSync {
+public class DLSyncWrapper implements DLSync, ModelWrapper<DLSync> {
 	public DLSyncWrapper(DLSync dlSync) {
 		_dlSync = dlSync;
 	}
@@ -131,7 +133,7 @@ public class DLSyncWrapper implements DLSync {
 	*
 	* @return the file ID of this d l sync
 	*/
-	public java.lang.String getFileId() {
+	public long getFileId() {
 		return _dlSync.getFileId();
 	}
 
@@ -140,7 +142,7 @@ public class DLSyncWrapper implements DLSync {
 	*
 	* @param fileId the file ID of this d l sync
 	*/
-	public void setFileId(java.lang.String fileId) {
+	public void setFileId(long fileId) {
 		_dlSync.setFileId(fileId);
 	}
 
@@ -160,6 +162,24 @@ public class DLSyncWrapper implements DLSync {
 	*/
 	public void setRepositoryId(long repositoryId) {
 		_dlSync.setRepositoryId(repositoryId);
+	}
+
+	/**
+	* Returns the parent folder ID of this d l sync.
+	*
+	* @return the parent folder ID of this d l sync
+	*/
+	public long getParentFolderId() {
+		return _dlSync.getParentFolderId();
+	}
+
+	/**
+	* Sets the parent folder ID of this d l sync.
+	*
+	* @param parentFolderId the parent folder ID of this d l sync
+	*/
+	public void setParentFolderId(long parentFolderId) {
+		_dlSync.setParentFolderId(parentFolderId);
 	}
 
 	/**
@@ -218,10 +238,6 @@ public class DLSyncWrapper implements DLSync {
 		return _dlSync.isEscapedModel();
 	}
 
-	public void setEscapedModel(boolean escapedModel) {
-		_dlSync.setEscapedModel(escapedModel);
-	}
-
 	public java.io.Serializable getPrimaryKeyObj() {
 		return _dlSync.getPrimaryKeyObj();
 	}
@@ -276,7 +292,14 @@ public class DLSyncWrapper implements DLSync {
 		_dlSync.persist();
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedModel}
+	 */
 	public DLSync getWrappedDLSync() {
+		return _dlSync;
+	}
+
+	public DLSync getWrappedModel() {
 		return _dlSync;
 	}
 

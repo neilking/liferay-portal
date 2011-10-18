@@ -17,6 +17,7 @@ package com.liferay.portal.model.impl;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.CacheModel;
@@ -29,8 +30,6 @@ import com.liferay.portlet.expando.model.ExpandoBridge;
 import com.liferay.portlet.expando.util.ExpandoBridgeFactoryUtil;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Proxy;
 
 import java.sql.Types;
 
@@ -86,6 +85,12 @@ public class OrganizationModelImpl extends BaseModelImpl<Organization>
 	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
 				"value.object.finder.cache.enabled.com.liferay.portal.model.Organization"),
 			true);
+	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.column.bitmask.enabled.com.liferay.portal.model.Organization"),
+			true);
+	public static long COMPANYID_COLUMN_BITMASK = 1L;
+	public static long NAME_COLUMN_BITMASK = 2L;
+	public static long PARENTORGANIZATIONID_COLUMN_BITMASK = 4L;
 
 	/**
 	 * Converts the soap model instance into a normal model instance.
@@ -128,18 +133,22 @@ public class OrganizationModelImpl extends BaseModelImpl<Organization>
 		return models;
 	}
 
-	public Class<?> getModelClass() {
-		return Organization.class;
-	}
-
-	public String getModelClassName() {
-		return Organization.class.getName();
-	}
-
-	public static final String MAPPING_TABLE_GROUPS_ORGS_NAME = com.liferay.portal.model.impl.GroupModelImpl.MAPPING_TABLE_GROUPS_ORGS_NAME;
-	public static final boolean FINDER_CACHE_ENABLED_GROUPS_ORGS = com.liferay.portal.model.impl.GroupModelImpl.FINDER_CACHE_ENABLED_GROUPS_ORGS;
-	public static final String MAPPING_TABLE_USERS_ORGS_NAME = com.liferay.portal.model.impl.UserModelImpl.MAPPING_TABLE_USERS_ORGS_NAME;
-	public static final boolean FINDER_CACHE_ENABLED_USERS_ORGS = com.liferay.portal.model.impl.UserModelImpl.FINDER_CACHE_ENABLED_USERS_ORGS;
+	public static final String MAPPING_TABLE_GROUPS_ORGS_NAME = "Groups_Orgs";
+	public static final Object[][] MAPPING_TABLE_GROUPS_ORGS_COLUMNS = {
+			{ "groupId", Types.BIGINT },
+			{ "organizationId", Types.BIGINT }
+		};
+	public static final String MAPPING_TABLE_GROUPS_ORGS_SQL_CREATE = "create table Groups_Orgs (groupId LONG not null,organizationId LONG not null,primary key (groupId, organizationId))";
+	public static final boolean FINDER_CACHE_ENABLED_GROUPS_ORGS = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.finder.cache.enabled.Groups_Orgs"), true);
+	public static final String MAPPING_TABLE_USERS_ORGS_NAME = "Users_Orgs";
+	public static final Object[][] MAPPING_TABLE_USERS_ORGS_COLUMNS = {
+			{ "userId", Types.BIGINT },
+			{ "organizationId", Types.BIGINT }
+		};
+	public static final String MAPPING_TABLE_USERS_ORGS_SQL_CREATE = "create table Users_Orgs (userId LONG not null,organizationId LONG not null,primary key (userId, organizationId))";
+	public static final boolean FINDER_CACHE_ENABLED_USERS_ORGS = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.finder.cache.enabled.Users_Orgs"), true);
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(com.liferay.portal.util.PropsUtil.get(
 				"lock.expiration.time.com.liferay.portal.model.Organization"));
 
@@ -162,6 +171,14 @@ public class OrganizationModelImpl extends BaseModelImpl<Organization>
 		setPrimaryKey(((Long)primaryKeyObj).longValue());
 	}
 
+	public Class<?> getModelClass() {
+		return Organization.class;
+	}
+
+	public String getModelClassName() {
+		return Organization.class.getName();
+	}
+
 	@JSON
 	public long getOrganizationId() {
 		return _organizationId;
@@ -177,6 +194,8 @@ public class OrganizationModelImpl extends BaseModelImpl<Organization>
 	}
 
 	public void setCompanyId(long companyId) {
+		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
+
 		if (!_setOriginalCompanyId) {
 			_setOriginalCompanyId = true;
 
@@ -196,6 +215,8 @@ public class OrganizationModelImpl extends BaseModelImpl<Organization>
 	}
 
 	public void setParentOrganizationId(long parentOrganizationId) {
+		_columnBitmask |= PARENTORGANIZATIONID_COLUMN_BITMASK;
+
 		if (!_setOriginalParentOrganizationId) {
 			_setOriginalParentOrganizationId = true;
 
@@ -238,6 +259,8 @@ public class OrganizationModelImpl extends BaseModelImpl<Organization>
 	}
 
 	public void setName(String name) {
+		_columnBitmask |= NAME_COLUMN_BITMASK;
+
 		if (_originalName == null) {
 			_originalName = _name;
 		}
@@ -317,20 +340,19 @@ public class OrganizationModelImpl extends BaseModelImpl<Organization>
 		_comments = comments;
 	}
 
+	public long getColumnBitmask() {
+		return _columnBitmask;
+	}
+
 	@Override
 	public Organization toEscapedModel() {
-		if (isEscapedModel()) {
-			return (Organization)this;
+		if (_escapedModelProxy == null) {
+			_escapedModelProxy = (Organization)ProxyUtil.newProxyInstance(_classLoader,
+					_escapedModelProxyInterfaces,
+					new AutoEscapeBeanHandler(this));
 		}
-		else {
-			if (_escapedModelProxy == null) {
-				_escapedModelProxy = (Organization)Proxy.newProxyInstance(_classLoader,
-						_escapedModelProxyInterfaces,
-						new AutoEscapeBeanHandler(this));
-			}
 
-			return _escapedModelProxy;
-		}
+		return _escapedModelProxy;
 	}
 
 	@Override
@@ -425,6 +447,8 @@ public class OrganizationModelImpl extends BaseModelImpl<Organization>
 		organizationModelImpl._setOriginalParentOrganizationId = false;
 
 		organizationModelImpl._originalName = organizationModelImpl._name;
+
+		organizationModelImpl._columnBitmask = 0;
 	}
 
 	@Override
@@ -592,5 +616,6 @@ public class OrganizationModelImpl extends BaseModelImpl<Organization>
 	private int _statusId;
 	private String _comments;
 	private transient ExpandoBridge _expandoBridge;
+	private long _columnBitmask;
 	private Organization _escapedModelProxy;
 }

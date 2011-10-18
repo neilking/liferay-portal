@@ -16,25 +16,13 @@
 
 <%@ include file="/html/portlet/css_init.jsp" %>
 
-.portlet-dynamic-data-mapping {
-	.aui-form-builder-drop-container {
-		width: 70%;
-	}
+.aui-document-library-folder-cell-editor-hidden {
+	display: none;
+}
 
-	.aui-form-builder-tabs-container {
-		width: 30%;
-
-		.aui-field-input-text {
-			width: 98%;
-		}
-
-		.aui-field-options-item-input {
-			width: 78px;
-		}
-	}
-
-	.aui-form-builder-settings .aui-field-input-checkbox {
-		margin: 0 3px 0 0;
+.portlet-document-library, .portlet-dynamic-data-mapping {
+	.aui-diagram-builder-drop-container {
+		overflow: auto;
 	}
 
 	.aui-field-labels-inline {
@@ -49,11 +37,6 @@
 	.aui-field {
 		.aui-field-content {
 			clear: both;
-			position: relative;
-
-			.aui-form-validator-message {
-				width: auto;
-			}
 		}
 	}
 
@@ -62,18 +45,16 @@
 		background-position: 0px 6px;
 	}
 
-	.form-fields-loading {
-		list-style: none;
-		padding: 10px 0;
-		position: relative;
-	}
-
 	.lfr-structure-entry-details-container {
 		margin-top: 10px;
 
 		.lfr-panel-content {
 			padding: 10px;
 		}
+	}
+
+	.lfr-translation-manager {
+		margin-bottom: 15px;
 	}
 
 	.lfr-ddm-types-form-column .aui-column-content-first {

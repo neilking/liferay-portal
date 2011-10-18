@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.wiki.service;
 
+import com.liferay.portal.service.ServiceWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link WikiNodeLocalService}.
@@ -23,7 +25,8 @@ package com.liferay.portlet.wiki.service;
  * @see       WikiNodeLocalService
  * @generated
  */
-public class WikiNodeLocalServiceWrapper implements WikiNodeLocalService {
+public class WikiNodeLocalServiceWrapper implements WikiNodeLocalService,
+	ServiceWrapper<WikiNodeLocalService> {
 	public WikiNodeLocalServiceWrapper(
 		WikiNodeLocalService wikiNodeLocalService) {
 		_wikiNodeLocalService = wikiNodeLocalService;
@@ -368,12 +371,12 @@ public class WikiNodeLocalServiceWrapper implements WikiNodeLocalService {
 	}
 
 	public void importPages(long userId, long nodeId,
-		java.lang.String importer, java.io.File[] files,
+		java.lang.String importer, java.io.InputStream[] inputStreams,
 		java.util.Map<java.lang.String, java.lang.String[]> options)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
-		_wikiNodeLocalService.importPages(userId, nodeId, importer, files,
-			options);
+		_wikiNodeLocalService.importPages(userId, nodeId, importer,
+			inputStreams, options);
 	}
 
 	public void subscribeNode(long userId, long nodeId)
@@ -397,12 +400,26 @@ public class WikiNodeLocalServiceWrapper implements WikiNodeLocalService {
 			serviceContext);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public WikiNodeLocalService getWrappedWikiNodeLocalService() {
 		return _wikiNodeLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedWikiNodeLocalService(
 		WikiNodeLocalService wikiNodeLocalService) {
+		_wikiNodeLocalService = wikiNodeLocalService;
+	}
+
+	public WikiNodeLocalService getWrappedService() {
+		return _wikiNodeLocalService;
+	}
+
+	public void setWrappedService(WikiNodeLocalService wikiNodeLocalService) {
 		_wikiNodeLocalService = wikiNodeLocalService;
 	}
 

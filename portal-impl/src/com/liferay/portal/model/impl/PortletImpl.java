@@ -29,6 +29,7 @@ import com.liferay.portal.kernel.portlet.PortletLayoutListener;
 import com.liferay.portal.kernel.scheduler.SchedulerEntry;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.OpenSearch;
+import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.servlet.URLEncoder;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.StringPool;
@@ -50,6 +51,7 @@ import com.liferay.portal.model.User;
 import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portal.security.permission.PermissionChecker;
 import com.liferay.portal.security.permission.PermissionCheckerFactoryUtil;
+import com.liferay.portal.security.permission.PermissionPropagator;
 import com.liferay.portal.security.permission.PermissionThreadLocal;
 import com.liferay.portal.service.UserLocalServiceUtil;
 import com.liferay.portal.service.permission.PortletPermissionUtil;
@@ -67,7 +69,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -79,6 +80,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.portlet.PortletMode;
 import javax.portlet.WindowState;
+
+import javax.servlet.ServletContext;
 
 /**
  * @author Brian Wing Shun Chan
@@ -148,14 +151,15 @@ public class PortletImpl extends PortletBaseImpl {
 		String controlPanelClass, List<String> assetRendererFactoryClasses,
 		List<String> atomCollectionAdapterClasses,
 		List<String> customAttributesDisplayClasses,
-		List<String> workflowHandlerClasses, String defaultPreferences,
-		String preferencesValidator, boolean preferencesCompanyWide,
-		boolean preferencesUniquePerLayout, boolean preferencesOwnedByGroup,
-		boolean useDefaultTemplate, boolean showPortletAccessDenied,
-		boolean showPortletInactive, boolean actionURLRedirect,
-		boolean restoreCurrentView, boolean maximizeEdit, boolean maximizeHelp,
-		boolean popUpPrint, boolean layoutCacheable, boolean instanceable,
-		boolean remoteable, boolean scopeable, String userPrincipalStrategy,
+		String permissionPropagatorClass, List<String> workflowHandlerClasses,
+		String defaultPreferences, String preferencesValidator,
+		boolean preferencesCompanyWide, boolean preferencesUniquePerLayout,
+		boolean preferencesOwnedByGroup, boolean useDefaultTemplate,
+		boolean showPortletAccessDenied, boolean showPortletInactive,
+		boolean actionURLRedirect, boolean restoreCurrentView,
+		boolean maximizeEdit, boolean maximizeHelp, boolean popUpPrint,
+		boolean layoutCacheable, boolean instanceable, boolean remoteable,
+		boolean scopeable, String userPrincipalStrategy,
 		boolean privateRequestAttributes, boolean privateSessionAttributes,
 		Set<String> autopropagatedParameters, int actionTimeout,
 		int renderTimeout, int renderWeight, boolean ajaxable,
@@ -213,6 +217,7 @@ public class PortletImpl extends PortletBaseImpl {
 		_assetRendererFactoryClasses = assetRendererFactoryClasses;
 		_atomCollectionAdapterClasses = atomCollectionAdapterClasses;
 		_customAttributesDisplayClasses = customAttributesDisplayClasses;
+		_permissionPropagatorClass = permissionPropagatorClass;
 		_workflowHandlerClasses = workflowHandlerClasses;
 		_defaultPreferences = defaultPreferences;
 		_preferencesValidator = preferencesValidator;
@@ -269,10 +274,6 @@ public class PortletImpl extends PortletBaseImpl {
 		setPublishingEvents(publishingEvents);
 		setPublicRenderParameters(publicRenderParameters);
 		_portletApp = portletApp;
-
-		if (_instanceable) {
-			_clonedInstances = new Hashtable<String, Portlet>();
-		}
 	}
 
 	/**
@@ -1261,6 +1262,40 @@ public class PortletImpl extends PortletBaseImpl {
 		PortletBag portletBag = PortletBagPool.get(getRootPortletId());
 
 		return portletBag.getCustomAttributesDisplayInstances();
+	}
+
+	/**
+	 * Returns the name of the permission propagator class of the portlet.
+	 *
+	 * @return the name of the permission propagator class of the portlet
+	 */
+	public String getPermissionPropagatorClass() {
+		return _permissionPropagatorClass;
+	}
+
+	/**
+	 * Sets the name of the permission propagator class of the portlet.
+	 *
+	 * @param pollerProcessorClass the name of the permission propagator class
+	 *        of the portlet
+	 */
+	public void setPermissionPropagatorClass(String permissionPropagatorClass) {
+		_permissionPropagatorClass = permissionPropagatorClass;
+	}
+
+	/**
+	 * Returns the permission propagator instance of the portlet.
+	 *
+	 * @return the permission propagator instance of the portlet
+	 */
+	public PermissionPropagator getPermissionPropagatorInstance() {
+		if (Validator.isNull(getPermissionPropagatorClass())) {
+			return null;
+		}
+
+		PortletBag portletBag = PortletBagPool.get(getRootPortletId());
+
+		return portletBag.getPermissionPropagatorInstance();
 	}
 
 	/**
@@ -2960,12 +2995,20 @@ public class PortletImpl extends PortletBaseImpl {
 	 * @return the servlet context path of the portlet
 	 */
 	public String getContextPath() {
-		if (_portletApp.isWARFile()) {
-			return StringPool.SLASH.concat(_portletApp.getServletContextName());
-		}
-		else {
+		if (!_portletApp.isWARFile()) {
 			return PortalUtil.getPathContext();
 		}
+
+		String servletContextName = _portletApp.getServletContextName();
+
+		if (ServletContextPool.containsKey(servletContextName)) {
+			ServletContext servletContext = ServletContextPool.get(
+				servletContextName);
+
+			return servletContext.getContextPath();
+		}
+
+		return StringPool.SLASH.concat(servletContextName);
 	}
 
 	/**
@@ -2984,12 +3027,11 @@ public class PortletImpl extends PortletBaseImpl {
 
 		String contextPath = getContextPath();
 
-		if (_portletApp.isWARFile()) {
-			return proxyPath.concat(contextPath);
-		}
-		else {
+		if (!_portletApp.isWARFile()) {
 			return contextPath;
 		}
+
+		return proxyPath.concat(contextPath);
 	}
 
 	/**
@@ -3019,31 +3061,11 @@ public class PortletImpl extends PortletBaseImpl {
 	 * @return a cloned instance of the portlet
 	 */
 	public Portlet getClonedInstance(String portletId) {
-		if (_clonedInstances == null) {
+		Portlet	portlet = (Portlet)clone();
 
-			// LEP-528
+		portlet.setPortletId(portletId);
 
-			return null;
-		}
-
-		Portlet clonedInstance = _clonedInstances.get(portletId);
-
-		if (clonedInstance == null) {
-			clonedInstance = (Portlet)clone();
-
-			clonedInstance.setPortletId(portletId);
-
-			// Disable caching of cloned instances until we can figure out how
-			// to elegantly refresh the cache when the portlet is dynamically
-			// updated by the user. For example, the user might change the
-			// portlet from one column to the next. Cloned instances that are
-			// cached would not see the new change. We can then also cache
-			// static portlet instances.
-
-			//_clonedInstances.put(portletId, clonedInstance);
-		}
-
-		return clonedInstance;
+		return portlet;
 	}
 
 	/**
@@ -3188,18 +3210,19 @@ public class PortletImpl extends PortletBaseImpl {
 			getControlPanelEntryCategory(), getControlPanelEntryWeight(),
 			getControlPanelEntryClass(), getAssetRendererFactoryClasses(),
 			getAtomCollectionAdapterClasses(),
-			getCustomAttributesDisplayClasses(), getWorkflowHandlerClasses(),
-			getDefaultPreferences(), getPreferencesValidator(),
-			isPreferencesCompanyWide(),	isPreferencesUniquePerLayout(),
-			isPreferencesOwnedByGroup(), isUseDefaultTemplate(),
-			isShowPortletAccessDenied(), isShowPortletInactive(),
-			isActionURLRedirect(), isRestoreCurrentView(), isMaximizeEdit(),
-			isMaximizeHelp(), isPopUpPrint(), isLayoutCacheable(),
-			isInstanceable(), isRemoteable(), isScopeable(),
-			getUserPrincipalStrategy(), isPrivateRequestAttributes(),
-			isPrivateSessionAttributes(), getAutopropagatedParameters(),
-			getActionTimeout(), getRenderTimeout(), getRenderWeight(),
-			isAjaxable(), getHeaderPortalCss(), getHeaderPortletCss(),
+			getCustomAttributesDisplayClasses(), getPermissionPropagatorClass(),
+			getWorkflowHandlerClasses(), getDefaultPreferences(),
+			getPreferencesValidator(), isPreferencesCompanyWide(),
+			isPreferencesUniquePerLayout(), isPreferencesOwnedByGroup(),
+			isUseDefaultTemplate(), isShowPortletAccessDenied(),
+			isShowPortletInactive(), isActionURLRedirect(),
+			isRestoreCurrentView(), isMaximizeEdit(), isMaximizeHelp(),
+			isPopUpPrint(), isLayoutCacheable(), isInstanceable(),
+			isRemoteable(), isScopeable(), getUserPrincipalStrategy(),
+			isPrivateRequestAttributes(), isPrivateSessionAttributes(),
+			getAutopropagatedParameters(), getActionTimeout(),
+			getRenderTimeout(), getRenderWeight(), isAjaxable(),
+			getHeaderPortalCss(), getHeaderPortletCss(),
 			getHeaderPortalJavaScript(), getHeaderPortletJavaScript(),
 			getFooterPortalCss(), getFooterPortletCss(),
 			getFooterPortalJavaScript(), getFooterPortletJavaScript(),
@@ -3465,6 +3488,11 @@ public class PortletImpl extends PortletBaseImpl {
 	 * associated with the portlet.
 	 */
 	private List<String> _customAttributesDisplayClasses;
+
+	/**
+	 * The name of the permission propagator class of the portlet.
+	 */
+	private String _permissionPropagatorClass;
 
 	/**
 	 * The names of the classes that represents workflow handlers associated
@@ -3759,11 +3787,6 @@ public class PortletImpl extends PortletBaseImpl {
 	 * The application to which this portlet belongs.
 	 */
 	private PortletApp _portletApp;
-
-	/**
-	 * The cloned instances of the portlet.
-	 */
-	private Map<String, Portlet> _clonedInstances;
 
 	/**
 	 * <code>True</code> if the portlet is a static portlet that is cannot be

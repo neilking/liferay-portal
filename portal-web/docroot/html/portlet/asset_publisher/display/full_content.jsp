@@ -93,9 +93,11 @@ request.setAttribute("view.jsp-showIconLabel", true);
 		</c:if>
 
 		<%
-		AssetEntryServiceUtil.incrementViewCounter(assetEntry.getClassName(), assetEntry.getClassPK());
+		AssetEntry incrementAssetEntry = AssetEntryServiceUtil.incrementViewCounter(assetEntry.getClassName(), assetEntry.getClassPK());
 
-		assetEntry.setViewCount(assetEntry.getViewCount() + 1);
+		if (incrementAssetEntry != null) {
+			assetEntry = incrementAssetEntry;
+		}
 
 		if (showContextLink) {
 			if (PortalUtil.getPlidFromPortletId(assetRenderer.getGroupId(), assetRendererFactory.getPortletId()) == 0) {
@@ -122,6 +124,14 @@ request.setAttribute("view.jsp-showIconLabel", true);
 		%>
 
 		<div class="asset-content">
+			<c:if test='<%= enableSocialBookmarks && socialBookmarksDisplayPosition.equals("top") %>'>
+				<liferay-ui:social-bookmarks
+					displayStyle="<%= socialBookmarksDisplayStyle %>"
+					target="_blank"
+					title="<%= assetEntry.getTitle() %>"
+					url="<%= viewFullContentURL.toString() %>"
+				/>
+			</c:if>
 
 			<%
 			String path = assetRenderer.render(renderRequest, renderResponse, AssetRenderer.TEMPLATE_FULL_CONTENT);
@@ -141,6 +151,15 @@ request.setAttribute("view.jsp-showIconLabel", true);
 						reportedUserId="<%= assetRenderer.getUserId() %>"
 					/>
 				</div>
+			</c:if>
+
+			<c:if test='<%= enableSocialBookmarks && socialBookmarksDisplayPosition.equals("bottom") %>'>
+				<liferay-ui:social-bookmarks
+					displayStyle="<%= socialBookmarksDisplayStyle %>"
+					target="_blank"
+					title="<%= assetEntry.getTitle() %>"
+					url="<%= viewFullContentURL.toString() %>"
+				/>
 			</c:if>
 
 			<c:if test="<%= enableRatings %>">

@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.dynamicdatamapping.model;
 
+import com.liferay.portal.model.ModelWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link DDMStructure}.
@@ -23,7 +25,8 @@ package com.liferay.portlet.dynamicdatamapping.model;
  * @see       DDMStructure
  * @generated
  */
-public class DDMStructureWrapper implements DDMStructure {
+public class DDMStructureWrapper implements DDMStructure,
+	ModelWrapper<DDMStructure> {
 	public DDMStructureWrapper(DDMStructure ddmStructure) {
 		_ddmStructure = ddmStructure;
 	}
@@ -315,6 +318,14 @@ public class DDMStructureWrapper implements DDMStructure {
 		return _ddmStructure.getName(languageId, useDefault);
 	}
 
+	public java.lang.String getNameCurrentLanguageId() {
+		return _ddmStructure.getNameCurrentLanguageId();
+	}
+
+	public java.lang.String getNameCurrentValue() {
+		return _ddmStructure.getNameCurrentValue();
+	}
+
 	/**
 	* Returns a map of the locales and localized names of this d d m structure.
 	*
@@ -353,6 +364,10 @@ public class DDMStructureWrapper implements DDMStructure {
 	public void setName(java.lang.String name, java.util.Locale locale,
 		java.util.Locale defaultLocale) {
 		_ddmStructure.setName(name, locale, defaultLocale);
+	}
+
+	public void setNameCurrentLanguageId(java.lang.String languageId) {
+		_ddmStructure.setNameCurrentLanguageId(languageId);
 	}
 
 	/**
@@ -430,6 +445,14 @@ public class DDMStructureWrapper implements DDMStructure {
 		return _ddmStructure.getDescription(languageId, useDefault);
 	}
 
+	public java.lang.String getDescriptionCurrentLanguageId() {
+		return _ddmStructure.getDescriptionCurrentLanguageId();
+	}
+
+	public java.lang.String getDescriptionCurrentValue() {
+		return _ddmStructure.getDescriptionCurrentValue();
+	}
+
 	/**
 	* Returns a map of the locales and localized descriptions of this d d m structure.
 	*
@@ -469,6 +492,10 @@ public class DDMStructureWrapper implements DDMStructure {
 	public void setDescription(java.lang.String description,
 		java.util.Locale locale, java.util.Locale defaultLocale) {
 		_ddmStructure.setDescription(description, locale, defaultLocale);
+	}
+
+	public void setDescriptionCurrentLanguageId(java.lang.String languageId) {
+		_ddmStructure.setDescriptionCurrentLanguageId(languageId);
 	}
 
 	/**
@@ -549,10 +576,6 @@ public class DDMStructureWrapper implements DDMStructure {
 		return _ddmStructure.isEscapedModel();
 	}
 
-	public void setEscapedModel(boolean escapedModel) {
-		_ddmStructure.setEscapedModel(escapedModel);
-	}
-
 	public java.io.Serializable getPrimaryKeyObj() {
 		return _ddmStructure.getPrimaryKeyObj();
 	}
@@ -607,6 +630,14 @@ public class DDMStructureWrapper implements DDMStructure {
 		_ddmStructure.persist();
 	}
 
+	public java.util.List<java.lang.String> getAvailableLocales() {
+		return _ddmStructure.getAvailableLocales();
+	}
+
+	public java.lang.String getDefaultLocale() {
+		return _ddmStructure.getDefaultLocale();
+	}
+
 	public java.lang.String getFieldDataType(java.lang.String fieldName) {
 		return _ddmStructure.getFieldDataType(fieldName);
 	}
@@ -615,8 +646,14 @@ public class DDMStructureWrapper implements DDMStructure {
 		return _ddmStructure.getFieldDisplayChildLabelAsValue(fieldName);
 	}
 
-	public java.lang.String getFieldLabel(java.lang.String fieldName) {
-		return _ddmStructure.getFieldLabel(fieldName);
+	public java.lang.String getFieldLabel(java.lang.String fieldName,
+		java.util.Locale locale) {
+		return _ddmStructure.getFieldLabel(fieldName, locale);
+	}
+
+	public java.lang.String getFieldLabel(java.lang.String fieldName,
+		java.lang.String locale) {
+		return _ddmStructure.getFieldLabel(fieldName, locale);
 	}
 
 	public java.util.Set<java.lang.String> getFieldNames() {
@@ -626,6 +663,11 @@ public class DDMStructureWrapper implements DDMStructure {
 	public java.lang.String getFieldProperty(java.lang.String fieldName,
 		java.lang.String property) {
 		return _ddmStructure.getFieldProperty(fieldName, property);
+	}
+
+	public java.lang.String getFieldProperty(java.lang.String fieldName,
+		java.lang.String property, java.lang.String locale) {
+		return _ddmStructure.getFieldProperty(fieldName, property, locale);
 	}
 
 	public boolean getFieldRequired(java.lang.String fieldName) {
@@ -638,8 +680,20 @@ public class DDMStructureWrapper implements DDMStructure {
 		return _ddmStructure.getFields(fieldName, attributeName, attributeValue);
 	}
 
+	public java.util.Map<java.lang.String, java.lang.String> getFields(
+		java.lang.String fieldName, java.lang.String attributeName,
+		java.lang.String attributeValue, java.lang.String locale) {
+		return _ddmStructure.getFields(fieldName, attributeName,
+			attributeValue, locale);
+	}
+
 	public java.util.Map<java.lang.String, java.util.Map<java.lang.String, java.lang.String>> getFieldsMap() {
 		return _ddmStructure.getFieldsMap();
+	}
+
+	public java.util.Map<java.lang.String, java.util.Map<java.lang.String, java.lang.String>> getFieldsMap(
+		java.lang.String locale) {
+		return _ddmStructure.getFieldsMap(locale);
 	}
 
 	public java.lang.String getFieldType(java.lang.String fieldName) {
@@ -650,7 +704,14 @@ public class DDMStructureWrapper implements DDMStructure {
 		return _ddmStructure.hasField(fieldName);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedModel}
+	 */
 	public DDMStructure getWrappedDDMStructure() {
+		return _ddmStructure;
+	}
+
+	public DDMStructure getWrappedModel() {
 		return _ddmStructure;
 	}
 

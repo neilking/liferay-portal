@@ -30,7 +30,7 @@ public class SaveSettingsPlaySoundTest extends BaseTestCase {
 				selenium.open("/web/guest/home/");
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
@@ -45,24 +45,23 @@ public class SaveSettingsPlaySoundTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
 				selenium.clickAt("link=Test CLP Test Page",
-					RuntimeVariables.replace(""));
+					RuntimeVariables.replace("Test CLP Test Page"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
 				assertEquals(RuntimeVariables.replace("true"),
 					selenium.getText(
 						"//div[@class='portlet-body']/table/tbody/tr[2]/td[8]"));
 				selenium.clickAt("//ul[@class='chat-tabs']/li[2]/div[1]/span",
-					RuntimeVariables.replace(""));
+					RuntimeVariables.replace("Settings"));
+				Thread.sleep(5000);
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
 					try {
-						if (selenium.isVisible("playSound")) {
+						if (selenium.isVisible("//input[@id='playSound']")) {
 							break;
 						}
 					}
@@ -72,8 +71,6 @@ public class SaveSettingsPlaySoundTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
-
 				boolean playSoundChecked = selenium.isChecked("playSound");
 
 				if (!playSoundChecked) {
@@ -82,13 +79,17 @@ public class SaveSettingsPlaySoundTest extends BaseTestCase {
 					continue;
 				}
 
-				selenium.clickAt("playSound", RuntimeVariables.replace(""));
+				assertTrue(selenium.isChecked("//input[@id='playSound']"));
+				selenium.clickAt("//input[@id='playSound']",
+					RuntimeVariables.replace("Play a Sound"));
+				assertFalse(selenium.isChecked("//input[@id='playSound']"));
 
 			case 2:
-				selenium.clickAt("saveSettings", RuntimeVariables.replace(""));
+				selenium.clickAt("//input[@id='saveSettings']",
+					RuntimeVariables.replace("Save Settings"));
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
@@ -104,13 +105,12 @@ public class SaveSettingsPlaySoundTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
 				assertFalse(selenium.isElementPresent(
 						"//li[@class='chat-settings saved']"));
 				selenium.open("/web/guest/home/");
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
@@ -125,11 +125,9 @@ public class SaveSettingsPlaySoundTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
 				selenium.clickAt("link=Test CLP Test Page",
-					RuntimeVariables.replace(""));
+					RuntimeVariables.replace("Test CLP Test Page"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
 				assertEquals(RuntimeVariables.replace("false"),
 					selenium.getText(
 						"//div[@class='portlet-body']/table/tbody/tr[2]/td[8]"));

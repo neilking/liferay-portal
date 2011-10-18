@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.messageboards.service;
 
+import com.liferay.portal.service.ServiceWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link MBMessageLocalService}.
@@ -23,7 +25,8 @@ package com.liferay.portlet.messageboards.service;
  * @see       MBMessageLocalService
  * @generated
  */
-public class MBMessageLocalServiceWrapper implements MBMessageLocalService {
+public class MBMessageLocalServiceWrapper implements MBMessageLocalService,
+	ServiceWrapper<MBMessageLocalService> {
 	public MBMessageLocalServiceWrapper(
 		MBMessageLocalService mbMessageLocalService) {
 		_mbMessageLocalService = mbMessageLocalService;
@@ -287,28 +290,28 @@ public class MBMessageLocalServiceWrapper implements MBMessageLocalService {
 		long userId, java.lang.String userName, long groupId, long categoryId,
 		long threadId, long parentMessageId, java.lang.String subject,
 		java.lang.String body, java.lang.String format,
-		java.util.List<com.liferay.portal.kernel.util.ObjectValuePair<java.lang.String, byte[]>> files,
+		java.util.List<com.liferay.portal.kernel.util.ObjectValuePair<java.lang.String, java.io.InputStream>> inputStreamOVPs,
 		boolean anonymous, double priority, boolean allowPingbacks,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		return _mbMessageLocalService.addMessage(userId, userName, groupId,
 			categoryId, threadId, parentMessageId, subject, body, format,
-			files, anonymous, priority, allowPingbacks, serviceContext);
+			inputStreamOVPs, anonymous, priority, allowPingbacks, serviceContext);
 	}
 
 	public com.liferay.portlet.messageboards.model.MBMessage addMessage(
 		long userId, java.lang.String userName, long groupId, long categoryId,
 		java.lang.String subject, java.lang.String body,
 		java.lang.String format,
-		java.util.List<com.liferay.portal.kernel.util.ObjectValuePair<java.lang.String, byte[]>> files,
+		java.util.List<com.liferay.portal.kernel.util.ObjectValuePair<java.lang.String, java.io.InputStream>> inputStreamOVPs,
 		boolean anonymous, double priority, boolean allowPingbacks,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		return _mbMessageLocalService.addMessage(userId, userName, groupId,
-			categoryId, subject, body, format, files, anonymous, priority,
-			allowPingbacks, serviceContext);
+			categoryId, subject, body, format, inputStreamOVPs, anonymous,
+			priority, allowPingbacks, serviceContext);
 	}
 
 	public void addMessageResources(long messageId,
@@ -498,21 +501,21 @@ public class MBMessageLocalServiceWrapper implements MBMessageLocalService {
 	}
 
 	public com.liferay.portlet.messageboards.model.MBMessageDisplay getMessageDisplay(
-		long messageId, int status, java.lang.String threadView,
+		long userId, long messageId, int status, java.lang.String threadView,
 		boolean includePrevAndNext)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
-		return _mbMessageLocalService.getMessageDisplay(messageId, status,
-			threadView, includePrevAndNext);
+		return _mbMessageLocalService.getMessageDisplay(userId, messageId,
+			status, threadView, includePrevAndNext);
 	}
 
 	public com.liferay.portlet.messageboards.model.MBMessageDisplay getMessageDisplay(
-		com.liferay.portlet.messageboards.model.MBMessage message, int status,
-		java.lang.String threadView, boolean includePrevAndNext)
+		long userId, com.liferay.portlet.messageboards.model.MBMessage message,
+		int status, java.lang.String threadView, boolean includePrevAndNext)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
-		return _mbMessageLocalService.getMessageDisplay(message, status,
-			threadView, includePrevAndNext);
+		return _mbMessageLocalService.getMessageDisplay(userId, message,
+			status, threadView, includePrevAndNext);
 	}
 
 	public java.util.List<com.liferay.portlet.messageboards.model.MBMessage> getMessages(
@@ -565,6 +568,50 @@ public class MBMessageLocalServiceWrapper implements MBMessageLocalService {
 			status, start, end);
 	}
 
+	public java.util.List<com.liferay.portlet.messageboards.model.MBMessage> getUserDiscussionMessages(
+		long userId, long classNameId, long classPK, int status, int start,
+		int end, com.liferay.portal.kernel.util.OrderByComparator obc)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _mbMessageLocalService.getUserDiscussionMessages(userId,
+			classNameId, classPK, status, start, end, obc);
+	}
+
+	public java.util.List<com.liferay.portlet.messageboards.model.MBMessage> getUserDiscussionMessages(
+		long userId, long[] classNameIds, int status, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator obc)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _mbMessageLocalService.getUserDiscussionMessages(userId,
+			classNameIds, status, start, end, obc);
+	}
+
+	public java.util.List<com.liferay.portlet.messageboards.model.MBMessage> getUserDiscussionMessages(
+		long userId, java.lang.String className, long classPK, int status,
+		int start, int end, com.liferay.portal.kernel.util.OrderByComparator obc)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _mbMessageLocalService.getUserDiscussionMessages(userId,
+			className, classPK, status, start, end, obc);
+	}
+
+	public int getUserDiscussionMessagesCount(long userId, long classNameId,
+		long classPK, int status)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _mbMessageLocalService.getUserDiscussionMessagesCount(userId,
+			classNameId, classPK, status);
+	}
+
+	public int getUserDiscussionMessagesCount(long userId, long[] classNameIds,
+		int status) throws com.liferay.portal.kernel.exception.SystemException {
+		return _mbMessageLocalService.getUserDiscussionMessagesCount(userId,
+			classNameIds, status);
+	}
+
+	public int getUserDiscussionMessagesCount(long userId,
+		java.lang.String className, long classPK, int status)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _mbMessageLocalService.getUserDiscussionMessagesCount(userId,
+			className, classPK, status);
+	}
+
 	public void subscribeMessage(long userId, long messageId)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
@@ -575,6 +622,20 @@ public class MBMessageLocalServiceWrapper implements MBMessageLocalService {
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		_mbMessageLocalService.unsubscribeMessage(userId, messageId);
+	}
+
+	public void updateAnswer(long messageId, boolean answer, boolean cascade)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		_mbMessageLocalService.updateAnswer(messageId, answer, cascade);
+	}
+
+	public void updateAnswer(
+		com.liferay.portlet.messageboards.model.MBMessage message,
+		boolean answer, boolean cascade)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		_mbMessageLocalService.updateAnswer(message, answer, cascade);
 	}
 
 	public void updateAsset(long userId,
@@ -600,14 +661,15 @@ public class MBMessageLocalServiceWrapper implements MBMessageLocalService {
 	public com.liferay.portlet.messageboards.model.MBMessage updateMessage(
 		long userId, long messageId, java.lang.String subject,
 		java.lang.String body,
-		java.util.List<com.liferay.portal.kernel.util.ObjectValuePair<java.lang.String, byte[]>> files,
+		java.util.List<com.liferay.portal.kernel.util.ObjectValuePair<java.lang.String, java.io.InputStream>> inputStreamOVPs,
 		java.util.List<java.lang.String> existingFiles, double priority,
 		boolean allowPingbacks,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		return _mbMessageLocalService.updateMessage(userId, messageId, subject,
-			body, files, existingFiles, priority, allowPingbacks, serviceContext);
+			body, inputStreamOVPs, existingFiles, priority, allowPingbacks,
+			serviceContext);
 	}
 
 	public com.liferay.portlet.messageboards.model.MBMessage updateMessage(
@@ -631,12 +693,26 @@ public class MBMessageLocalServiceWrapper implements MBMessageLocalService {
 		_mbMessageLocalService.updateUserName(userId, userName);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public MBMessageLocalService getWrappedMBMessageLocalService() {
 		return _mbMessageLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedMBMessageLocalService(
 		MBMessageLocalService mbMessageLocalService) {
+		_mbMessageLocalService = mbMessageLocalService;
+	}
+
+	public MBMessageLocalService getWrappedService() {
+		return _mbMessageLocalService;
+	}
+
+	public void setWrappedService(MBMessageLocalService mbMessageLocalService) {
 		_mbMessageLocalService = mbMessageLocalService;
 	}
 

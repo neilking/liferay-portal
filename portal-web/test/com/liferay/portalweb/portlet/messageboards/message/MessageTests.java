@@ -22,6 +22,7 @@ import com.liferay.portalweb.portlet.messageboards.message.addcategorymessageque
 import com.liferay.portalweb.portlet.messageboards.message.addcategorymessagereply.AddCategoryMessageReplyTests;
 import com.liferay.portalweb.portlet.messageboards.message.addcategorymessagereplymultiple.AddCategoryMessageReplyMultipleTests;
 import com.liferay.portalweb.portlet.messageboards.message.addcategorymessagesubjectnull.AddCategoryMessageSubjectNullTests;
+import com.liferay.portalweb.portlet.messageboards.message.addcategorymessageutf8.AddCategoryMessageUTF8Tests;
 import com.liferay.portalweb.portlet.messageboards.message.addmessage.AddMessageTests;
 import com.liferay.portalweb.portlet.messageboards.message.addsubcategorymessage.AddSubcategoryMessageTests;
 import com.liferay.portalweb.portlet.messageboards.message.addsubcategorymessagebodynull.AddSubcategoryMessageBodyNullTests;
@@ -33,10 +34,13 @@ import com.liferay.portalweb.portlet.messageboards.message.editcategorymessagebo
 import com.liferay.portalweb.portlet.messageboards.message.editcategorymessagebodynull.EditCategoryMessageBodyNullTests;
 import com.liferay.portalweb.portlet.messageboards.message.editcategorymessagesubject.EditCategoryMessageSubjectTests;
 import com.liferay.portalweb.portlet.messageboards.message.editcategorymessagesubjectnull.EditCategoryMessageSubjectNullTests;
+import com.liferay.portalweb.portlet.messageboards.message.gmailviewmbthreadmessagegmail.Gmail_ViewMBThreadMessageGmailTests;
+import com.liferay.portalweb.portlet.messageboards.message.guestviewpermissionsmbthreadmessageguestviewoff.Guest_ViewPermissionsMBThreadMessageGuestViewOffTests;
 import com.liferay.portalweb.portlet.messageboards.message.markasanswercategorymessagequestionreply.MarkAsAnswerCategoryMessageQuestionReplyTests;
 import com.liferay.portalweb.portlet.messageboards.message.movecategorymessagetocategory.MoveCategoryMessageToCategoryTests;
 import com.liferay.portalweb.portlet.messageboards.message.movecategorymessagetocategoryexplanation.MoveCategoryMessageToCategoryExplanationTests;
 import com.liferay.portalweb.portlet.messageboards.message.nextcategorymessage.NextCategoryMessageTests;
+import com.liferay.portalweb.portlet.messageboards.message.previewmbthreadmessagedetails.PreviewMBThreadMessageDetailsTests;
 import com.liferay.portalweb.portlet.messageboards.message.previouscategorymessage.PreviousCategoryMessageTests;
 import com.liferay.portalweb.portlet.messageboards.message.ratecategorymessage.RateCategoryMessageTests;
 import com.liferay.portalweb.portlet.messageboards.message.searchcategorymessage.SearchCategoryMessageTests;
@@ -67,6 +71,7 @@ public class MessageTests extends BaseTests {
 		testSuite.addTest(AddCategoryMessageReplyTests.suite());
 		testSuite.addTest(AddCategoryMessageReplyMultipleTests.suite());
 		testSuite.addTest(AddCategoryMessageSubjectNullTests.suite());
+		testSuite.addTest(AddCategoryMessageUTF8Tests.suite());
 		testSuite.addTest(AddMessageTests.suite());
 		testSuite.addTest(AddSubcategoryMessageTests.suite());
 		testSuite.addTest(AddSubcategoryMessageBodyNullTests.suite());
@@ -79,12 +84,16 @@ public class MessageTests extends BaseTests {
 		testSuite.addTest(EditCategoryMessageBodyNullTests.suite());
 		testSuite.addTest(EditCategoryMessageSubjectTests.suite());
 		testSuite.addTest(EditCategoryMessageSubjectNullTests.suite());
+		testSuite.addTest(Gmail_ViewMBThreadMessageGmailTests.suite());
+		testSuite.addTest(
+			Guest_ViewPermissionsMBThreadMessageGuestViewOffTests.suite());
 		testSuite.addTest(
 			MarkAsAnswerCategoryMessageQuestionReplyTests.suite());
 		testSuite.addTest(MoveCategoryMessageToCategoryTests.suite());
 		testSuite.addTest(
 			MoveCategoryMessageToCategoryExplanationTests.suite());
 		testSuite.addTest(NextCategoryMessageTests.suite());
+		testSuite.addTest(PreviewMBThreadMessageDetailsTests.suite());
 		testSuite.addTest(PreviousCategoryMessageTests.suite());
 		testSuite.addTest(RateCategoryMessageTests.suite());
 		testSuite.addTest(SearchCategoryMessageTests.suite());
@@ -93,7 +102,8 @@ public class MessageTests extends BaseTests {
 			SplitThreadCategoryMessageReplyBackButtonTests.suite());
 		testSuite.addTest(
 			SplitThreadCategoryMessageReplyExplanationTests.suite());
-		testSuite.addTest(SplitThreadCategoryMessageReplyMultipleTests.suite());
+		testSuite.addTest(
+			SplitThreadCategoryMessageReplyMultipleTests.suite());
 		testSuite.addTest(UnmarkCategoryMessageQuestionReplyTests.suite());
 		testSuite.addTest(ViewCategoryMessageMyPostsTests.suite());
 		testSuite.addTest(ViewCategoryMessagePostCountTests.suite());

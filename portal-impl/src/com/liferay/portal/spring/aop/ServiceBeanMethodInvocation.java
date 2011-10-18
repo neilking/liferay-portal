@@ -24,7 +24,6 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.aopalliance.intercept.MethodInterceptor;
@@ -45,7 +44,9 @@ public class ServiceBeanMethodInvocation
 		_method = method;
 		_arguments = arguments;
 
-		_method.setAccessible(true);
+		if (!_method.isAccessible()) {
+			_method.setAccessible(true);
+		}
 	}
 
 	@Override
@@ -100,9 +101,7 @@ public class ServiceBeanMethodInvocation
 	}
 
 	public Object proceed() throws Throwable {
-		if ((_methodInterceptors != Collections.EMPTY_LIST) &&
-			(_index < _methodInterceptors.size())) {
-
+		if (_index < _methodInterceptors.size()) {
 			MethodInterceptor methodInterceptor = _methodInterceptors.get(
 				_index++);
 

@@ -19,9 +19,9 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
@@ -37,8 +37,6 @@ import com.liferay.portlet.expando.model.ExpandoBridge;
 import com.liferay.portlet.expando.util.ExpandoBridgeFactoryUtil;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Proxy;
 
 import java.sql.Types;
 
@@ -116,6 +114,15 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
 				"value.object.finder.cache.enabled.com.liferay.portal.model.LayoutRevision"),
 			true);
+	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.column.bitmask.enabled.com.liferay.portal.model.LayoutRevision"),
+			true);
+	public static long HEAD_COLUMN_BITMASK = 1L;
+	public static long LAYOUTBRANCHID_COLUMN_BITMASK = 2L;
+	public static long LAYOUTSETBRANCHID_COLUMN_BITMASK = 4L;
+	public static long PARENTLAYOUTREVISIONID_COLUMN_BITMASK = 8L;
+	public static long PLID_COLUMN_BITMASK = 16L;
+	public static long STATUS_COLUMN_BITMASK = 32L;
 
 	/**
 	 * Converts the soap model instance into a normal model instance.
@@ -177,14 +184,6 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 		return models;
 	}
 
-	public Class<?> getModelClass() {
-		return LayoutRevision.class;
-	}
-
-	public String getModelClassName() {
-		return LayoutRevision.class.getName();
-	}
-
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(com.liferay.portal.util.PropsUtil.get(
 				"lock.expiration.time.com.liferay.portal.model.LayoutRevision"));
 
@@ -205,6 +204,14 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 
 	public void setPrimaryKeyObj(Serializable primaryKeyObj) {
 		setPrimaryKey(((Long)primaryKeyObj).longValue());
+	}
+
+	public Class<?> getModelClass() {
+		return LayoutRevision.class;
+	}
+
+	public String getModelClassName() {
+		return LayoutRevision.class.getName();
 	}
 
 	@JSON
@@ -289,6 +296,8 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 	}
 
 	public void setLayoutSetBranchId(long layoutSetBranchId) {
+		_columnBitmask |= LAYOUTSETBRANCHID_COLUMN_BITMASK;
+
 		if (!_setOriginalLayoutSetBranchId) {
 			_setOriginalLayoutSetBranchId = true;
 
@@ -308,7 +317,19 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 	}
 
 	public void setLayoutBranchId(long layoutBranchId) {
+		_columnBitmask |= LAYOUTBRANCHID_COLUMN_BITMASK;
+
+		if (!_setOriginalLayoutBranchId) {
+			_setOriginalLayoutBranchId = true;
+
+			_originalLayoutBranchId = _layoutBranchId;
+		}
+
 		_layoutBranchId = layoutBranchId;
+	}
+
+	public long getOriginalLayoutBranchId() {
+		return _originalLayoutBranchId;
 	}
 
 	@JSON
@@ -317,7 +338,19 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 	}
 
 	public void setParentLayoutRevisionId(long parentLayoutRevisionId) {
+		_columnBitmask |= PARENTLAYOUTREVISIONID_COLUMN_BITMASK;
+
+		if (!_setOriginalParentLayoutRevisionId) {
+			_setOriginalParentLayoutRevisionId = true;
+
+			_originalParentLayoutRevisionId = _parentLayoutRevisionId;
+		}
+
 		_parentLayoutRevisionId = parentLayoutRevisionId;
+	}
+
+	public long getOriginalParentLayoutRevisionId() {
+		return _originalParentLayoutRevisionId;
 	}
 
 	@JSON
@@ -330,6 +363,8 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 	}
 
 	public void setHead(boolean head) {
+		_columnBitmask |= HEAD_COLUMN_BITMASK;
+
 		if (!_setOriginalHead) {
 			_setOriginalHead = true;
 
@@ -362,6 +397,8 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 	}
 
 	public void setPlid(long plid) {
+		_columnBitmask |= PLID_COLUMN_BITMASK;
+
 		if (!_setOriginalPlid) {
 			_setOriginalPlid = true;
 
@@ -411,26 +448,23 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 	}
 
 	public String getName(String languageId) {
-		String value = LocalizationUtil.getLocalization(getName(), languageId);
-
-		if (isEscapedModel()) {
-			return HtmlUtil.escape(value);
-		}
-		else {
-			return value;
-		}
+		return LocalizationUtil.getLocalization(getName(), languageId);
 	}
 
 	public String getName(String languageId, boolean useDefault) {
-		String value = LocalizationUtil.getLocalization(getName(), languageId,
-				useDefault);
+		return LocalizationUtil.getLocalization(getName(), languageId,
+			useDefault);
+	}
 
-		if (isEscapedModel()) {
-			return HtmlUtil.escape(value);
-		}
-		else {
-			return value;
-		}
+	public String getNameCurrentLanguageId() {
+		return _nameCurrentLanguageId;
+	}
+
+	@JSON
+	public String getNameCurrentValue() {
+		Locale locale = getLocale(_nameCurrentLanguageId);
+
+		return getName(locale);
 	}
 
 	public Map<Locale, String> getNameMap() {
@@ -457,6 +491,10 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 			setName(LocalizationUtil.removeLocalization(getName(), "Name",
 					languageId));
 		}
+	}
+
+	public void setNameCurrentLanguageId(String languageId) {
+		_nameCurrentLanguageId = languageId;
 	}
 
 	public void setNameMap(Map<Locale, String> nameMap) {
@@ -500,26 +538,23 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 	}
 
 	public String getTitle(String languageId) {
-		String value = LocalizationUtil.getLocalization(getTitle(), languageId);
-
-		if (isEscapedModel()) {
-			return HtmlUtil.escape(value);
-		}
-		else {
-			return value;
-		}
+		return LocalizationUtil.getLocalization(getTitle(), languageId);
 	}
 
 	public String getTitle(String languageId, boolean useDefault) {
-		String value = LocalizationUtil.getLocalization(getTitle(), languageId,
-				useDefault);
+		return LocalizationUtil.getLocalization(getTitle(), languageId,
+			useDefault);
+	}
 
-		if (isEscapedModel()) {
-			return HtmlUtil.escape(value);
-		}
-		else {
-			return value;
-		}
+	public String getTitleCurrentLanguageId() {
+		return _titleCurrentLanguageId;
+	}
+
+	@JSON
+	public String getTitleCurrentValue() {
+		Locale locale = getLocale(_titleCurrentLanguageId);
+
+		return getTitle(locale);
 	}
 
 	public Map<Locale, String> getTitleMap() {
@@ -546,6 +581,10 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 			setTitle(LocalizationUtil.removeLocalization(getTitle(), "Title",
 					languageId));
 		}
+	}
+
+	public void setTitleCurrentLanguageId(String languageId) {
+		_titleCurrentLanguageId = languageId;
 	}
 
 	public void setTitleMap(Map<Locale, String> titleMap) {
@@ -589,27 +628,23 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 	}
 
 	public String getDescription(String languageId) {
-		String value = LocalizationUtil.getLocalization(getDescription(),
-				languageId);
-
-		if (isEscapedModel()) {
-			return HtmlUtil.escape(value);
-		}
-		else {
-			return value;
-		}
+		return LocalizationUtil.getLocalization(getDescription(), languageId);
 	}
 
 	public String getDescription(String languageId, boolean useDefault) {
-		String value = LocalizationUtil.getLocalization(getDescription(),
-				languageId, useDefault);
+		return LocalizationUtil.getLocalization(getDescription(), languageId,
+			useDefault);
+	}
 
-		if (isEscapedModel()) {
-			return HtmlUtil.escape(value);
-		}
-		else {
-			return value;
-		}
+	public String getDescriptionCurrentLanguageId() {
+		return _descriptionCurrentLanguageId;
+	}
+
+	@JSON
+	public String getDescriptionCurrentValue() {
+		Locale locale = getLocale(_descriptionCurrentLanguageId);
+
+		return getDescription(locale);
 	}
 
 	public Map<Locale, String> getDescriptionMap() {
@@ -638,6 +673,10 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 			setDescription(LocalizationUtil.removeLocalization(
 					getDescription(), "Description", languageId));
 		}
+	}
+
+	public void setDescriptionCurrentLanguageId(String languageId) {
+		_descriptionCurrentLanguageId = languageId;
 	}
 
 	public void setDescriptionMap(Map<Locale, String> descriptionMap) {
@@ -682,27 +721,23 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 	}
 
 	public String getKeywords(String languageId) {
-		String value = LocalizationUtil.getLocalization(getKeywords(),
-				languageId);
-
-		if (isEscapedModel()) {
-			return HtmlUtil.escape(value);
-		}
-		else {
-			return value;
-		}
+		return LocalizationUtil.getLocalization(getKeywords(), languageId);
 	}
 
 	public String getKeywords(String languageId, boolean useDefault) {
-		String value = LocalizationUtil.getLocalization(getKeywords(),
-				languageId, useDefault);
+		return LocalizationUtil.getLocalization(getKeywords(), languageId,
+			useDefault);
+	}
 
-		if (isEscapedModel()) {
-			return HtmlUtil.escape(value);
-		}
-		else {
-			return value;
-		}
+	public String getKeywordsCurrentLanguageId() {
+		return _keywordsCurrentLanguageId;
+	}
+
+	@JSON
+	public String getKeywordsCurrentValue() {
+		Locale locale = getLocale(_keywordsCurrentLanguageId);
+
+		return getKeywords(locale);
 	}
 
 	public Map<Locale, String> getKeywordsMap() {
@@ -729,6 +764,10 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 			setKeywords(LocalizationUtil.removeLocalization(getKeywords(),
 					"Keywords", languageId));
 		}
+	}
+
+	public void setKeywordsCurrentLanguageId(String languageId) {
+		_keywordsCurrentLanguageId = languageId;
 	}
 
 	public void setKeywordsMap(Map<Locale, String> keywordsMap) {
@@ -773,26 +812,23 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 	}
 
 	public String getRobots(String languageId) {
-		String value = LocalizationUtil.getLocalization(getRobots(), languageId);
-
-		if (isEscapedModel()) {
-			return HtmlUtil.escape(value);
-		}
-		else {
-			return value;
-		}
+		return LocalizationUtil.getLocalization(getRobots(), languageId);
 	}
 
 	public String getRobots(String languageId, boolean useDefault) {
-		String value = LocalizationUtil.getLocalization(getRobots(),
-				languageId, useDefault);
+		return LocalizationUtil.getLocalization(getRobots(), languageId,
+			useDefault);
+	}
 
-		if (isEscapedModel()) {
-			return HtmlUtil.escape(value);
-		}
-		else {
-			return value;
-		}
+	public String getRobotsCurrentLanguageId() {
+		return _robotsCurrentLanguageId;
+	}
+
+	@JSON
+	public String getRobotsCurrentValue() {
+		Locale locale = getLocale(_robotsCurrentLanguageId);
+
+		return getRobots(locale);
 	}
 
 	public Map<Locale, String> getRobotsMap() {
@@ -819,6 +855,10 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 			setRobots(LocalizationUtil.removeLocalization(getRobots(),
 					"Robots", languageId));
 		}
+	}
+
+	public void setRobotsCurrentLanguageId(String languageId) {
+		_robotsCurrentLanguageId = languageId;
 	}
 
 	public void setRobotsMap(Map<Locale, String> robotsMap) {
@@ -951,7 +991,19 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 	}
 
 	public void setStatus(int status) {
+		_columnBitmask |= STATUS_COLUMN_BITMASK;
+
+		if (!_setOriginalStatus) {
+			_setOriginalStatus = true;
+
+			_originalStatus = _status;
+		}
+
 		_status = status;
+	}
+
+	public int getOriginalStatus() {
+		return _originalStatus;
 	}
 
 	@JSON
@@ -1038,20 +1090,19 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 		}
 	}
 
+	public long getColumnBitmask() {
+		return _columnBitmask;
+	}
+
 	@Override
 	public LayoutRevision toEscapedModel() {
-		if (isEscapedModel()) {
-			return (LayoutRevision)this;
+		if (_escapedModelProxy == null) {
+			_escapedModelProxy = (LayoutRevision)ProxyUtil.newProxyInstance(_classLoader,
+					_escapedModelProxyInterfaces,
+					new AutoEscapeBeanHandler(this));
 		}
-		else {
-			if (_escapedModelProxy == null) {
-				_escapedModelProxy = (LayoutRevision)Proxy.newProxyInstance(_classLoader,
-						_escapedModelProxyInterfaces,
-						new AutoEscapeBeanHandler(this));
-			}
 
-			return _escapedModelProxy;
-		}
+		return _escapedModelProxy;
 	}
 
 	@Override
@@ -1170,6 +1221,14 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 
 		layoutRevisionModelImpl._setOriginalLayoutSetBranchId = false;
 
+		layoutRevisionModelImpl._originalLayoutBranchId = layoutRevisionModelImpl._layoutBranchId;
+
+		layoutRevisionModelImpl._setOriginalLayoutBranchId = false;
+
+		layoutRevisionModelImpl._originalParentLayoutRevisionId = layoutRevisionModelImpl._parentLayoutRevisionId;
+
+		layoutRevisionModelImpl._setOriginalParentLayoutRevisionId = false;
+
 		layoutRevisionModelImpl._originalHead = layoutRevisionModelImpl._head;
 
 		layoutRevisionModelImpl._setOriginalHead = false;
@@ -1177,6 +1236,12 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 		layoutRevisionModelImpl._originalPlid = layoutRevisionModelImpl._plid;
 
 		layoutRevisionModelImpl._setOriginalPlid = false;
+
+		layoutRevisionModelImpl._originalStatus = layoutRevisionModelImpl._status;
+
+		layoutRevisionModelImpl._setOriginalStatus = false;
+
+		layoutRevisionModelImpl._columnBitmask = 0;
 	}
 
 	@Override
@@ -1571,7 +1636,11 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 	private long _originalLayoutSetBranchId;
 	private boolean _setOriginalLayoutSetBranchId;
 	private long _layoutBranchId;
+	private long _originalLayoutBranchId;
+	private boolean _setOriginalLayoutBranchId;
 	private long _parentLayoutRevisionId;
+	private long _originalParentLayoutRevisionId;
+	private boolean _setOriginalParentLayoutRevisionId;
 	private boolean _head;
 	private boolean _originalHead;
 	private boolean _setOriginalHead;
@@ -1581,10 +1650,15 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 	private boolean _setOriginalPlid;
 	private boolean _privateLayout;
 	private String _name;
+	private String _nameCurrentLanguageId;
 	private String _title;
+	private String _titleCurrentLanguageId;
 	private String _description;
+	private String _descriptionCurrentLanguageId;
 	private String _keywords;
+	private String _keywordsCurrentLanguageId;
 	private String _robots;
+	private String _robotsCurrentLanguageId;
 	private String _typeSettings;
 	private boolean _iconImage;
 	private long _iconImageId;
@@ -1594,10 +1668,13 @@ public class LayoutRevisionModelImpl extends BaseModelImpl<LayoutRevision>
 	private String _wapColorSchemeId;
 	private String _css;
 	private int _status;
+	private int _originalStatus;
+	private boolean _setOriginalStatus;
 	private long _statusByUserId;
 	private String _statusByUserUuid;
 	private String _statusByUserName;
 	private Date _statusDate;
 	private transient ExpandoBridge _expandoBridge;
+	private long _columnBitmask;
 	private LayoutRevision _escapedModelProxy;
 }

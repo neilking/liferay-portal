@@ -23,7 +23,8 @@ package com.liferay.portal.service;
  * @see       LayoutBranchLocalService
  * @generated
  */
-public class LayoutBranchLocalServiceWrapper implements LayoutBranchLocalService {
+public class LayoutBranchLocalServiceWrapper implements LayoutBranchLocalService,
+	ServiceWrapper<LayoutBranchLocalService> {
 	public LayoutBranchLocalServiceWrapper(
 		LayoutBranchLocalService layoutBranchLocalService) {
 		_layoutBranchLocalService = layoutBranchLocalService;
@@ -265,6 +266,26 @@ public class LayoutBranchLocalServiceWrapper implements LayoutBranchLocalService
 			name, description, master, serviceContext);
 	}
 
+	public void deleteLayoutSetBranchLayoutBranches(long layoutSetBranchId)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		_layoutBranchLocalService.deleteLayoutSetBranchLayoutBranches(layoutSetBranchId);
+	}
+
+	public java.util.List<com.liferay.portal.model.LayoutBranch> getLayoutBranches(
+		long layoutSetBranchId, long plid, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator orderByComparator)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _layoutBranchLocalService.getLayoutBranches(layoutSetBranchId,
+			plid, start, end, orderByComparator);
+	}
+
+	public java.util.List<com.liferay.portal.model.LayoutBranch> getLayoutSetBranchLayoutBranches(
+		long layoutSetBranchId)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _layoutBranchLocalService.getLayoutSetBranchLayoutBranches(layoutSetBranchId);
+	}
+
 	public com.liferay.portal.model.LayoutBranch getMasterLayoutBranch(
 		long layoutSetBranchId, long plid)
 		throws com.liferay.portal.kernel.exception.PortalException,
@@ -273,11 +294,36 @@ public class LayoutBranchLocalServiceWrapper implements LayoutBranchLocalService
 			plid);
 	}
 
+	public com.liferay.portal.model.LayoutBranch updateLayoutBranch(
+		long layoutBranchId, java.lang.String name,
+		java.lang.String description,
+		com.liferay.portal.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return _layoutBranchLocalService.updateLayoutBranch(layoutBranchId,
+			name, description, serviceContext);
+	}
+
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public LayoutBranchLocalService getWrappedLayoutBranchLocalService() {
 		return _layoutBranchLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedLayoutBranchLocalService(
+		LayoutBranchLocalService layoutBranchLocalService) {
+		_layoutBranchLocalService = layoutBranchLocalService;
+	}
+
+	public LayoutBranchLocalService getWrappedService() {
+		return _layoutBranchLocalService;
+	}
+
+	public void setWrappedService(
 		LayoutBranchLocalService layoutBranchLocalService) {
 		_layoutBranchLocalService = layoutBranchLocalService;
 	}

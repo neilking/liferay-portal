@@ -26,12 +26,12 @@ public class EnterDefaultUserAssociationsCommunityTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent("link=Control Panel")) {
+				if (selenium.isVisible("link=Control Panel")) {
 					break;
 				}
 			}
@@ -41,28 +41,62 @@ public class EnterDefaultUserAssociationsCommunityTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Control Panel", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Control Panel",
+			RuntimeVariables.replace("Control Panel"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Portal Settings", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Portal Settings",
+			RuntimeVariables.replace("Portal Settings"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("_130_usersLink", RuntimeVariables.replace("Users"));
+
+		for (int second = 0;; second++) {
+			if (second >= 90) {
+				fail("timeout");
+			}
+
+			try {
+				if (selenium.isVisible("//a[@id='_130_usersLink']")) {
+					break;
+				}
+			}
+			catch (Exception e) {
+			}
+
+			Thread.sleep(1000);
+		}
+
+		selenium.clickAt("//a[@id='_130_usersLink']",
+			RuntimeVariables.replace("Users"));
 		selenium.clickAt("link=Default User Associations",
-			RuntimeVariables.replace(""));
-		selenium.type("_130_settings--admin.default.group.names--",
-			RuntimeVariables.replace("Guest "));
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("//input[@value='Save']", RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Default User Associations"));
+		selenium.type("//textarea[@name='_130_settings--admin.default.group.names--']",
+			RuntimeVariables.replace("Guest"));
+		selenium.clickAt("//input[@value='Save']",
+			RuntimeVariables.replace("Save"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
+
+		for (int second = 0;; second++) {
+			if (second >= 90) {
+				fail("timeout");
+			}
+
+			try {
+				if (selenium.isVisible("//div[@class='portlet-msg-success']")) {
+					break;
+				}
+			}
+			catch (Exception e) {
+			}
+
+			Thread.sleep(1000);
+		}
+
 		assertEquals(RuntimeVariables.replace(
 				"Your request completed successfully."),
-			selenium.getText("//section/div/div/div/div[1]"));
+			selenium.getText("//div[@class='portlet-msg-success']"));
 		selenium.clickAt("link=Default User Associations",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Default User Associations"));
 		assertEquals("Guest",
-			selenium.getValue("_130_settings--admin.default.group.names--"));
+			selenium.getValue(
+				"//textarea[@name='_130_settings--admin.default.group.names--']"));
 	}
 }

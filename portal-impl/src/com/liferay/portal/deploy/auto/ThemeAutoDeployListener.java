@@ -28,10 +28,10 @@ import java.io.File;
 public class ThemeAutoDeployListener extends BaseAutoDeployListener {
 
 	public ThemeAutoDeployListener() {
-		_deployer = new ThemeAutoDeployer();
+		_autoDeployer = new ThemeAutoDeployer();
 	}
 
-	public void deploy(File file) throws AutoDeployException {
+	public void deploy(File file, String context) throws AutoDeployException {
 		if (_log.isDebugEnabled()) {
 			_log.debug("Invoking deploy for " + file.getPath());
 		}
@@ -44,7 +44,7 @@ public class ThemeAutoDeployListener extends BaseAutoDeployListener {
 			_log.info("Copying themes for " + file.getPath());
 		}
 
-		_deployer.autoDeploy(file.getName());
+		_autoDeployer.autoDeploy(file, context);
 
 		if (_log.isInfoEnabled()) {
 			_log.info(
@@ -56,6 +56,6 @@ public class ThemeAutoDeployListener extends BaseAutoDeployListener {
 	private static Log _log = LogFactoryUtil.getLog(
 		ThemeAutoDeployListener.class);
 
-	private AutoDeployer _deployer;
+	private AutoDeployer _autoDeployer;
 
 }

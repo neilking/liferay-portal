@@ -17,32 +17,26 @@ package com.liferay.portlet.layoutsadmin.action;
 import com.liferay.portal.NoSuchGroupException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.upload.UploadException;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.util.Constants;
-import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PropertiesParamUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.model.ColorScheme;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.model.LayoutSet;
-import com.liferay.portal.model.Theme;
-import com.liferay.portal.model.impl.ThemeSettingImpl;
 import com.liferay.portal.security.auth.PrincipalException;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.service.GroupServiceUtil;
 import com.liferay.portal.service.LayoutSetLocalServiceUtil;
 import com.liferay.portal.service.LayoutSetServiceUtil;
-import com.liferay.portal.service.ThemeLocalServiceUtil;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.WebKeys;
-import com.liferay.util.servlet.UploadException;
 
-import java.io.File;
+import java.io.InputStream;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -171,28 +165,36 @@ public class EditLayoutSetAction extends EditLayoutsAction {
 			long stagingGroupId, boolean privateLayout, boolean hasLogo)
 		throws Exception {
 
-		UploadPortletRequest uploadRequest = PortalUtil.getUploadPortletRequest(
-			actionRequest);
+		UploadPortletRequest uploadPortletRequest =
+			PortalUtil.getUploadPortletRequest(actionRequest);
 
 		boolean useLogo = ParamUtil.getBoolean(actionRequest, "useLogo");
 
-		File file = uploadRequest.getFile( "logoFileName");
-		byte[] bytes = FileUtil.getBytes(file);
+		InputStream inputStream = uploadPortletRequest.getFileAsStream(
+			"logoFileName");
 
-		if (useLogo && ((bytes == null) || (bytes.length == 0))) {
+		if (useLogo && (inputStream == null)) {
 			if (hasLogo) {
 				return;
 			}
 
-			throw new UploadException();
+			throw new UploadException("No logo uploaded for use");
+		}
+
+		if (inputStream != null) {
+			inputStream.mark(0);
 		}
 
 		LayoutSetServiceUtil.updateLogo(
-			liveGroupId, privateLayout, useLogo, file);
+			liveGroupId, privateLayout, useLogo, inputStream);
+
+		if (inputStream != null) {
+			inputStream.reset();
+		}
 
 		if (stagingGroupId > 0) {
 			LayoutSetServiceUtil.updateLogo(
-				stagingGroupId, privateLayout, useLogo, file);
+				stagingGroupId, privateLayout, useLogo, inputStream);
 		}
 	}
 
@@ -214,45 +216,9 @@ public class EditLayoutSetAction extends EditLayoutsAction {
 			boolean wapTheme = device.equals("wap");
 
 			if (Validator.isNotNull(themeId)) {
-				Theme theme = ThemeLocalServiceUtil.getTheme(
-					companyId, themeId, wapTheme);
-
-				if (!theme.hasColorSchemes()) {
-					colorSchemeId = StringPool.BLANK;
-				}
-
-				if (Validator.isNull(colorSchemeId)) {
-					ColorScheme colorScheme =
-						ThemeLocalServiceUtil.getColorScheme(
-							companyId, themeId, colorSchemeId, wapTheme);
-
-					colorSchemeId = colorScheme.getColorSchemeId();
-				}
-
-				deleteThemeSettings(typeSettingsProperties, device);
-
-				if (Validator.equals(themeId, oldThemeId)) {
-					UnicodeProperties themeSettingsProperties =
-						PropertiesParamUtil.getProperties(
-							actionRequest,
-							device + "ThemeSettingsProperties--");
-
-					for (String key : themeSettingsProperties.keySet()) {
-						String defaultValue = theme.getSetting(key);
-						String newValue = themeSettingsProperties.get(key);
-
-						if (!newValue.equals(defaultValue)) {
-							typeSettingsProperties.setProperty(
-								ThemeSettingImpl.namespaceProperty(device, key),
-								newValue);
-						}
-						else {
-							typeSettingsProperties.remove(
-								ThemeSettingImpl.namespaceProperty(
-									device, key));
-						}
-					}
-				}
+				colorSchemeId = getColorSchemeId(
+					actionRequest, companyId, typeSettingsProperties, device,
+					themeId, colorSchemeId, wapTheme);
 			}
 
 			long groupId = liveGroupId;
@@ -262,8 +228,7 @@ public class EditLayoutSetAction extends EditLayoutsAction {
 			}
 
 			LayoutSetServiceUtil.updateLookAndFeel(
-				groupId, privateLayout, themeId, colorSchemeId,
-				css, wapTheme);
+				groupId, privateLayout, themeId, colorSchemeId, css, wapTheme);
 		}
 	}
 

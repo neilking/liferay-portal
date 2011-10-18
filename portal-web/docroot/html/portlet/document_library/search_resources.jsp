@@ -21,6 +21,12 @@ String redirect = ParamUtil.getString(request, "redirect");
 
 long breadcrumbsFolderId = ParamUtil.getLong(request, "breadcrumbsFolderId");
 
+long repositoryId = ParamUtil.getLong(request, "repositoryId");
+
+if (repositoryId == 0) {
+	repositoryId = scopeGroupId;
+}
+
 long folderId = ParamUtil.getLong(request, "folderId");
 
 long searchFolderId = ParamUtil.getLong(request, "searchFolderId");
@@ -50,11 +56,16 @@ String keywords = ParamUtil.getString(request, "keywords");
 String displayStyle = ParamUtil.getString(request, "displayStyle");
 
 if (Validator.isNull(displayStyle)) {
-	displayStyle = portalPreferences.getValue(PortletKeys.DOCUMENT_LIBRARY, "display-style", "icon");
+	displayStyle = portalPreferences.getValue(PortletKeys.DOCUMENT_LIBRARY, "display-style", PropsValues.DL_DEFAULT_DISPLAY_VIEW);
 }
+
+int entryStart = ParamUtil.getInteger(request, "entryStart");
+int entryEnd = ParamUtil.getInteger(request, "entryEnd", entriesPerPage);
+
+int total = 0;
 %>
 
-<div id="<portlet:namespace />entries">
+<div id="<portlet:namespace />searchResults">
 	<div class="search-info">
 		<span class="keywords">
 			<%= (folder != null) ? LanguageUtil.format(pageContext, "searched-for-x-in-x", new Object[] {keywords, folder.getName()}) : LanguageUtil.format(pageContext, "searched-for-x-in-every-folder", keywords) %>
@@ -93,23 +104,26 @@ if (Validator.isNull(displayStyle)) {
 
 			List<String> headerNames = new ArrayList<String>();
 
-			headerNames.add("name");
-			headerNames.add("description");
-			headerNames.add("size");
-			headerNames.add("create-date");
-			headerNames.add("modified-date");
-			headerNames.add("read-count");
-			headerNames.add(StringPool.BLANK);
+			for (String headerName : entryColumns) {
+				if (headerName.equals("action")) {
+					headerName = StringPool.BLANK;
+				}
+				else if (headerName.equals("name")) {
+					headerName = "title";
+				}
 
-			SearchContainer searchContainer = new SearchContainer(liferayPortletRequest, null, null, SearchContainer.DEFAULT_CUR_PARAM, SearchContainer.DEFAULT_DELTA, portletURL, headerNames, LanguageUtil.format(pageContext, "no-documents-were-found-that-matched-the-keywords-x", "<strong>" + HtmlUtil.escape(keywords) + "</strong>"));
+				headerNames.add(headerName);
+			}
+
+			SearchContainer searchContainer = new SearchContainer(liferayPortletRequest, null, null, SearchContainer.DEFAULT_CUR_PARAM, entriesPerPage, portletURL, headerNames, LanguageUtil.format(pageContext, "no-documents-were-found-that-matched-the-keywords-x", "<strong>" + HtmlUtil.escape(keywords) + "</strong>"));
 
 			Map<String, String> orderableHeaders = new HashMap<String, String>();
 
-			orderableHeaders.put("name", "name");
+			orderableHeaders.put("title", "title");
 			orderableHeaders.put("size", "size");
 			orderableHeaders.put("create-date", "creationDate");
 			orderableHeaders.put("modified-date", "modifiedDate");
-			orderableHeaders.put("read-count", "readCount");
+			orderableHeaders.put("downloads", "downloads");
 
 			searchContainer.setOrderableHeaders(orderableHeaders);
 
@@ -125,39 +139,25 @@ if (Validator.isNull(displayStyle)) {
 
 			searchContainer.setOrderByComparator(orderByComparator);
 
-			searchContainer.setRowChecker(new RowChecker(liferayPortletResponse));
-
-			Hits results = null;
+			searchContainer.setRowChecker(new EntriesChecker(liferayPortletRequest, liferayPortletResponse));
 
 			try {
-				Indexer indexer = IndexerRegistryUtil.getIndexer(DLFileEntryConstants.getClassName());
-
 				SearchContext searchContext = SearchContextFactory.getInstance(request);
 
-				searchContext.setAttribute("paginationType", "more");
-				searchContext.setEnd(searchContainer.getEnd());
+				searchContext.setAttribute("paginationType", "regular");
+				searchContext.setEnd(entryEnd);
 				searchContext.setFolderIds(folderIdsArray);
 				searchContext.setKeywords(keywords);
-				searchContext.setStart(searchContainer.getStart());
+				searchContext.setStart(entryStart);
 
-				results = indexer.search(searchContext);
+				Hits hits = DLAppServiceUtil.search(repositoryId, searchContext);
 
-				int total = results.getLength();
+				List results = new ArrayList();
 
-				searchContainer.setTotal(total);
-				%>
-
-				<c:if test='<%= !displayStyle.equals("list") && (results.getLength() > 0) %>'>
-					<div class="taglib-search-iterator-page-iterator-top">
-						<liferay-ui:search-paginator searchContainer="<%= searchContainer %>" />
-					</div>
-				</c:if>
-
-				<%
 				List resultRows = searchContainer.getResultRows();
 
-				for (int i = 0; i < results.getDocs().length; i++) {
-					Document doc = results.doc(i);
+				for (int i = 0; i < hits.getDocs().length; i++) {
+					Document doc = hits.doc(i);
 
 					// Folder and document
 
@@ -175,7 +175,20 @@ if (Validator.isNull(displayStyle)) {
 
 						continue;
 					}
-					%>
+
+					results.add(fileEntry);
+				}
+
+				total = results.size();
+
+				searchContainer.setResults(results);
+				searchContainer.setTotal(total);
+
+				for (int i = 0; i < results.size(); i++) {
+					Object result = results.get(i);
+				%>
+
+					<%@ include file="/html/portlet/document_library/cast_result.jspf" %>
 
 					<c:choose>
 						<c:when test='<%= !displayStyle.equals("list") %>'>
@@ -215,11 +228,11 @@ if (Validator.isNull(displayStyle)) {
 						<c:otherwise>
 
 							<%
-							ResultRow row = new ResultRow(doc, i, i);
+							resultRows = searchContainer.getResultRows();
+
+							ResultRow row = new ResultRow(fileEntry, fileEntry.getFileEntryId(), i);
 
 							// Position
-
-							row.setObject(fileEntry);
 
 							PortletURL rowURL = liferayPortletResponse.createRenderURL();
 
@@ -227,19 +240,31 @@ if (Validator.isNull(displayStyle)) {
 							rowURL.setParameter("redirect", currentURL);
 							rowURL.setParameter("fileEntryId", String.valueOf(fileEntry.getFileEntryId()));
 
-							String rowHREF = rowURL.toString();
+							for (String columnName : entryColumns) {
+								if (columnName.equals("action")) {
+									row.addJSP("right", SearchEntry.DEFAULT_VALIGN, "/html/portlet/document_library/file_entry_action.jsp");
+								}
 
-							row.addText(fileEntry.getTitle(), rowHREF);
+								if (columnName.equals("create-date")) {
+									row.addText(dateFormatDateTime.format(fileEntry.getCreateDate()));
+								}
 
-							row.addText(fileEntry.getDescription(), rowHREF);
-							row.addText(TextFormatter.formatKB(fileEntry.getSize(), locale) + "k");
-							row.addText(dateFormatDateTime.format(fileEntry.getCreateDate()));
-							row.addText(dateFormatDateTime.format(fileEntry.getModifiedDate()));
-							row.addText(String.valueOf(fileEntry.getReadCount()));
+								if (columnName.equals("downloads")) {
+									row.addText(String.valueOf(fileEntry.getReadCount()));
+								}
 
-							// Action
+								if (columnName.equals("modified-date")) {
+									row.addText(dateFormatDateTime.format(fileEntry.getModifiedDate()));
+								}
 
-							row.addJSP("right", SearchEntry.DEFAULT_VALIGN, "/html/portlet/document_library/file_entry_action.jsp");
+								if (columnName.equals("name")) {
+									row.addText(fileEntry.getTitle(), rowURL);
+								}
+
+								if (columnName.equals("size")) {
+									row.addText(TextFormatter.formatKB(fileEntry.getSize(), locale) + "k");
+								}
+							}
 
 							// Add result row
 
@@ -263,11 +288,6 @@ if (Validator.isNull(displayStyle)) {
 			}
 			%>
 
-			<c:if test='<%= !displayStyle.equals("list") && (results.getLength() > 0) %>'>
-				<div class="taglib-search-iterator-page-iterator-top">
-					<liferay-ui:search-paginator searchContainer="<%= searchContainer %>" />
-				</div>
-			</c:if>
 		</aui:form>
 	</div>
 
@@ -281,96 +301,48 @@ if (Validator.isNull(displayStyle)) {
 	PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(pageContext, "search") + ": " + keywords, currentURL);
 	%>
 
-	<aui:script use="aui-base">
-		<portlet:resourceURL var="changeSearchFolder">
-			<portlet:param name="struts_action" value="/document_library/search" />
-			<portlet:param name="folderId" value="<%= String.valueOf(folderId) %>" />
-			<portlet:param name="searchFolderId" value="<%= (folder != null) ? String.valueOf(DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) : String.valueOf(folderId) %>" />
-			<portlet:param name="keywords" value="<%= keywords %>" />
-		</portlet:resourceURL>
-
-		Liferay.provide(
-			window,
-			'<portlet:namespace />changeSearchFolder',
-			function() {
-
-				var documentContainer = A.one('#<portlet:namespace />documentContainer');
-
-				documentContainer.plug(A.LoadingMask);
-
-				documentContainer.loadingmask.toggle();
-
-				A.io.request(
-					'<%= changeSearchFolder.toString() %>',
-					{
-						after: {
-							success: function(event, id, obj) {
-								documentContainer.unplug(A.LoadingMask);
-
-								var responseData = this.get('responseData');
-
-								var content = A.Node.create(responseData);
-
-								A.one('#<portlet:namespace />displayStyleToolbar').empty();
-
-								var displayStyleButtonsContainer = A.one('#<portlet:namespace />displayStyleButtonsContainer');
-								var displayStyleButtons = content.one('#<portlet:namespace />displayStyleButtons');
-
-								displayStyleButtonsContainer.plug(A.Plugin.ParseContent);
-								displayStyleButtonsContainer.setContent(displayStyleButtons);
-
-								var entries = content.one('#<portlet:namespace />entries');
-
-								documentContainer.setContent(entries);
-							}
-						}
+	<aui:script>
+		function <portlet:namespace />changeSearchFolder() {
+			Liferay.fire(
+				'<portlet:namespace />dataRequest',
+				{
+					requestParams: {
+						'<portlet:namespace />struts_action': '/document_library/search',
+						'<portlet:namespace />folderId': '<%= String.valueOf(folderId) %>',
+						'<portlet:namespace />searchFolderId': '<%= (folder != null) ? String.valueOf(DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) : String.valueOf(folderId) %>',
+						'<portlet:namespace />keywords': document.<portlet:namespace />fm1.<portlet:namespace />keywords.value
 					}
-				);
-			},
-			['aui-base,aui-io']
+				}
+			);
+		}
+
+		Liferay.fire(
+			'<portlet:namespace />pageLoaded',
+			{
+				paginator: {
+					name: 'entryPaginator',
+					state: {
+						page: <%= entryEnd / (entryEnd - entryStart) %>,
+						rowsPerPage: <%= (entryEnd - entryStart) %>,
+						total: <%= total %>
+					}
+				}
+			}
 		);
 	</aui:script>
 
-	<aui:script use="aui-io">
-		<portlet:resourceURL var="closeSearch">
-			<portlet:param name="struts_action" value="/document_library/view" />
-			<portlet:param name="folderId" value="<%= String.valueOf(folderId) %>" />
-			<portlet:param name="viewDisplayStyleButtons" value="<%= Boolean.TRUE.toString() %>" />
-			<portlet:param name="viewEntries" value="<%= Boolean.TRUE.toString() %>" />
-		</portlet:resourceURL>
-
+	<aui:script use="aui-base">
 		A.one('#<portlet:namespace />closeSearch').on(
 			'click',
 			function(event) {
-				var documentContainer = A.one('#<portlet:namespace />documentContainer');
-
-				documentContainer.plug(A.LoadingMask);
-
-				documentContainer.loadingmask.toggle();
-
-				A.io.request(
-					'<%= closeSearch.toString() %>',
+				Liferay.fire(
+					'<portlet:namespace />dataRequest',
 					{
-						after: {
-							success: function(event, id, obj) {
-								documentContainer.unplug(A.LoadingMask);
-
-								var responseData = this.get('responseData');
-
-								var content = A.Node.create(responseData);
-
-								A.one('#<portlet:namespace />displayStyleToolbar').empty();
-
-								var displayStyleButtonsContainer = A.one('#<portlet:namespace />displayStyleButtonsContainer');
-								var displayStyleButtons = content.one('#<portlet:namespace />displayStyleButtons');
-
-								displayStyleButtonsContainer.plug(A.Plugin.ParseContent);
-								displayStyleButtonsContainer.setContent(displayStyleButtons);
-
-								var entries = content.one('#<portlet:namespace />entries');
-
-								documentContainer.setContent(entries);
-							}
+						requestParams: {
+							'<portlet:namespace />struts_action': '/document_library/view',
+							'<portlet:namespace />folderId': '<%= String.valueOf(folderId) %>',
+							'<portlet:namespace />viewDisplayStyleButtons': <%= Boolean.TRUE.toString() %>,
+							'<portlet:namespace />viewEntries': <%= Boolean.TRUE.toString() %>
 						}
 					}
 				);

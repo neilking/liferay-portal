@@ -17,6 +17,7 @@ package com.liferay.portal.model.impl;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.CacheModel;
@@ -25,8 +26,6 @@ import com.liferay.portal.model.ListTypeModel;
 import com.liferay.portal.model.ListTypeSoap;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Proxy;
 
 import java.sql.Types;
 
@@ -73,6 +72,10 @@ public class ListTypeModelImpl extends BaseModelImpl<ListType>
 	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
 				"value.object.finder.cache.enabled.com.liferay.portal.model.ListType"),
 			true);
+	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.column.bitmask.enabled.com.liferay.portal.model.ListType"),
+			true);
+	public static long TYPE_COLUMN_BITMASK = 1L;
 
 	/**
 	 * Converts the soap model instance into a normal model instance.
@@ -106,14 +109,6 @@ public class ListTypeModelImpl extends BaseModelImpl<ListType>
 		return models;
 	}
 
-	public Class<?> getModelClass() {
-		return ListType.class;
-	}
-
-	public String getModelClassName() {
-		return ListType.class.getName();
-	}
-
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(com.liferay.portal.util.PropsUtil.get(
 				"lock.expiration.time.com.liferay.portal.model.ListType"));
 
@@ -134,6 +129,14 @@ public class ListTypeModelImpl extends BaseModelImpl<ListType>
 
 	public void setPrimaryKeyObj(Serializable primaryKeyObj) {
 		setPrimaryKey(((Integer)primaryKeyObj).intValue());
+	}
+
+	public Class<?> getModelClass() {
+		return ListType.class;
+	}
+
+	public String getModelClassName() {
+		return ListType.class.getName();
 	}
 
 	@JSON
@@ -170,23 +173,32 @@ public class ListTypeModelImpl extends BaseModelImpl<ListType>
 	}
 
 	public void setType(String type) {
+		_columnBitmask |= TYPE_COLUMN_BITMASK;
+
+		if (_originalType == null) {
+			_originalType = _type;
+		}
+
 		_type = type;
+	}
+
+	public String getOriginalType() {
+		return GetterUtil.getString(_originalType);
+	}
+
+	public long getColumnBitmask() {
+		return _columnBitmask;
 	}
 
 	@Override
 	public ListType toEscapedModel() {
-		if (isEscapedModel()) {
-			return (ListType)this;
+		if (_escapedModelProxy == null) {
+			_escapedModelProxy = (ListType)ProxyUtil.newProxyInstance(_classLoader,
+					_escapedModelProxyInterfaces,
+					new AutoEscapeBeanHandler(this));
 		}
-		else {
-			if (_escapedModelProxy == null) {
-				_escapedModelProxy = (ListType)Proxy.newProxyInstance(_classLoader,
-						_escapedModelProxyInterfaces,
-						new AutoEscapeBeanHandler(this));
-			}
 
-			return _escapedModelProxy;
-		}
+		return _escapedModelProxy;
 	}
 
 	@Override
@@ -247,6 +259,11 @@ public class ListTypeModelImpl extends BaseModelImpl<ListType>
 
 	@Override
 	public void resetOriginalValues() {
+		ListTypeModelImpl listTypeModelImpl = this;
+
+		listTypeModelImpl._originalType = listTypeModelImpl._type;
+
+		listTypeModelImpl._columnBitmask = 0;
 	}
 
 	@Override
@@ -321,5 +338,7 @@ public class ListTypeModelImpl extends BaseModelImpl<ListType>
 	private int _listTypeId;
 	private String _name;
 	private String _type;
+	private String _originalType;
+	private long _columnBitmask;
 	private ListType _escapedModelProxy;
 }

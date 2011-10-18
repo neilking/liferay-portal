@@ -17,6 +17,7 @@ package com.liferay.portlet.social.model.impl;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.model.CacheModel;
 import com.liferay.portal.model.impl.BaseModelImpl;
@@ -29,8 +30,6 @@ import com.liferay.portlet.social.model.SocialEquityHistory;
 import com.liferay.portlet.social.model.SocialEquityHistoryModel;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Proxy;
 
 import java.sql.Types;
 
@@ -76,15 +75,7 @@ public class SocialEquityHistoryModelImpl extends BaseModelImpl<SocialEquityHist
 	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
 				"value.object.finder.cache.enabled.com.liferay.portlet.social.model.SocialEquityHistory"),
 			true);
-
-	public Class<?> getModelClass() {
-		return SocialEquityHistory.class;
-	}
-
-	public String getModelClassName() {
-		return SocialEquityHistory.class.getName();
-	}
-
+	public static final boolean COLUMN_BITMASK_ENABLED = false;
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(com.liferay.portal.util.PropsUtil.get(
 				"lock.expiration.time.com.liferay.portlet.social.model.SocialEquityHistory"));
 
@@ -105,6 +96,14 @@ public class SocialEquityHistoryModelImpl extends BaseModelImpl<SocialEquityHist
 
 	public void setPrimaryKeyObj(Serializable primaryKeyObj) {
 		setPrimaryKey(((Long)primaryKeyObj).longValue());
+	}
+
+	public Class<?> getModelClass() {
+		return SocialEquityHistory.class;
+	}
+
+	public String getModelClassName() {
+		return SocialEquityHistory.class.getName();
 	}
 
 	public long getEquityHistoryId() {
@@ -165,18 +164,13 @@ public class SocialEquityHistoryModelImpl extends BaseModelImpl<SocialEquityHist
 
 	@Override
 	public SocialEquityHistory toEscapedModel() {
-		if (isEscapedModel()) {
-			return (SocialEquityHistory)this;
+		if (_escapedModelProxy == null) {
+			_escapedModelProxy = (SocialEquityHistory)ProxyUtil.newProxyInstance(_classLoader,
+					_escapedModelProxyInterfaces,
+					new AutoEscapeBeanHandler(this));
 		}
-		else {
-			if (_escapedModelProxy == null) {
-				_escapedModelProxy = (SocialEquityHistory)Proxy.newProxyInstance(_classLoader,
-						_escapedModelProxyInterfaces,
-						new AutoEscapeBeanHandler(this));
-			}
 
-			return _escapedModelProxy;
-		}
+		return _escapedModelProxy;
 	}
 
 	@Override

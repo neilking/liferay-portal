@@ -19,7 +19,6 @@ import com.liferay.portal.kernel.freemarker.FreeMarkerVariables;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.language.UnicodeLanguageUtil;
 import com.liferay.portal.kernel.servlet.BrowserSnifferUtil;
-import com.liferay.portal.kernel.servlet.ImageServletTokenUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ArrayUtil_IW;
 import com.liferay.portal.kernel.util.DateUtil_IW;
@@ -39,7 +38,7 @@ import com.liferay.portal.kernel.util.TimeZoneUtil_IW;
 import com.liferay.portal.kernel.util.UnicodeFormatter_IW;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.Validator_IW;
-import com.liferay.portal.kernel.xml.SAXReaderUtil;
+import com.liferay.portal.kernel.xml.SAXReader;
 import com.liferay.portal.model.Layout;
 import com.liferay.portal.model.Theme;
 import com.liferay.portal.service.permission.AccountPermissionUtil;
@@ -64,6 +63,7 @@ import com.liferay.portal.util.WebKeys;
 import com.liferay.portal.velocity.ServiceLocator;
 import com.liferay.portal.velocity.UtilLocator;
 import com.liferay.portal.velocity.VelocityPortletPreferences;
+import com.liferay.portal.webserver.WebServerServletTokenUtil;
 import com.liferay.portlet.PortletConfigImpl;
 import com.liferay.portlet.PortletURLFactoryUtil;
 import com.liferay.portlet.expando.service.ExpandoColumnLocalService;
@@ -164,11 +164,6 @@ public class FreeMarkerVariablesImpl implements FreeMarkerVariables {
 
 		freeMarkerContext.put("httpUtil", HttpUtil.getHttp());
 
-		// Image servlet token
-
-		freeMarkerContext.put(
-			"imageToken", ImageServletTokenUtil.getImageServletToken());
-
 		// Journal content util
 
 		freeMarkerContext.put(
@@ -235,7 +230,7 @@ public class FreeMarkerVariablesImpl implements FreeMarkerVariables {
 
 		freeMarkerContext.put(
 			"saxReaderUtil",
-			utilLocator.findUtil(SAXReaderUtil.class.getName()));
+			utilLocator.findUtil(SAXReader.class.getName()));
 
 		// Service locator
 
@@ -282,6 +277,12 @@ public class FreeMarkerVariablesImpl implements FreeMarkerVariables {
 
 		freeMarkerContext.put("validator", Validator_IW.getInstance());
 
+		// Web server servlet token
+
+		freeMarkerContext.put(
+			"webServerToken",
+			WebServerServletTokenUtil.getWebServerServletToken());
+
 		// Permissions
 
 		freeMarkerContext.put(
@@ -309,6 +310,11 @@ public class FreeMarkerVariablesImpl implements FreeMarkerVariables {
 			UserGroupPermissionUtil.getUserGroupPermission());
 		freeMarkerContext.put(
 			"userPermission", UserPermissionUtil.getUserPermission());
+
+		// Deprecated
+
+		freeMarkerContext.put(
+			"imageToken", WebServerServletTokenUtil.getWebServerServletToken());
 	}
 
 	public void insertVariables(

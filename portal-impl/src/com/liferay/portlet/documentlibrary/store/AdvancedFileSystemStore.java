@@ -14,6 +14,7 @@
 
 package com.liferay.portlet.documentlibrary.store;
 
+import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.StringBundler;
@@ -58,11 +59,11 @@ public class AdvancedFileSystemStore extends FileSystemStore {
 
 	@Override
 	public void updateFile(
-		long companyId, String portletId, long groupId, long repositoryId,
-		String fileName, String newFileName) {
+			long companyId, long repositoryId, String fileName,
+			String newFileName)
+		throws SystemException {
 
-		super.updateFile(
-			companyId, portletId, groupId, repositoryId, fileName, newFileName);
+		super.updateFile(companyId, repositoryId, fileName, newFileName);
 
 		File newFileNameDir = getFileNameDir(
 			companyId, repositoryId, newFileName);
@@ -139,7 +140,7 @@ public class AdvancedFileSystemStore extends FileSystemStore {
 	}
 
 	protected int getDepth(String path) {
-		String[] fragments = StringUtil.split(path, StringPool.SLASH);
+		String[] fragments = StringUtil.split(path, CharPool.SLASH);
 
 		return fragments.length;
 	}
@@ -234,38 +235,38 @@ public class AdvancedFileSystemStore extends FileSystemStore {
 	}
 
 	@Override
-	protected String getHeadVersionNumber(
+	protected String getHeadVersionLabel(
 		long companyId, long repositoryId, String fileName) {
 
 		File fileNameDir = getFileNameDir(companyId, repositoryId, fileName);
 
 		if (!fileNameDir.exists()) {
-			return DEFAULT_VERSION;
+			return VERSION_DEFAULT;
 		}
 
-		String[] versionNumbers = FileUtil.listFiles(fileNameDir);
+		String[] versionLabels = FileUtil.listFiles(fileNameDir);
 
-		String headVersionNumber = DEFAULT_VERSION;
+		String headVersionLabel = VERSION_DEFAULT;
 
-		for (int i = 0; i < versionNumbers.length; i++) {
-			String versionNumberFragment = versionNumbers[i];
+		for (int i = 0; i < versionLabels.length; i++) {
+			String versionLabelFragment = versionLabels[i];
 
-			int x = versionNumberFragment.lastIndexOf(CharPool.UNDERLINE);
-			int y = versionNumberFragment.lastIndexOf(CharPool.PERIOD);
+			int x = versionLabelFragment.lastIndexOf(CharPool.UNDERLINE);
+			int y = versionLabelFragment.lastIndexOf(CharPool.PERIOD);
 
 			if (x > -1) {
-				versionNumberFragment = versionNumberFragment.substring(
+				versionLabelFragment = versionLabelFragment.substring(
 					x + 1, y);
 			}
 
-			String versionNumber = versionNumberFragment;
+			String versionLabel = versionLabelFragment;
 
-			if (DLUtil.compareVersions(versionNumber, headVersionNumber) > 0) {
-				headVersionNumber = versionNumber;
+			if (DLUtil.compareVersions(versionLabel, headVersionLabel) > 0) {
+				headVersionLabel = versionLabel;
 			}
 		}
 
-		return headVersionNumber;
+		return headVersionLabel;
 	}
 
 	private static final String _HOOK_EXTENSION = "afsh";

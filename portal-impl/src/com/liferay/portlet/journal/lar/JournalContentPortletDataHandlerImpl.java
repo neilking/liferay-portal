@@ -135,6 +135,12 @@ public class JournalContentPortletDataHandlerImpl
 			return StringPool.BLANK;
 		}
 
+		long previousScopeGroupId = portletDataContext.getScopeGroupId();
+
+		if (articleGroupId != portletDataContext.getScopeGroupId()) {
+			portletDataContext.setScopeGroupId(articleGroupId);
+		}
+
 		JournalArticle article = null;
 
 		try {
@@ -149,13 +155,15 @@ public class JournalContentPortletDataHandlerImpl
 			}
 		}
 
-		if (article == null) {
-			return StringPool.BLANK;
-		}
-
 		Document document = SAXReaderUtil.createDocument();
 
 		Element rootElement = document.addElement("journal-content-data");
+
+		if (article == null) {
+			portletDataContext.setScopeGroupId(previousScopeGroupId);
+
+			return document.formattedString();
+		}
 
 		String path = JournalPortletDataHandlerImpl.getArticlePath(
 			portletDataContext, article);
@@ -164,6 +172,8 @@ public class JournalContentPortletDataHandlerImpl
 
 		articleElement.addAttribute("path", path);
 
+		Element dlFileEntryTypesElement = rootElement.addElement(
+			"dl-file-entry-types");
 		Element dlFoldersElement = rootElement.addElement("dl-folders");
 		Element dlFilesElement = rootElement.addElement("dl-file-entries");
 		Element dlFileRanksElement = rootElement.addElement("dl-file-ranks");
@@ -172,8 +182,11 @@ public class JournalContentPortletDataHandlerImpl
 
 		JournalPortletDataHandlerImpl.exportArticle(
 			portletDataContext, rootElement, rootElement, rootElement,
-			dlFoldersElement, dlFilesElement, dlFileRanksElement,
-			igFoldersElement, igImagesElement, article, false);
+			dlFileEntryTypesElement, dlFoldersElement, dlFilesElement,
+			dlFileRanksElement, igFoldersElement, igImagesElement, article,
+			false);
+
+		portletDataContext.setScopeGroupId(previousScopeGroupId);
 
 		return document.formattedString();
 	}
@@ -191,6 +204,15 @@ public class JournalContentPortletDataHandlerImpl
 
 		if (Validator.isNull(data)) {
 			return null;
+		}
+
+		long previousScopeGroupId = portletDataContext.getScopeGroupId();
+
+		long importGroupId = GetterUtil.getLong(
+			portletPreferences.getValue("groupId", null));
+
+		if (importGroupId == portletDataContext.getSourceGroupId()) {
+			portletDataContext.setScopeGroupId(portletDataContext.getGroupId());
 		}
 
 		Document document = SAXReaderUtil.read(data);
@@ -223,7 +245,7 @@ public class JournalContentPortletDataHandlerImpl
 
 		String articleId = portletPreferences.getValue("articleId", null);
 
-		if (Validator.isNotNull(articleId)) {
+		if (Validator.isNotNull(articleId) && (articleElement != null)) {
 			String importedArticleGroupId = articleElement.attributeValue(
 				"imported-article-group-id");
 
@@ -249,6 +271,10 @@ public class JournalContentPortletDataHandlerImpl
 				portletDataContext.getScopeGroupId(), layout.isPrivateLayout(),
 				layout.getLayoutId(), portletId, articleId, true);
 		}
+		else {
+			portletPreferences.setValue("groupId", StringPool.BLANK);
+			portletPreferences.setValue("articleId", StringPool.BLANK);
+		}
 
 		String templateId = portletPreferences.getValue("templateId", null);
 
@@ -261,6 +287,11 @@ public class JournalContentPortletDataHandlerImpl
 
 			portletPreferences.setValue("templateId", templateId);
 		}
+		else {
+			portletPreferences.setValue("templateId", StringPool.BLANK);
+		}
+
+		portletDataContext.setScopeGroupId(previousScopeGroupId);
 
 		return portletPreferences;
 	}

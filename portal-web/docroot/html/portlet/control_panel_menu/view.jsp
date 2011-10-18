@@ -163,7 +163,7 @@
 									Group group = manageableSites.get(i);
 
 									String image = "site_icon";
-									String message = HtmlUtil.escape(group.getDescriptiveName());
+									String message = group.getDescriptiveName();
 
 									if (group.isCompany()) {
 										image = "folder";
@@ -185,7 +185,7 @@
 
 									<liferay-ui:icon
 										image="<%= image %>"
-										message="<%= message %>"
+										message="<%= HtmlUtil.escape(message) %>"
 										url="<%= url %>"
 									/>
 
@@ -271,14 +271,10 @@
 					for (Portlet portlet : portlets) {
 						if (portlet.isActive() && !portlet.isInstanceable()) {
 							String portletId = portlet.getPortletId();
-
-							if (controlPanelCategory.equals(PortletCategoryKeys.CONTENT) && (portletId.equals(PortletKeys.GROUP_PAGES) || portletId.equals(PortletKeys.SITE_SETTINGS))) {
-								continue;
-							}
 					%>
 
 							<li class="<%= ppid.equals(portletId) ? "selected-portlet" : "" %>">
-								<a href="<liferay-portlet:renderURL windowState="<%= WindowState.MAXIMIZED.toString() %>" portletName="<%= portlet.getRootPortletId() %>" />">
+								<a href="<liferay-portlet:renderURL doAsGroupId="<%= themeDisplay.getScopeGroupId() %>" portletName="<%= portlet.getRootPortletId() %>" windowState="<%= WindowState.MAXIMIZED.toString() %>" />">
 									<c:choose>
 										<c:when test="<%= Validator.isNull(portlet.getIcon()) %>">
 											<liferay-ui:icon src='<%= themeDisplay.getPathContext() + "/html/icons/default.png" %>' />

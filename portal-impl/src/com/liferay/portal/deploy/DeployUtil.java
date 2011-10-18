@@ -22,12 +22,11 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ServerDetector;
 import com.liferay.portal.kernel.util.StreamUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.util.PrefsPropsUtil;
 import com.liferay.portal.util.PropsValues;
-import com.liferay.util.SystemProperties;
 import com.liferay.util.ant.CopyTask;
 import com.liferay.util.ant.DeleteTask;
 
@@ -36,7 +35,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.commons.io.FileUtils;
 
 /**
  * @author Brian Wing Shun Chan
@@ -44,12 +46,12 @@ import java.util.Map;
 public class DeployUtil {
 
 	public static void copyDependencyXml(
-			String fileName, String targetDir, Map<String, String> filterMap,
-			boolean overwrite)
+			String fileName, String targetDir, String targetFileName,
+			Map<String, String> filterMap, boolean overwrite)
 		throws Exception {
 
 		File file = new File(getResourcePath(fileName));
-		File targetFile = new File(targetDir + StringPool.SLASH + fileName);
+		File targetFile = new File(targetDir, targetFileName);
 
 		if (!targetFile.exists()) {
 			CopyTask.copyFile(
@@ -101,6 +103,31 @@ public class DeployUtil {
 		return _instance._getResourcePath(resource);
 	}
 
+	public static void redeployJetty(String context) throws Exception {
+		String contextsDirName = System.getProperty("jetty.home") + "/contexts";
+
+		File contextXml = new File(contextsDirName + "/" + context + ".xml");
+
+		if (contextXml.exists()) {
+			FileUtils.touch(contextXml);
+		}
+		else {
+			Map<String, String> filterMap = new HashMap<String, String>();
+
+			filterMap.put("context", context);
+
+			copyDependencyXml(
+				"jetty-context-configure.xml", contextsDirName,
+				context + ".xml", filterMap, true);
+		}
+	}
+
+	public static void redeployTomcat(String context) throws Exception {
+		File webXml = new File(getAutoDeployDestDir(), "/WEB-INF/web.xml");
+
+		FileUtils.touch(webXml);
+	}
+
 	public static void undeploy(String appServerType, File deployDir)
 		throws Exception {
 
@@ -114,6 +141,10 @@ public class DeployUtil {
 		if (!appServerType.startsWith(ServerDetector.JBOSS_ID) &&
 			!appServerType.equals(ServerDetector.TOMCAT_ID)) {
 
+			return;
+		}
+
+		if (!deployDir.exists()) {
 			return;
 		}
 
@@ -135,6 +166,13 @@ public class DeployUtil {
 			FileUtil.delete(
 				System.getProperty("jetty.home") + "/contexts/" +
 					deployDir.getName() + ".xml");
+		}
+
+		if (ServerDetector.isJBoss()) {
+			File deployedFile = new File(
+				deployDir.getParent(), deployDir.getName() + ".deployed");
+
+			FileUtil.delete(deployedFile);
 		}
 
 		int undeployInterval = PrefsPropsUtil.getInteger(

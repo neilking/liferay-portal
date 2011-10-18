@@ -1,5 +1,6 @@
 alter table AssetCategory add description STRING null;
 
+alter table AssetEntry add classTypeId LONG;
 alter table AssetEntry add layoutUuid VARCHAR(75) null;
 
 update AssetEntry set classUuid = (select uuid_ from JournalArticleResource where AssetEntry.classPK = JournalArticleResource.resourcePrimKey) where visible = TRUE and classNameId = (select classNameId from ClassName_ where value = 'com.liferay.portlet.journal.model.JournalArticle');
@@ -10,6 +11,7 @@ alter table BlogsEntry add smallImageId VARCHAR(75) null;
 alter table BlogsEntry add smallImageURL STRING null;
 
 alter table BookmarksEntry add userName VARCHAR(75) null;
+alter table BookmarksEntry add resourceBlockId LONG;
 alter table BookmarksEntry add description VARCHAR(75) null;
 
 COMMIT_TRANSACTION;
@@ -18,6 +20,7 @@ update BookmarksEntry set description = comments;
 alter table BookmarksEntry drop column comments;
 
 alter table BookmarksFolder add userName VARCHAR(75) null;
+alter table BookmarksFolder add resourceBlockId LONG;
 
 alter table CalEvent add location STRING null;
 
@@ -29,6 +32,12 @@ alter table Company add active_ BOOLEAN;
 COMMIT_TRANSACTION;
 
 update Company set active_ = TRUE;
+
+alter table Country add zipRequired BOOLEAN;
+
+COMMIT_TRANSACTION;
+
+update Country set zipRequired = TRUE;
 
 create table DDLRecord (
 	uuid_ VARCHAR(75) null,
@@ -60,7 +69,26 @@ create table DDLRecordSet (
 	recordSetKey VARCHAR(75) null,
 	name STRING null,
 	description STRING null,
-	minDisplayRows INTEGER
+	minDisplayRows INTEGER,
+	scope INTEGER
+);
+
+create table DDLRecordVersion (
+	recordVersionId LONG not null primary key,
+	groupId LONG,
+	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	DDMStorageId LONG,
+	recordSetId LONG,
+	recordId LONG,
+	version VARCHAR(75) null,
+	displayIndex INTEGER,
+	status INTEGER,
+	statusByUserId LONG,
+	statusByUserName VARCHAR(75) null,
+	statusDate DATE null
 );
 
 create table DDMContent (
@@ -122,6 +150,7 @@ create table DDMTemplate (
 	name STRING null,
 	description STRING null,
 	type_ VARCHAR(75) null,
+	mode_ VARCHAR(75) null,
 	language VARCHAR(75) null,
 	script TEXT null
 );
@@ -130,7 +159,6 @@ create table DLContent (
 	contentId LONG not null primary key,
 	groupId LONG,
 	companyId LONG,
-	portletId VARCHAR(75) null,
 	repositoryId LONG,
 	path_ VARCHAR(255) null,
 	version VARCHAR(75) null,
@@ -149,6 +177,7 @@ create table DLFileEntryMetadata (
 );
 
 create table DLFileEntryType (
+	uuid_ VARCHAR(75) null,
 	fileEntryTypeId LONG not null primary key,
 	groupId LONG,
 	companyId LONG,
@@ -175,6 +204,10 @@ create table DLFileEntryTypes_DLFolders (
 alter table DLFileEntry add repositoryId LONG;
 alter table DLFileEntry add mimeType VARCHAR(75) null;
 alter table DLFileEntry add fileEntryTypeId LONG;
+alter table DLFileEntry add smallImageId LONG;
+alter table DLFileEntry add largeImageId LONG;
+alter table DLFileEntry add custom1ImageId LONG;
+alter table DLFileEntry add custom2ImageId LONG;
 
 COMMIT_TRANSACTION;
 
@@ -220,8 +253,9 @@ create table DLSync (
 	companyId LONG,
 	createDate DATE null,
 	modifiedDate DATE null,
-	fileId VARCHAR(75) null,
+	fileId LONG,
 	repositoryId LONG,
+	parentFolderId LONG,
 	event VARCHAR(75) null,
 	type_ VARCHAR(75) null
 );
@@ -250,6 +284,10 @@ alter table Layout add createDate DATE null;
 alter table Layout add modifiedDate DATE null;
 alter table Layout add keywords STRING null;
 alter table Layout add robots STRING null;
+alter table Layout add layoutPrototypeUuid VARCHAR(75) null;
+alter table Layout add layoutPrototypeLinkEnabled BOOLEAN null;
+alter table Layout add templateLayoutUuid VARCHAR(75) null;
+alter table Layout drop column layoutPrototypeId;
 alter table Layout drop column dlFolderId;
 
 update Layout set createDate = CURRENT_TIMESTAMP;
@@ -266,9 +304,11 @@ create table LayoutBranch (
 	layoutSetBranchId LONG,
 	plid LONG,
 	name VARCHAR(75) null,
-	description VARCHAR(75) null,
+	description STRING null,
 	master BOOLEAN
 );
+
+alter table LayoutPrototype add uuid_ VARCHAR(75) null;
 
 create table LayoutRevision (
 	layoutRevisionId LONG not null primary key,
@@ -331,6 +371,7 @@ update MBCategory set displayStyle = 'default';
 alter table MBMailingList add allowAnonymous BOOLEAN;
 
 alter table MBMessage add format VARCHAR(75) null;
+alter table MBMessage add answer BOOLEAN;
 
 COMMIT_TRANSACTION;
 
@@ -338,6 +379,81 @@ update MBMessage set format = 'bbcode';
 
 alter table MBThread add companyId LONG;
 alter table MBThread add rootMessageUserId LONG;
+alter table MBThread add question BOOLEAN;
+
+create table MBThreadFlag (
+	threadFlagId LONG not null primary key,
+	userId LONG,
+	modifiedDate DATE null,
+	threadId LONG
+);
+
+create table MDRAction (
+	uuid_ VARCHAR(75) null,
+	actionId LONG not null primary key,
+	groupId LONG,
+	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	modifiedDate DATE null,
+	classNameId LONG,
+	classPK LONG,
+	ruleGroupInstanceId LONG,
+	name STRING null,
+	description STRING null,
+	type_ VARCHAR(255) null,
+	typeSettings TEXT null
+);
+
+create table MDRRule (
+	uuid_ VARCHAR(75) null,
+	ruleId LONG not null primary key,
+	groupId LONG,
+	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	modifiedDate DATE null,
+	ruleGroupId LONG,
+	name STRING null,
+	description STRING null,
+	type_ VARCHAR(255) null,
+	typeSettings TEXT null
+);
+
+create table MDRRuleGroup (
+	uuid_ VARCHAR(75) null,
+	ruleGroupId LONG not null primary key,
+	groupId LONG,
+	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	modifiedDate DATE null,
+	name STRING null,
+	description STRING null
+);
+
+create table MDRRuleGroupInstance (
+	uuid_ VARCHAR(75) null,
+	ruleGroupInstanceId LONG not null primary key,
+	groupId LONG,
+	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	modifiedDate DATE null,
+	classNameId LONG,
+	classPK LONG,
+	ruleGroupId LONG,
+	priority INTEGER
+);
+
+alter table PollsVote add companyId LONG;
+alter table PollsVote add userName VARCHAR(75) null;
+alter table PollsVote add createDate DATE null;
+alter table PollsVote add modifiedDate DATE null;
 
 create table PortalPreferences (
 	portalPreferencesId LONG not null primary key,
@@ -368,7 +484,79 @@ create table RepositoryEntry (
 	mappedId VARCHAR(75) null
 );
 
+create table ResourceBlock (
+	resourceBlockId LONG not null primary key,
+	companyId LONG,
+	groupId LONG,
+	name VARCHAR(75) null,
+	permissionsHash VARCHAR(75) null,
+	referenceCount LONG
+);
+
+create table ResourceBlockPermission (
+	resourceBlockPermissionId LONG not null primary key,
+	resourceBlockId LONG,
+	roleId LONG,
+	actionIds LONG
+);
+
 alter table ResourcePermission add ownerId LONG;
+
+create table ResourceTypePermission (
+	resourceTypePermissionId LONG not null primary key,
+	companyId LONG,
+	groupId LONG,
+	name VARCHAR(75) null,
+	roleId LONG,
+	actionIds LONG
+);
+
+create table SocialActivityAchievement (
+	activityAchievementId LONG not null primary key,
+	groupId LONG,
+	companyId LONG,
+	userId LONG,
+	createDate LONG,
+	name VARCHAR(75) null,
+	firstInGroup BOOLEAN
+);
+
+create table SocialActivityCounter (
+	activityCounterId LONG not null primary key,
+	groupId LONG,
+	companyId LONG,
+	classNameId LONG,
+	classPK LONG,
+	name VARCHAR(75) null,
+	ownerType INTEGER,
+	currentValue INTEGER,
+	totalValue INTEGER,
+	graceValue INTEGER,
+	startPeriod INTEGER,
+	endPeriod INTEGER
+);
+
+create table SocialActivityLimit (
+	activityLimitId LONG not null primary key,
+	groupId LONG,
+	companyId LONG,
+	userId LONG,
+	classNameId LONG,
+	classPK LONG,
+	activityType INTEGER,
+	activityCounterName VARCHAR(75) null,
+	value VARCHAR(75) null
+);
+
+create table SocialActivitySetting (
+	activitySettingId LONG not null primary key,
+	groupId LONG,
+	companyId LONG,
+	classNameId LONG,
+	activityType INTEGER,
+	name VARCHAR(75) null,
+	value VARCHAR(75) null
+);
 
 alter table SocialEquityLog add extraData VARCHAR(255) null;
 
@@ -379,6 +567,10 @@ update Role_ set name = 'Organization User' where name = 'Organization Member';
 
 alter table Ticket add type_ INTEGER;
 alter table Ticket add extraInfo TEXT null;
+
+COMMIT_TRANSACTION;
+
+update Ticket set type_ = 3;
 
 alter table User_ add emailAddressVerified BOOLEAN;
 alter table User_ add status int;
@@ -409,8 +601,11 @@ create table UserNotificationEvent (
 	type_ VARCHAR(75) null,
 	timestamp LONG,
 	deliverBy LONG,
-	payload TEXT null
+	payload TEXT null,
+	archived BOOLEAN
 );
+
+alter table UserNotificationEvent add archived BOOLEAN;
 
 create table VirtualHost (
 	virtualHostId LONG not null primary key,

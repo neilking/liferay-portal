@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.search.lucene.dump.DumpIndexDeletionPolicy;
 import com.liferay.portal.search.lucene.dump.IndexCommitSerializationUtil;
+import com.liferay.portal.search.lucene.store.jdbc.LiferayJdbcDirectory;
 import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
 
@@ -55,6 +56,7 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.MMapDirectory;
 import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.store.jdbc.JdbcDirectory;
 import org.apache.lucene.store.jdbc.JdbcStoreException;
@@ -76,6 +78,7 @@ public class IndexAccessorImpl implements IndexAccessor {
 		_initDialect();
 		_checkLuceneDir();
 		_initIndexWriter();
+		_initCleanupJdbcScheduler();
 		_initCommitScheduler();
 	}
 
@@ -218,6 +221,22 @@ public class IndexAccessorImpl implements IndexAccessor {
 		}
 	}
 
+	private void _cleanUpJdbcDirectories() {
+		for (String tableName : _jdbcDirectories.keySet()) {
+			JdbcDirectory jdbcDirectory = (JdbcDirectory)_jdbcDirectories.get(
+				tableName);
+
+			try {
+				jdbcDirectory.deleteMarkDeleted(60000);
+			}
+			catch (IOException e) {
+				if (_log.isWarnEnabled()) {
+					_log.warn("Could not clean up JDBC directory " + tableName);
+				}
+			}
+		}
+	}
+
 	private void _commit() throws IOException {
 		if ((PropsValues.LUCENE_COMMIT_BATCH_SIZE == 0) ||
 			(PropsValues.LUCENE_COMMIT_BATCH_SIZE <= _batchCount)) {
@@ -320,7 +339,12 @@ public class IndexAccessorImpl implements IndexAccessor {
 	}
 
 	private FSDirectory _getDirectory(String path) throws IOException {
-		return FSDirectory.open(new File(path));
+		if (PropsValues.LUCENE_STORE_TYPE_FILE_FORCE_MMAP) {
+			return new MMapDirectory(new File(path));
+		}
+		else {
+			return FSDirectory.open(new File(path));
+		}
 	}
 
 	private Directory _getLuceneDirFile() {
@@ -366,7 +390,7 @@ public class IndexAccessorImpl implements IndexAccessor {
 			try {
 				DataSource dataSource = InfrastructureUtil.getDataSource();
 
-				jdbcDirectory = new JdbcDirectory(
+				jdbcDirectory = new LiferayJdbcDirectory(
 					dataSource, _dialect, tableName);
 
 				_jdbcDirectories.put(tableName, jdbcDirectory);
@@ -432,7 +456,9 @@ public class IndexAccessorImpl implements IndexAccessor {
 
 			public void run() {
 				try {
-					_doCommit();
+					if (_batchCount > 0) {
+						_doCommit();
+					}
 				}
 				catch (IOException ioe) {
 					_log.error("Could not run scheduled commit", ioe);
@@ -444,6 +470,30 @@ public class IndexAccessorImpl implements IndexAccessor {
 		scheduledExecutorService.scheduleWithFixedDelay(
 			runnable, 0, PropsValues.LUCENE_COMMIT_TIME_INTERVAL,
 			TimeUnit.MILLISECONDS);
+	}
+
+	private void _initCleanupJdbcScheduler() {
+		if (!PropsValues.LUCENE_STORE_TYPE.equals(_LUCENE_STORE_TYPE_JDBC) ||
+			!PropsValues.LUCENE_STORE_JDBC_AUTO_CLEAN_UP_ENABLED) {
+
+			return;
+		}
+
+		ScheduledExecutorService scheduledExecutorService =
+			Executors.newSingleThreadScheduledExecutor();
+
+		Runnable runnable = new Runnable() {
+
+			public void run() {
+				_cleanUpJdbcDirectories();
+			}
+
+		};
+
+		scheduledExecutorService.scheduleWithFixedDelay(
+			runnable, 0,
+			PropsValues.LUCENE_STORE_JDBC_AUTO_CLEAN_UP_INTERVAL * 60L,
+			TimeUnit.SECONDS);
 	}
 
 	private void _initDialect() {
@@ -592,7 +642,7 @@ public class IndexAccessorImpl implements IndexAccessor {
 
 	private static Log _log = LogFactoryUtil.getLog(IndexAccessorImpl.class);
 
-	private int _batchCount;
+	private volatile int _batchCount;
 	private Lock _commitLock = new ReentrantLock();
 	private long _companyId;
 	private CountDownLatch _countDownLatch = new CountDownLatch(1);

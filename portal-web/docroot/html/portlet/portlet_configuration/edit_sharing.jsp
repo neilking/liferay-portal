@@ -41,7 +41,7 @@ String widgetURL = PortalUtil.getWidgetURL(portlet, themeDisplay);
 </liferay-util:include>
 
 <liferay-ui:tabs
-	names="any-website,facebook,google-gadget,netvibes,friends"
+	names="any-website,facebook,opensocial-gadget,netvibes,friends"
 	param="tabs2"
 	url="<%= portletURL.toString() %>"
 />
@@ -62,7 +62,7 @@ String widgetURL = PortalUtil.getWidgetURL(portlet, themeDisplay);
 			<c:when test='<%= tabs2.equals("any-website") %>'>
 
 				<%
-				boolean widgetShowAddAppLink = GetterUtil.getBoolean(preferences.getValue("lfr-widget-show-add-app-link", null), PropsValues.THEME_PORTLET_SHARING_DEFAULT);
+				boolean widgetShowAddAppLink = GetterUtil.getBoolean(preferences.getValue("lfrWidgetShowAddAppLink", null), PropsValues.THEME_PORTLET_SHARING_DEFAULT);
 				%>
 
 				<div class="portlet-msg-info">
@@ -82,9 +82,9 @@ String widgetURL = PortalUtil.getWidgetURL(portlet, themeDisplay);
 			<c:when test='<%= tabs2.equals("facebook") %>'>
 
 				<%
-				String facebookAPIKey = GetterUtil.getString(preferences.getValue("lfr-facebook-api-key", null));
-				String facebookCanvasPageURL = GetterUtil.getString(preferences.getValue("lfr-facebook-canvas-page-url", null));
-				boolean facebookShowAddAppLink = GetterUtil.getBoolean(preferences.getValue("lfr-facebook-show-add-app-link", null), true);
+				String facebookAPIKey = GetterUtil.getString(preferences.getValue("lfrFacebookApiKey", null));
+				String facebookCanvasPageURL = GetterUtil.getString(preferences.getValue("lfrFacebookCanvasPageUrl", null));
+				boolean facebookShowAddAppLink = GetterUtil.getBoolean(preferences.getValue("lfrFacebookShowAddAppLink", null), true);
 
 				String callbackURL = widgetURL;
 
@@ -124,17 +124,17 @@ String widgetURL = PortalUtil.getWidgetURL(portlet, themeDisplay);
 					<aui:input inlineLabel="left" label='<%= LanguageUtil.format(pageContext, "allow-users-to-add-x-to-facebook", portletDisplay.getTitle()) %>' name="facebookShowAddAppLink" type="checkbox" value="<%= facebookShowAddAppLink %>" />
 				</c:if>
 			</c:when>
-			<c:when test='<%= tabs2.equals("google-gadget") %>'>
+			<c:when test='<%= tabs2.equals("opensocial-gadget") %>'>
 
 				<%
-				boolean iGoogleShowAddAppLink = PrefsParamUtil.getBoolean(preferences, request, "lfr-igoogle-show-add-app-link");
+				boolean iGoogleShowAddAppLink = PrefsParamUtil.getBoolean(preferences, request, "lfrIgoogleShowAddAppLink");
 				%>
 
 				<div class="portlet-msg-info">
-					<liferay-ui:message key="use-the-google-gadget-url-to-create-a-google-gadget" />
+					<liferay-ui:message key="use-the-opensocial-gadget-url-to-create-an-opensocial-gadget" />
 				</div>
 
-				<label><liferay-ui:message key="google-gadget-url" /></label>
+				<label><liferay-ui:message key="opensocial-gadget-url" /></label>
 
 				<liferay-ui:input-resource url="<%= PortalUtil.getGoogleGadgetURL(portlet, themeDisplay) %>" />
 
@@ -143,7 +143,7 @@ String widgetURL = PortalUtil.getWidgetURL(portlet, themeDisplay);
 			<c:when test='<%= tabs2.equals("netvibes") %>'>
 
 				<%
-				boolean netvibesShowAddAppLink = PrefsParamUtil.getBoolean(preferences, request, "lfr-netvibes-show-add-app-link");
+				boolean netvibesShowAddAppLink = PrefsParamUtil.getBoolean(preferences, request, "lfrNetvibesShowAddAppLink");
 				%>
 
 				<div class="portlet-msg-info">
@@ -159,7 +159,7 @@ String widgetURL = PortalUtil.getWidgetURL(portlet, themeDisplay);
 			<c:when test='<%= tabs2.equals("friends") %>'>
 
 				<%
-				boolean appShowShareWithFriendsLink = GetterUtil.getBoolean(preferences.getValue("lfr-app-show-share-with-friends-link", null));
+				boolean appShowShareWithFriendsLink = GetterUtil.getBoolean(preferences.getValue("lfrAppShowShareWithFriendsLink", null));
 				%>
 
 				<aui:input inlineLabel="left" label='<%= LanguageUtil.format(pageContext, "allow-users-to-share-x-with-friends", portletDisplay.getTitle()) %>' name="appShowShareWithFriendsLink" type="checkbox" value="<%= appShowShareWithFriendsLink %>" />

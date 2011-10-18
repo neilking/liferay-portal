@@ -56,7 +56,7 @@ public class ActionUtil {
 		else if ((classNameId > 0) && (classPK > 0)) {
 			String className = PortalUtil.getClassName(classNameId);
 
-			article = JournalArticleServiceUtil.getArticle(
+			article = JournalArticleServiceUtil.getLatestArticle(
 				groupId, className, classPK);
 		}
 		else if (Validator.isNotNull(structureId)) {
@@ -70,13 +70,16 @@ public class ActionUtil {
 				ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
 					WebKeys.THEME_DISPLAY);
 
-				if (groupId != themeDisplay.getCompanyGroupId()) {
-					try {
-						structure = JournalStructureServiceUtil.getStructure(
-							themeDisplay.getCompanyGroupId(), structureId);
-					}
-					catch (NoSuchStructureException nsse2) {
-					}
+				if (groupId == themeDisplay.getCompanyGroupId()) {
+					return;
+				}
+
+				try {
+					structure = JournalStructureServiceUtil.getStructure(
+						themeDisplay.getCompanyGroupId(), structureId);
+				}
+				catch (NoSuchStructureException nsse2) {
+					return;
 				}
 			}
 

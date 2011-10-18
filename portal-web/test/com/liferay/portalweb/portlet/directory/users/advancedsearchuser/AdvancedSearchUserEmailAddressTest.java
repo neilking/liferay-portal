@@ -30,13 +30,12 @@ public class AdvancedSearchUserEmailAddressTest extends BaseTestCase {
 				selenium.open("/web/guest/home/");
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
 					try {
-						if (selenium.isElementPresent(
-									"link=Directory Test Page")) {
+						if (selenium.isVisible("link=Directory Test Page")) {
 							break;
 						}
 					}
@@ -46,14 +45,11 @@ public class AdvancedSearchUserEmailAddressTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
 				selenium.clickAt("link=Directory Test Page",
-					RuntimeVariables.replace(""));
+					RuntimeVariables.replace("Directory Test Page"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
-				selenium.clickAt("link=Users", RuntimeVariables.replace(""));
+				selenium.clickAt("link=Users", RuntimeVariables.replace("Users"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
 
 				boolean advancedVisible = selenium.isVisible(
 						"link=Advanced \u00bb");
@@ -65,17 +61,18 @@ public class AdvancedSearchUserEmailAddressTest extends BaseTestCase {
 				}
 
 				selenium.clickAt("link=Advanced \u00bb",
-					RuntimeVariables.replace(""));
+					RuntimeVariables.replace("Advanced \u00bb"));
 
 			case 2:
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
 					try {
-						if (selenium.isVisible("_11_andOperator")) {
+						if (selenium.isVisible(
+									"//select[@id='_11_andOperator']")) {
 							break;
 						}
 					}
@@ -85,33 +82,28 @@ public class AdvancedSearchUserEmailAddressTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
-				selenium.select("_11_andOperator",
-					RuntimeVariables.replace("label=Any"));
-				selenium.type("_11_emailAddress",
-					RuntimeVariables.replace("testemail1@liferay.com"));
-				selenium.saveScreenShotAndSource();
+				selenium.select("//select[@id='_11_andOperator']",
+					RuntimeVariables.replace("Any"));
+				selenium.type("//input[@id='_11_emailAddress']",
+					RuntimeVariables.replace("userea@liferay.com"));
 				selenium.click(RuntimeVariables.replace(
-						"//div[2]/span[2]/span/input"));
+						"//input[@value='Search']"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
-				selenium.type("_11_emailAddress", RuntimeVariables.replace(""));
-				selenium.saveScreenShotAndSource();
-				assertTrue(selenium.isElementPresent("link=TestFirst1"));
-				selenium.type("_11_emailAddress",
-					RuntimeVariables.replace("testemail1liferay.com"));
-				selenium.saveScreenShotAndSource();
-				selenium.click(RuntimeVariables.replace(
-						"//div[2]/span[2]/span/input"));
-				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
-				selenium.select("_11_andOperator",
-					RuntimeVariables.replace("label=All"));
-				selenium.type("_11_emailAddress", RuntimeVariables.replace(""));
-				selenium.saveScreenShotAndSource();
-				selenium.clickAt("link=\u00ab Basic",
+				selenium.type("//input[@id='_11_emailAddress']",
 					RuntimeVariables.replace(""));
-				assertFalse(selenium.isTextPresent("TestFirst1"));
+				assertTrue(selenium.isElementPresent("link=userfn"));
+				selenium.type("//input[@id='_11_emailAddress']",
+					RuntimeVariables.replace("userea1@liferay.com"));
+				selenium.click(RuntimeVariables.replace(
+						"//input[@value='Search']"));
+				selenium.waitForPageToLoad("30000");
+				selenium.select("//select[@id='_11_andOperator']",
+					RuntimeVariables.replace("All"));
+				selenium.type("//input[@id='_11_emailAddress']",
+					RuntimeVariables.replace(""));
+				selenium.clickAt("link=\u00ab Basic",
+					RuntimeVariables.replace("\u00ab Basic"));
+				assertFalse(selenium.isTextPresent("userfn"));
 
 			case 100:
 				label = -1;

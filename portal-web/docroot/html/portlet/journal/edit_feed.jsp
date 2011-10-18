@@ -36,14 +36,14 @@ if (Validator.isNotNull(structureId)) {
 	try {
 		structure = JournalStructureLocalServiceUtil.getStructure(groupId, structureId);
 
-		structureName = structure.getName();
+		structureName = structure.getName(locale);
 	}
 	catch (NoSuchStructureException nsse1) {
 		if (groupId != themeDisplay.getCompanyGroupId()) {
 			try {
 				structure = JournalStructureLocalServiceUtil.getStructure(themeDisplay.getCompanyGroupId(), structureId);
 
-				structureName = structure.getName();
+				structureName = structure.getName(locale);
 			}
 			catch (NoSuchStructureException nsse2) {
 			}
@@ -82,7 +82,7 @@ if ((structure == null) && Validator.isNotNull(templateId)) {
 		try {
 			structure = JournalStructureLocalServiceUtil.getStructure(groupId, structureId);
 
-			structureName = structure.getName();
+			structureName = structure.getName(locale);
 
 			templates = JournalTemplateLocalServiceUtil.getStructureTemplates(groupId, structureId);
 		}
@@ -91,7 +91,7 @@ if ((structure == null) && Validator.isNotNull(templateId)) {
 				try {
 					structure = JournalStructureLocalServiceUtil.getStructure(themeDisplay.getCompanyGroupId(), structureId);
 
-					structureName = structure.getName();
+					structureName = structure.getName(locale);
 
 					templates = JournalTemplateLocalServiceUtil.getStructureTemplates(themeDisplay.getCompanyGroupId(), structureId);
 				}
@@ -110,8 +110,8 @@ if (Validator.isNull(contentField) || ((structure == null) && !contentField.equa
 	contentField = JournalFeedConstants.WEB_CONTENT_DESCRIPTION;
 }
 
-String feedType = BeanParamUtil.getString(feed, request, "feedType", RSSUtil.DEFAULT_TYPE);
-double feedVersion = BeanParamUtil.getDouble(feed, request, "feedVersion", RSSUtil.DEFAULT_VERSION);
+String feedType = BeanParamUtil.getString(feed, request, "feedType", RSSUtil.TYPE_DEFAULT);
+double feedVersion = BeanParamUtil.getDouble(feed, request, "feedVersion", RSSUtil.VERSION_DEFAULT);
 
 ResourceURL feedURL = null;
 
@@ -138,6 +138,7 @@ if (feed != null) {
 	<aui:input name="groupId" type="hidden" value="<%= groupId %>" />
 	<aui:input name="feedId" type="hidden" value="<%= feedId %>" />
 	<aui:input name="rendererTemplateId" type="hidden" value="<%= rendererTemplateId %>" />
+	<aui:input name="contentField" type="hidden" value="<%= contentField %>" />
 
 	<liferay-ui:header
 		backURL="<%= redirect %>"
@@ -269,7 +270,7 @@ if (feed != null) {
 								<c:if test="<%= tableIteratorObj.isSmallImage() %>">
 									<br />
 
-									<img border="0" hspace="0" src="<%= Validator.isNotNull(tableIteratorObj.getSmallImageURL()) ? tableIteratorObj.getSmallImageURL() : themeDisplay.getPathImage() + "/journal/template?img_id=" + tableIteratorObj.getSmallImageId() + "&t=" + ImageServletTokenUtil.getToken(tableIteratorObj.getSmallImageId()) %>" vspace="0" />
+									<img border="0" hspace="0" src="<%= Validator.isNotNull(tableIteratorObj.getSmallImageURL()) ? tableIteratorObj.getSmallImageURL() : themeDisplay.getPathImage() + "/journal/template?img_id=" + tableIteratorObj.getSmallImageId() + "&t=" + WebServerServletTokenUtil.getToken(tableIteratorObj.getSmallImageId()) %>" vspace="0" />
 								</c:if>
 							</liferay-ui:table-iterator>
 						</c:otherwise>
@@ -280,24 +281,19 @@ if (feed != null) {
 
 		<liferay-ui:panel collapsible="<%= true %>" extended="<%= true %>" id="journalPresentationSettingsPanel" persistState="<%= true %>" title="presentation-settings">
 			<aui:fieldset>
-				<aui:select label="feed-item-content" name="contentField">
+				<aui:select label="feed-item-content" name="contentFieldSelector">
+					<aui:option label="<%= JournalFeedConstants.WEB_CONTENT_DESCRIPTION %>" selected="<%= contentField.equals(JournalFeedConstants.WEB_CONTENT_DESCRIPTION) %>" />
 
-					<%
-					String taglibSelectRendererTemplateOption = renderResponse.getNamespace() + "selectRendererTemplate('');";
-					%>
-
-					<aui:option label="<%= JournalFeedConstants.RENDERED_WEB_CONTENT %>" onClick="<%= taglibSelectRendererTemplateOption %>" selected="<%= contentField.equals(JournalFeedConstants.WEB_CONTENT_DESCRIPTION) %>" />
 					<optgroup label='<liferay-ui:message key="<%= JournalFeedConstants.RENDERED_WEB_CONTENT %>" />'>
-						<aui:option label="use-default-template" onClick="<%= taglibSelectRendererTemplateOption %>" selected="<%= contentField.equals(JournalFeedConstants.RENDERED_WEB_CONTENT) %>" value="<%= JournalFeedConstants.RENDERED_WEB_CONTENT %>" />
+						<aui:option data-contentField="<%= JournalFeedConstants.RENDERED_WEB_CONTENT %>" label="use-default-template" selected="<%= contentField.equals(JournalFeedConstants.RENDERED_WEB_CONTENT) %>" value="" />
 
 						<c:if test="<%= (structure != null) && (templates.size() > 1) %>">
 
 							<%
 							for (JournalTemplate currTemplate : templates) {
-								taglibSelectRendererTemplateOption = renderResponse.getNamespace() + "selectRendererTemplate('" + currTemplate.getTemplateId() + "');";
 							%>
 
-								<aui:option label='<%= LanguageUtil.format(pageContext, "use-template-x", currTemplate.getName()) %>' onClick="<%= taglibSelectRendererTemplateOption %>" selected="<%= rendererTemplateId.equals(currTemplate.getTemplateId()) %>" value="<%= JournalFeedConstants.RENDERED_WEB_CONTENT %>" />
+								<aui:option data-contentField="<%= JournalFeedConstants.RENDERED_WEB_CONTENT %>"  label='<%= LanguageUtil.format(pageContext, "use-template-x", currTemplate.getName(locale)) %>' selected="<%= rendererTemplateId.equals(currTemplate.getTemplateId()) %>" value="<%= currTemplate.getTemplateId() %>" />
 
 							<%
 							}
@@ -323,10 +319,9 @@ if (feed != null) {
 								String elType = StringUtil.replace(el.attributeValue("type"), StringPool.UNDERLINE, StringPool.DASH);
 
 								if (!elType.equals("boolean") && !elType.equals("list") && !elType.equals("multi-list")) {
-									taglibSelectRendererTemplateOption = renderResponse.getNamespace() + "selectRendererTemplate('');";
 							%>
 
-									<aui:option label='<%= TextFormatter.format(elName, TextFormatter.J) + "(" + LanguageUtil.get(pageContext, elType) + ")" %>' onClick="<%= taglibSelectRendererTemplateOption %>" selected="<%= contentField.equals(elName) %>" value="<%= elName %>" />
+									<aui:option label='<%= TextFormatter.format(elName, TextFormatter.J) + "(" + LanguageUtil.get(pageContext, elType) + ")" %>' selected="<%= contentField.equals(elName) %>" value="<%= elName %>" />
 
 							<%
 								}
@@ -482,4 +477,26 @@ if (feed != null) {
 			</c:otherwise>
 		</c:choose>
 	</c:if>
+</aui:script>
+
+<aui:script use="aui-base">
+	var feedItemContentSelector = A.one('select#<portlet:namespace />contentFieldSelector');
+
+	var changeFeedItemContent = function() {
+		var selectedFeedItemOption = feedItemContentSelector.one(':selected');
+
+		var data = selectedFeedItemOption.attr('data-contentField');
+		var value = selectedFeedItemOption.attr('value');
+
+		if (data === '<%= JournalFeedConstants.RENDERED_WEB_CONTENT %>') {
+			document.<portlet:namespace />fm.<portlet:namespace />rendererTemplateId.value = value;
+			document.<portlet:namespace />fm.<portlet:namespace />contentField.value = '<%= JournalFeedConstants.RENDERED_WEB_CONTENT %>';
+		}
+		else {
+			document.<portlet:namespace />fm.<portlet:namespace />rendererTemplateId.value = '';
+			document.<portlet:namespace />fm.<portlet:namespace />contentField.value = value;
+		}
+	}
+
+	feedItemContentSelector.on('change', changeFeedItemContent);
 </aui:script>

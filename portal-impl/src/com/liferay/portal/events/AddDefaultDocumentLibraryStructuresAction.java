@@ -15,31 +15,26 @@
 package com.liferay.portal.events;
 
 import com.liferay.portal.kernel.events.ActionException;
-import com.liferay.portal.kernel.events.SimpleAction;
-import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.metadata.RawMetadataProcessorUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.xml.Document;
-import com.liferay.portal.kernel.xml.DocumentException;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
-import com.liferay.portal.metadata.TikaRawMetadataProcessor;
 import com.liferay.portal.model.Group;
-import com.liferay.portal.model.GroupConstants;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.service.UserLocalServiceUtil;
 import com.liferay.portal.util.PortalUtil;
+import com.liferay.portlet.documentlibrary.NoSuchFileEntryTypeException;
 import com.liferay.portlet.documentlibrary.model.DLFileEntry;
 import com.liferay.portlet.documentlibrary.model.DLFileEntryMetadata;
-import com.liferay.portlet.documentlibrary.model.DLFileEntryType;
+import com.liferay.portlet.documentlibrary.model.DLFileEntryTypeConstants;
 import com.liferay.portlet.documentlibrary.service.DLFileEntryTypeLocalServiceUtil;
 import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
 import com.liferay.portlet.dynamicdatamapping.service.DDMStructureLocalServiceUtil;
-import com.liferay.util.ContentUtil;
 
 import java.io.StringReader;
 
@@ -54,7 +49,8 @@ import java.util.Map;
  * @author Sergio González
  * @author Miguel Pastor
  */
-public class AddDefaultDocumentLibraryStructuresAction extends SimpleAction {
+public class AddDefaultDocumentLibraryStructuresAction
+	extends BaseDefaultDDMStructureAction {
 
 	@Override
 	public void run(String[] ids) throws ActionException {
@@ -63,56 +59,6 @@ public class AddDefaultDocumentLibraryStructuresAction extends SimpleAction {
 		}
 		catch (Exception e) {
 			throw new ActionException(e);
-		}
-	}
-
-	protected void addDDMStructures(
-			long userId, long groupId, ServiceContext serviceContext)
-		throws DocumentException, PortalException, SystemException {
-
-		String xml = ContentUtil.get(
-			"com/liferay/portal/events/dependencies/" +
-				"document-library-structures.xml");
-
-		Document document = SAXReaderUtil.read(xml);
-
-		Element rootElement = document.getRootElement();
-
-		List<Element> structureElements = rootElement.elements("structure");
-
-		for (Element structureElement : structureElements) {
-			String name = structureElement.elementText("name");
-
-			String description = structureElement.elementText("description");
-
-			String ddmStructureKey = name;
-
-			DDMStructure ddmStructure =
-				DDMStructureLocalServiceUtil.fetchStructure(
-					groupId, ddmStructureKey);
-
-			if (ddmStructure != null) {
-				continue;
-			}
-
-			Element structureElementRootElement = structureElement.element(
-				"root");
-
-			String xsd = structureElementRootElement.asXML();
-
-			Map<Locale, String> nameMap = new HashMap<Locale, String>();
-
-			nameMap.put(LocaleUtil.getDefault(), name);
-
-			Map<Locale, String> descriptionMap = new HashMap<Locale, String>();
-
-			descriptionMap.put(LocaleUtil.getDefault(), description);
-
-			DDMStructureLocalServiceUtil.addStructure(
-				userId, groupId,
-				PortalUtil.getClassNameId(DLFileEntryMetadata.class),
-				ddmStructureKey, nameMap, descriptionMap, xsd, "xml",
-				serviceContext);
 		}
 	}
 
@@ -133,14 +79,14 @@ public class AddDefaultDocumentLibraryStructuresAction extends SimpleAction {
 
 		long[] ddmStructureId = new long[] {ddmStructure.getStructureId()};
 
-		List<DLFileEntryType> dlFileEntryTypes =
-			DLFileEntryTypeLocalServiceUtil.getFileEntryTypes(
-				groupId, dlFileEntryTypeName, dlFileEntryTypeDescription);
-
-		if (dlFileEntryTypes.isEmpty()) {
+		try {
+			DLFileEntryTypeLocalServiceUtil.getFileEntryType(
+				groupId, dlFileEntryTypeName);
+		}
+		catch (NoSuchFileEntryTypeException nsfete) {
 			DLFileEntryTypeLocalServiceUtil.addFileEntryType(
 				userId, groupId, dlFileEntryTypeName,
-				dlFileEntryTypeDescription, ddmStructureId,	serviceContext);
+				dlFileEntryTypeDescription, ddmStructureId, serviceContext);
 		}
 	}
 
@@ -149,12 +95,14 @@ public class AddDefaultDocumentLibraryStructuresAction extends SimpleAction {
 		throws Exception {
 
 		addDLFileEntryType(
-			userId, groupId, "Image", "Image Document Type",
-			"Default Image's Metadata Set", serviceContext);
+			userId, groupId, DLFileEntryTypeConstants.NAME_IMAGE,
+			"Image Document Type", "Default Image's Metadata Set",
+			serviceContext);
 
 		addDLFileEntryType(
-			userId, groupId, "Video", "Video Document Type",
-			"Default Videos's Metadata Set", serviceContext);
+			userId, groupId, DLFileEntryTypeConstants.NAME_VIDEO,
+			"Video Document Type", "Default Videos's Metadata Set",
+			serviceContext);
 	}
 
 	protected void addDLRawMetadataStructures(
@@ -162,7 +110,7 @@ public class AddDefaultDocumentLibraryStructuresAction extends SimpleAction {
 		throws Exception {
 
 		String xsd = buildDLRawMetadataXML(
-			TikaRawMetadataProcessor.getFields());
+			RawMetadataProcessorUtil.getFields());
 
 		Document document = SAXReaderUtil.read(new StringReader(xsd));
 
@@ -208,12 +156,13 @@ public class AddDefaultDocumentLibraryStructuresAction extends SimpleAction {
 	}
 
 	protected String buildDLRawMetadataElementXML(String name, Field field) {
-		StringBundler sb = new StringBundler();
+		StringBundler sb = new StringBundler(12);
 
 		sb.append("<dynamic-element dataType=\"string\" name=\"");
 		sb.append(field.getName());
 		sb.append("\" type=\"text\">");
-		sb.append("<meta-data><entry name=\"label\"><![CDATA[metadata.");
+		sb.append("<meta-data locale=\"en_US\">");
+		sb.append("<entry name=\"label\"><![CDATA[metadata.");
 		sb.append(name);
 		sb.append(StringPool.PERIOD);
 		sb.append(field.getName());
@@ -228,14 +177,16 @@ public class AddDefaultDocumentLibraryStructuresAction extends SimpleAction {
 	protected String buildDLRawMetadataStructureXML(
 		String name, Field[] fields) {
 
-		StringBundler sb = new StringBundler();
+		StringBundler sb = new StringBundler(8 + fields.length);
 
 		sb.append("<structure><name><![CDATA[");
 		sb.append(name);
 		sb.append("]]></name>");
 		sb.append("<description><![CDATA[");
 		sb.append(name);
-		sb.append("]]></description><root>");
+		sb.append("]]></description>");
+		sb.append(
+			"<root available-locales=\"en_US\" default-locale=\"en_US\">");
 
 		for (Field field : fields) {
 			sb.append(buildDLRawMetadataElementXML(name, field));
@@ -247,7 +198,7 @@ public class AddDefaultDocumentLibraryStructuresAction extends SimpleAction {
 	}
 
 	protected String buildDLRawMetadataXML(Map<String, Field[]> fields) {
-		StringBundler sb = new StringBundler();
+		StringBundler sb = new StringBundler(2 + fields.size());
 
 		sb.append("<?xml version=\"1.0\"?><root>");
 
@@ -263,8 +214,7 @@ public class AddDefaultDocumentLibraryStructuresAction extends SimpleAction {
 	protected void doRun(long companyId) throws Exception {
 		ServiceContext serviceContext = new ServiceContext();
 
-		Group group = GroupLocalServiceUtil.getGroup(
-			companyId, GroupConstants.GUEST);
+		Group group = GroupLocalServiceUtil.getCompanyGroup(companyId);
 
 		serviceContext.setScopeGroupId(group.getGroupId());
 
@@ -273,7 +223,9 @@ public class AddDefaultDocumentLibraryStructuresAction extends SimpleAction {
 		serviceContext.setUserId(defaultUserId);
 
 		addDDMStructures(
-			defaultUserId, group.getGroupId(), serviceContext);
+			defaultUserId, group.getGroupId(),
+			PortalUtil.getClassNameId(DLFileEntryMetadata.class),
+			"document-library-structures.xml", serviceContext);
 		addDLFileEntryTypes(defaultUserId, group.getGroupId(), serviceContext);
 		addDLRawMetadataStructures(
 			defaultUserId, group.getGroupId(), serviceContext);

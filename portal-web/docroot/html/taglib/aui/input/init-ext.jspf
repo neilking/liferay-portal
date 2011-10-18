@@ -14,8 +14,6 @@
  */
 --%>
 
-<%@ page import="java.text.Format" %>
-
 <%
 if (!useNamespace) {
 	namespace = StringPool.BLANK;
@@ -47,8 +45,12 @@ boolean choiceField = checkboxField || baseType.equals("radio");
 
 boolean showForLabel = true;
 
-if ((baseType.equals("assetCategories")) || (baseType.equals("assetTags")) || baseType.equals(Date.class.getName())) {
+if ((type.equals("assetCategories")) || baseType.equals(Date.class.getName())) {
 	showForLabel = false;
+}
+
+if (type.equals("assetTags")) {
+	forLabel += "assetTagNames";
 }
 
 if (checkboxField) {

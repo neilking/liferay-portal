@@ -40,21 +40,21 @@ int entriesCount = BookmarksEntryServiceUtil.getEntriesCount(scopeGroupId, folde
 long categoryId = ParamUtil.getLong(request, "categoryId");
 String tagName = ParamUtil.getString(request, "tag");
 
-String categoryName = null;
-String vocabularyName = null;
+String categoryTitle = null;
+String vocabularyTitle = null;
 
 if (categoryId != 0) {
 	AssetCategory assetCategory = AssetCategoryLocalServiceUtil.getAssetCategory(categoryId);
 
 	assetCategory = assetCategory.toEscapedModel();
 
-	categoryName = assetCategory.getName();
+	categoryTitle = assetCategory.getTitle(locale);
 
 	AssetVocabulary assetVocabulary = AssetVocabularyLocalServiceUtil.getAssetVocabulary(assetCategory.getVocabularyId());
 
 	assetVocabulary = assetVocabulary.toEscapedModel();
 
-	vocabularyName = assetVocabulary.getName();
+	vocabularyTitle = assetVocabulary.getTitle(locale);
 }
 
 boolean useAssetEntryQuery = (categoryId > 0) || Validator.isNotNull(tagName);
@@ -78,9 +78,9 @@ request.setAttribute("view.jsp-useAssetEntryQuery", String.valueOf(useAssetEntry
 
 <c:choose>
 	<c:when test="<%= useAssetEntryQuery %>">
-		<c:if test="<%= Validator.isNotNull(categoryName) %>">
+		<c:if test="<%= Validator.isNotNull(categoryTitle) %>">
 			<h1 class="entry-title">
-				<%= LanguageUtil.format(pageContext, "bookmarks-with-x-x", new String[] {vocabularyName, categoryName}) %>
+				<%= LanguageUtil.format(pageContext, "bookmarks-with-x-x", new String[] {vocabularyTitle, categoryTitle}) %>
 			</h1>
 		</c:if>
 
@@ -95,7 +95,7 @@ request.setAttribute("view.jsp-useAssetEntryQuery", String.valueOf(useAssetEntry
 		<%
 		if (portletName.equals(PortletKeys.BOOKMARKS)) {
 			PortalUtil.addPageKeywords(tagName, request);
-			PortalUtil.addPageKeywords(categoryName, request);
+			PortalUtil.addPageKeywords(categoryTitle, request);
 		}
 		%>
 
@@ -110,7 +110,7 @@ request.setAttribute("view.jsp-useAssetEntryQuery", String.valueOf(useAssetEntry
 			</c:if>
 
 			<aui:column columnWidth="<%= 75 %>" cssClass="lfr-asset-column lfr-asset-column-details" first="<%= true %>">
-				<liferay-ui:panel-container extended="<%= false %>" persistState="<%= true %>">
+				<liferay-ui:panel-container extended="<%= false %>" id="bookmarksInfoPanelContainer" persistState="<%= true %>">
 					<c:if test="<%= folder != null %>">
 						<div class="lfr-asset-description">
 							<%= HtmlUtil.escape(folder.getDescription()) %>
@@ -141,7 +141,7 @@ request.setAttribute("view.jsp-useAssetEntryQuery", String.valueOf(useAssetEntry
 					</c:if>
 
 					<c:if test="<%= foldersCount > 0 %>">
-						<liferay-ui:panel collapsible="<%= true %>" extended="<%= true %>" persistState="<%= true %>" title='<%= (folder != null) ? "subfolders" : "folders" %>'>
+						<liferay-ui:panel collapsible="<%= true %>" extended="<%= true %>" id="bookmarksEntriesFoldersListingPanel" persistState="<%= true %>" title='<%= (folder != null) ? "subfolders" : "folders" %>'>
 							<liferay-ui:search-container
 								curParam="cur1"
 								delta="<%= foldersPerPage %>"
@@ -174,7 +174,7 @@ request.setAttribute("view.jsp-useAssetEntryQuery", String.valueOf(useAssetEntry
 						</liferay-ui:panel>
 					</c:if>
 
-					<liferay-ui:panel collapsible="<%= true %>" extended="<%= true %>" persistState="<%= true %>" title="bookmarks">
+					<liferay-ui:panel collapsible="<%= true %>" extended="<%= true %>" id="bookmarksEntriesListingPanel" persistState="<%= true %>" title="bookmarks">
 						<%@ include file="/html/portlet/bookmarks/view_entries.jspf" %>
 					</liferay-ui:panel>
 				</liferay-ui:panel-container>
@@ -185,11 +185,11 @@ request.setAttribute("view.jsp-useAssetEntryQuery", String.valueOf(useAssetEntry
 					<liferay-ui:icon
 						cssClass="lfr-asset-avatar"
 						image='<%= "../file_system/large/" + (((foldersCount + entriesCount) > 0) ? "folder_full_bookmark" : "folder_empty") %>'
-						message='<%= (folder != null) ? folder.getName() : LanguageUtil.get(pageContext, "bookmarks-home") %>'
+						message='<%= (folder != null) ? HtmlUtil.escapeAttribute(folder.getName()) : "bookmarks-home" %>'
 					/>
 
 					<div class="lfr-asset-name">
-						<h4><%= (folder != null) ? folder.getName() : LanguageUtil.get(pageContext, "bookmarks-home") %></h4>
+						<h4><%= (folder != null) ? HtmlUtil.escape(folder.getName()) : LanguageUtil.get(pageContext, "bookmarks-home") %></h4>
 					</div>
 				</div>
 

@@ -24,7 +24,8 @@ package com.liferay.portal.service;
  * @generated
  */
 public class ResourceActionLocalServiceWrapper
-	implements ResourceActionLocalService {
+	implements ResourceActionLocalService,
+		ServiceWrapper<ResourceActionLocalService> {
 	public ResourceActionLocalServiceWrapper(
 		ResourceActionLocalService resourceActionLocalService) {
 		_resourceActionLocalService = resourceActionLocalService;
@@ -265,6 +266,11 @@ public class ResourceActionLocalServiceWrapper
 			addDefaultActions);
 	}
 
+	public com.liferay.portal.model.ResourceAction fetchResourceAction(
+		java.lang.String name, java.lang.String actionId) {
+		return _resourceActionLocalService.fetchResourceAction(name, actionId);
+	}
+
 	public com.liferay.portal.model.ResourceAction getResourceAction(
 		java.lang.String name, java.lang.String actionId)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -277,11 +283,26 @@ public class ResourceActionLocalServiceWrapper
 		return _resourceActionLocalService.getResourceActions(name);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public ResourceActionLocalService getWrappedResourceActionLocalService() {
 		return _resourceActionLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedResourceActionLocalService(
+		ResourceActionLocalService resourceActionLocalService) {
+		_resourceActionLocalService = resourceActionLocalService;
+	}
+
+	public ResourceActionLocalService getWrappedService() {
+		return _resourceActionLocalService;
+	}
+
+	public void setWrappedService(
 		ResourceActionLocalService resourceActionLocalService) {
 		_resourceActionLocalService = resourceActionLocalService;
 	}

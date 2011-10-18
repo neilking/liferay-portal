@@ -25,13 +25,12 @@ public class ConfigurePortletEnableCommentsTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent(
-							"link=Web Content Display Test Page")) {
+				if (selenium.isVisible("link=Web Content Display Test Page")) {
 					break;
 				}
 			}
@@ -41,15 +40,15 @@ public class ConfigurePortletEnableCommentsTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		selenium.clickAt("link=Web Content Display Test Page",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Web Content Display Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
+		assertEquals(RuntimeVariables.replace("Options"),
+			selenium.getText("//strong/a"));
 		selenium.clickAt("//strong/a", RuntimeVariables.replace("Options"));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -65,19 +64,19 @@ public class ConfigurePortletEnableCommentsTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace("Configuration"),
 			selenium.getText(
 				"//div[@class='lfr-component lfr-menu-list']/ul/li[2]/a"));
 		selenium.click("//div[@class='lfr-component lfr-menu-list']/ul/li[2]/a");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isVisible("_86_enableCommentsCheckbox")) {
+				if (selenium.isVisible(
+							"//input[@id='_86_enableCommentsCheckbox']")) {
 					break;
 				}
 			}
@@ -87,29 +86,29 @@ public class ConfigurePortletEnableCommentsTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		assertFalse(selenium.isChecked("_86_enableCommentsCheckbox"));
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("_86_enableCommentsCheckbox",
-			RuntimeVariables.replace(""));
-		selenium.clickAt("//input[@value='Save']", RuntimeVariables.replace(""));
+		assertFalse(selenium.isChecked(
+				"//input[@id='_86_enableCommentsCheckbox']"));
+		selenium.clickAt("//input[@id='_86_enableCommentsCheckbox']",
+			RuntimeVariables.replace("Enable Comments"));
+		assertTrue(selenium.isChecked(
+				"//input[@id='_86_enableCommentsCheckbox']"));
+		selenium.clickAt("//input[@value='Save']",
+			RuntimeVariables.replace("Save"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace(
 				"You have successfully updated the setup."),
-			selenium.getText("//div[@id='p_p_id_86_']/div/div"));
-		assertTrue(selenium.isChecked("_86_enableCommentsCheckbox"));
-		selenium.saveScreenShotAndSource();
+			selenium.getText("//div[@class='portlet-msg-success']"));
+		assertTrue(selenium.isChecked(
+				"//input[@id='_86_enableCommentsCheckbox']"));
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent(
-							"link=Web Content Display Test Page")) {
+				if (selenium.isVisible("link=Web Content Display Test Page")) {
 					break;
 				}
 			}
@@ -119,12 +118,12 @@ public class ConfigurePortletEnableCommentsTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		selenium.clickAt("link=Web Content Display Test Page",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Web Content Display Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		assertTrue(selenium.isTextPresent("This is a test wcd web content."));
-		assertTrue(selenium.isElementPresent("link=Be the first."));
+		assertEquals(RuntimeVariables.replace("WCD Web Content Content"),
+			selenium.getText("//div[@class='journal-content-article']/p"));
+		assertEquals(RuntimeVariables.replace("Be the first."),
+			selenium.getText("//fieldset/div/a"));
 	}
 }

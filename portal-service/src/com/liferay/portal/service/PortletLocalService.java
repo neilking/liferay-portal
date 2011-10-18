@@ -238,6 +238,8 @@ public interface PortletLocalService extends PersistedModelLocalService {
 
 	public void clearCache();
 
+	public void clearCompanyPortletsPool();
+
 	/**
 	* @deprecated {@link #clonePortlet(String)}
 	*/
@@ -324,6 +326,13 @@ public interface PortletLocalService extends PersistedModelLocalService {
 		java.lang.String servletContextName,
 		javax.servlet.ServletContext servletContext, java.lang.String[] xmls,
 		com.liferay.portal.kernel.plugin.PluginPackage pluginPackage);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public java.util.Map<java.lang.String, com.liferay.portal.model.Portlet> loadGetPortletsPool(
+		long companyId)
+		throws com.liferay.portal.kernel.exception.SystemException;
+
+	public void removeCompanyPortletsPool(long companyId);
 
 	public com.liferay.portal.model.Portlet updatePortlet(long companyId,
 		java.lang.String portletId, java.lang.String roles, boolean active)

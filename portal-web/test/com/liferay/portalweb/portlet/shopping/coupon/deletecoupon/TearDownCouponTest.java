@@ -30,12 +30,12 @@ public class TearDownCouponTest extends BaseTestCase {
 				selenium.open("/web/guest/home/");
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
 					try {
-						if (selenium.isElementPresent("link=Shopping Test Page")) {
+						if (selenium.isVisible("link=Shopping Test Page")) {
 							break;
 						}
 					}
@@ -45,14 +45,12 @@ public class TearDownCouponTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
 				selenium.clickAt("link=Shopping Test Page",
-					RuntimeVariables.replace(""));
+					RuntimeVariables.replace("Shopping Test Page"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
-				selenium.clickAt("link=Coupons", RuntimeVariables.replace(""));
+				selenium.clickAt("link=Coupons",
+					RuntimeVariables.replace("Coupons"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
 
 				boolean couponPresent = selenium.isElementPresent("_34_rowIds");
 
@@ -62,13 +60,13 @@ public class TearDownCouponTest extends BaseTestCase {
 					continue;
 				}
 
-				selenium.clickAt("_34_allRowIds", RuntimeVariables.replace(""));
+				selenium.clickAt("//input[@name='_34_allRowIds']",
+					RuntimeVariables.replace(""));
 				selenium.click(RuntimeVariables.replace(
 						"//input[@value='Delete']"));
 				selenium.waitForPageToLoad("30000");
 				assertTrue(selenium.getConfirmation()
 								   .matches("^Are you sure you want to delete the selected coupons.$"));
-				selenium.saveScreenShotAndSource();
 
 			case 2:
 			case 100:

@@ -1,7 +1,4 @@
 <!--
-This is the DTD for the Liferay Plugins XML file that lists the plugins
-available in a plugin repository
-
 <!DOCTYPE plugin-package PUBLIC
 	"-//Liferay//DTD Plugin Package 5.2.0//EN"
 	"http://www.liferay.com/dtd/liferay-plugin-package_5_2_0.dtd">
@@ -176,13 +173,13 @@ the package should be deployed.
 <!--
 The name attribute specifies the name of the setting.
 -->
-<!ATTLIST setting
+<!ATTLIST name
 	name CDATA #IMPLIED
 >
 
 <!--
 The value attribute specifies the value of the setting.
 -->
-<!ATTLIST setting
+<!ATTLIST value
 	value CDATA #IMPLIED
 >

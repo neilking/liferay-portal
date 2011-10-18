@@ -23,7 +23,8 @@ package com.liferay.portal.service;
  * @see       LockLocalService
  * @generated
  */
-public class LockLocalServiceWrapper implements LockLocalService {
+public class LockLocalServiceWrapper implements LockLocalService,
+	ServiceWrapper<LockLocalService> {
 	public LockLocalServiceWrapper(LockLocalService lockLocalService) {
 		_lockLocalService = lockLocalService;
 	}
@@ -266,27 +267,23 @@ public class LockLocalServiceWrapper implements LockLocalService {
 	}
 
 	public boolean hasLock(long userId, java.lang.String className, long key)
-		throws com.liferay.portal.kernel.exception.PortalException,
-			com.liferay.portal.kernel.exception.SystemException {
+		throws com.liferay.portal.kernel.exception.SystemException {
 		return _lockLocalService.hasLock(userId, className, key);
 	}
 
 	public boolean hasLock(long userId, java.lang.String className,
 		java.lang.String key)
-		throws com.liferay.portal.kernel.exception.PortalException,
-			com.liferay.portal.kernel.exception.SystemException {
+		throws com.liferay.portal.kernel.exception.SystemException {
 		return _lockLocalService.hasLock(userId, className, key);
 	}
 
 	public boolean isLocked(java.lang.String className, long key)
-		throws com.liferay.portal.kernel.exception.PortalException,
-			com.liferay.portal.kernel.exception.SystemException {
+		throws com.liferay.portal.kernel.exception.SystemException {
 		return _lockLocalService.isLocked(className, key);
 	}
 
 	public boolean isLocked(java.lang.String className, java.lang.String key)
-		throws com.liferay.portal.kernel.exception.PortalException,
-			com.liferay.portal.kernel.exception.SystemException {
+		throws com.liferay.portal.kernel.exception.SystemException {
 		return _lockLocalService.isLocked(className, key);
 	}
 
@@ -345,11 +342,25 @@ public class LockLocalServiceWrapper implements LockLocalService {
 		_lockLocalService.unlock(className, key, owner, retrieveFromCache);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public LockLocalService getWrappedLockLocalService() {
 		return _lockLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedLockLocalService(LockLocalService lockLocalService) {
+		_lockLocalService = lockLocalService;
+	}
+
+	public LockLocalService getWrappedService() {
+		return _lockLocalService;
+	}
+
+	public void setWrappedService(LockLocalService lockLocalService) {
 		_lockLocalService = lockLocalService;
 	}
 

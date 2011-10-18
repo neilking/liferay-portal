@@ -54,21 +54,21 @@ int fileEntriesCount = DLAppServiceUtil.getFileEntriesAndFileShortcutsCount(repo
 long categoryId = ParamUtil.getLong(request, "categoryId");
 String tagName = ParamUtil.getString(request, "tag");
 
-String categoryName = null;
-String vocabularyName = null;
+String categoryTitle = null;
+String vocabularyTitle = null;
 
 if (categoryId != 0) {
 	AssetCategory assetCategory = AssetCategoryLocalServiceUtil.getAssetCategory(categoryId);
 
 	assetCategory = assetCategory.toEscapedModel();
 
-	categoryName = assetCategory.getName();
+	categoryTitle = assetCategory.getTitle(locale);
 
 	AssetVocabulary assetVocabulary = AssetVocabularyLocalServiceUtil.getAssetVocabulary(assetCategory.getVocabularyId());
 
 	assetVocabulary = assetVocabulary.toEscapedModel();
 
-	vocabularyName = assetVocabulary.getName();
+	vocabularyTitle = assetVocabulary.getTitle(locale);
 }
 
 boolean useAssetEntryQuery = (categoryId > 0) || Validator.isNotNull(tagName);
@@ -96,9 +96,9 @@ request.setAttribute("view.jsp-useAssetEntryQuery", String.valueOf(useAssetEntry
 
 <c:choose>
 	<c:when test="<%= useAssetEntryQuery %>">
-		<c:if test="<%= Validator.isNotNull(categoryName) %>">
+		<c:if test="<%= Validator.isNotNull(categoryTitle) %>">
 			<h1 class="entry-title">
-				<%= LanguageUtil.format(pageContext, "documents-with-x-x", new String[] {vocabularyName, categoryName}) %>
+				<%= LanguageUtil.format(pageContext, "documents-with-x-x", new String[] {vocabularyTitle, categoryTitle}) %>
 			</h1>
 		</c:if>
 
@@ -112,13 +112,13 @@ request.setAttribute("view.jsp-useAssetEntryQuery", String.valueOf(useAssetEntry
 
 		<%
 		PortalUtil.addPageKeywords(tagName, request);
-		PortalUtil.addPageKeywords(categoryName, request);
+		PortalUtil.addPageKeywords(categoryTitle, request);
 		%>
 
 	</c:when>
 	<c:when test='<%= topLink.equals("documents-home") %>'>
 		<aui:layout>
-			<c:if test="<%= (folder != null) && (folder.getFolderId() != defaultFolderId) %>">
+			<c:if test="<%= (folder != null) %>">
 				<liferay-ui:header
 					backURL="<%= redirect %>"
 					localizeTitle="<%= false %>"
@@ -127,7 +127,7 @@ request.setAttribute("view.jsp-useAssetEntryQuery", String.valueOf(useAssetEntry
 			</c:if>
 
 			<aui:column columnWidth="<%= showFolderMenu ? 75 : 100 %>" cssClass="lfr-asset-column lfr-asset-column-details" first="<%= true %>">
-				<liferay-ui:panel-container extended="<%= false %>" persistState="<%= true %>">
+				<liferay-ui:panel-container extended="<%= false %>" id="documentLibraryDisplayInfoPanelContainer" persistState="<%= true %>">
 					<c:if test="<%= folder != null %>">
 						<c:if test="<%= Validator.isNotNull(folder.getDescription()) %>">
 							<div class="lfr-asset-description">
@@ -160,7 +160,7 @@ request.setAttribute("view.jsp-useAssetEntryQuery", String.valueOf(useAssetEntry
 					</c:if>
 
 					<c:if test="<%= foldersCount > 0 %>">
-						<liferay-ui:panel collapsible="<%= true %>" extended="<%= true %>" persistState="<%= true %>" title='<%= (folder != null) ? "subfolders" : "folders" %>'>
+						<liferay-ui:panel collapsible="<%= true %>" extended="<%= true %>" id="documentLibraryDisplayFoldersListingPanel" persistState="<%= true %>" title='<%= (folder != null) ? "subfolders" : "folders" %>'>
 							<liferay-ui:search-container
 								curParam="cur1"
 								delta="<%= foldersPerPage %>"
@@ -193,7 +193,7 @@ request.setAttribute("view.jsp-useAssetEntryQuery", String.valueOf(useAssetEntry
 						</liferay-ui:panel>
 					</c:if>
 
-					<liferay-ui:panel collapsible="<%= true %>" extended="<%= true %>" persistState="<%= true %>" title="documents">
+					<liferay-ui:panel collapsible="<%= true %>" extended="<%= true %>" id="documentLibraryDisplayDocumentsListingPanel" persistState="<%= true %>" title="documents">
 						<%@ include file="/html/portlet/document_library_display/view_file_entries.jspf" %>
 					</liferay-ui:panel>
 				</liferay-ui:panel-container>
@@ -224,7 +224,7 @@ request.setAttribute("view.jsp-useAssetEntryQuery", String.valueOf(useAssetEntry
 
 		<%
 		if (folder != null) {
-			DLUtil.addPortletBreadcrumbEntries(folder, request, renderResponse);
+			DLUtil.addPortletBreadcrumbEntries(folder, request, renderResponse, true);
 
 			PortalUtil.setPageSubtitle(folder.getName(), request);
 			PortalUtil.setPageDescription(folder.getDescription(), request);
@@ -267,6 +267,8 @@ request.setAttribute("view.jsp-useAssetEntryQuery", String.valueOf(useAssetEntry
 				>
 
 					<%
+					DLFileShortcut fileShortcut = null;
+
 					String rowHREF = null;
 
 					if (DLFileEntryPermission.contains(permissionChecker, fileEntry, ActionKeys.VIEW)) {

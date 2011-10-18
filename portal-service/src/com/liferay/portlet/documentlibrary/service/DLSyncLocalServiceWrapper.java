@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.documentlibrary.service;
 
+import com.liferay.portal.service.ServiceWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link DLSyncLocalService}.
@@ -23,7 +25,8 @@ package com.liferay.portlet.documentlibrary.service;
  * @see       DLSyncLocalService
  * @generated
  */
-public class DLSyncLocalServiceWrapper implements DLSyncLocalService {
+public class DLSyncLocalServiceWrapper implements DLSyncLocalService,
+	ServiceWrapper<DLSyncLocalService> {
 	public DLSyncLocalServiceWrapper(DLSyncLocalService dlSyncLocalService) {
 		_dlSyncLocalService = dlSyncLocalService;
 	}
@@ -245,25 +248,40 @@ public class DLSyncLocalServiceWrapper implements DLSyncLocalService {
 	}
 
 	public com.liferay.portlet.documentlibrary.model.DLSync addSync(
-		java.lang.String fileId, long companyId, long repositoryId,
+		long fileId, long companyId, long repositoryId, long parentFolderId,
 		java.lang.String type)
 		throws com.liferay.portal.kernel.exception.SystemException {
-		return _dlSyncLocalService.addSync(fileId, companyId, repositoryId, type);
+		return _dlSyncLocalService.addSync(fileId, companyId, repositoryId,
+			parentFolderId, type);
 	}
 
 	public com.liferay.portlet.documentlibrary.model.DLSync updateSync(
-		java.lang.String fileId, java.lang.String event)
+		long fileId, long parentFolderId, java.lang.String event)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
-		return _dlSyncLocalService.updateSync(fileId, event);
+		return _dlSyncLocalService.updateSync(fileId, parentFolderId, event);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public DLSyncLocalService getWrappedDLSyncLocalService() {
 		return _dlSyncLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedDLSyncLocalService(
 		DLSyncLocalService dlSyncLocalService) {
+		_dlSyncLocalService = dlSyncLocalService;
+	}
+
+	public DLSyncLocalService getWrappedService() {
+		return _dlSyncLocalService;
+	}
+
+	public void setWrappedService(DLSyncLocalService dlSyncLocalService) {
 		_dlSyncLocalService = dlSyncLocalService;
 	}
 

@@ -81,7 +81,7 @@ portletURL.setParameter("tabs1", tabs1);
 
 			<c:if test="<%= !results.isEmpty() %>">
 				<aui:button-row>
-					<aui:button onClick='<%= renderResponse.getNamespace() + "expireArticles();" %>' value="expire" />
+					<aui:button cssClass="expire-articles-button" onClick='<%= renderResponse.getNamespace() + "expireArticles();" %>' value="expire" />
 
 					<aui:button cssClass="delete-articles-button" onClick='<%= renderResponse.getNamespace() + "deleteArticles();" %>' value="delete" />
 				</aui:button-row>
@@ -123,7 +123,25 @@ portletURL.setParameter("tabs1", tabs1);
 			<aui:input name="groupId" type="hidden" />
 			<aui:input name="deleteStructureIds" type="hidden" />
 
-			<liferay-ui:error exception="<%= RequiredStructureException.class %>" message="required-structures-could-not-be-deleted" />
+			<liferay-ui:error exception="<%= RequiredStructureException.class %>">
+				<liferay-ui:message key="required-structures-could-not-be-deleted" />
+
+				<%
+				RequiredStructureException rse = (RequiredStructureException)errorException;
+				%>
+
+				<c:if test="<%= rse.getType() == RequiredStructureException.REFERENCED_STRUCTURE %>">
+					<liferay-ui:message key="they-are-referenced-by-other-structures" />
+				</c:if>
+
+				<c:if test="<%= rse.getType() == RequiredStructureException.REFERENCED_TEMPLATE %>">
+					<liferay-ui:message key="they-are-referenced-by-templates" />
+				</c:if>
+
+				<c:if test="<%= rse.getType() == RequiredStructureException.REFERENCED_WEB_CONTENT %>">
+					<liferay-ui:message key="they-are-referenced-by-web-contents" />
+				</c:if>
+			</liferay-ui:error>
 
 			<%
 			StructureSearch searchContainer = new StructureSearch(renderRequest, portletURL);
@@ -173,13 +191,14 @@ portletURL.setParameter("tabs1", tabs1);
 
 				row.addText(structure.getStructureId(), rowURL);
 
-				// Name and description
+				// Name
 
-				if (Validator.isNotNull(structure.getDescription())) {
-					row.addText(structure.getName().concat("<br />").concat(structure.getDescription()), rowURL);
-				}
-				else {
-					row.addText(structure.getName(), rowURL);
+				row.addText(HtmlUtil.escape(structure.getName(locale)), rowURL);
+
+				// Description
+
+				if (Validator.isNotNull(structure.getDescription(locale))) {
+					row.addText(HtmlUtil.escape(structure.getDescription(locale)), rowURL);
 				}
 
 				// Action
@@ -198,7 +217,11 @@ portletURL.setParameter("tabs1", tabs1);
 			<aui:input name="groupId" type="hidden" />
 			<aui:input name="deleteTemplateIds" type="hidden" />
 
-			<liferay-ui:error exception="<%= RequiredTemplateException.class %>" message="required-templates-could-not-be-deleted" />
+			<liferay-ui:error exception="<%= RequiredTemplateException.class %>">
+				<liferay-ui:message key="required-templates-could-not-be-deleted" />
+
+				<liferay-ui:message key="they-are-are-referenced-by-web-contents" />
+			</liferay-ui:error>
 
 			<%
 			TemplateSearch searchContainer = new TemplateSearch(renderRequest, portletURL);
@@ -252,7 +275,11 @@ portletURL.setParameter("tabs1", tabs1);
 
 				row.addText(template.getTemplateId(), rowURL);
 
-				// Name, description, and image
+				// Name
+
+				row.addText(HtmlUtil.escape(template.getName(locale)), rowURL);
+
+				// Description and image
 
 				row.addJSP("/html/portlet/journal/template_description.jsp");
 
@@ -439,7 +466,7 @@ portletURL.setParameter("tabs1", tabs1);
 								<aui:a href="<%= editStructureURL %>"><%= structure.getId() %></aui:a>
 							</td>
 							<td>
-								<aui:a href="<%= editStructureURL %>"><%= structure.getName() %></aui:a>
+								<aui:a href="<%= editStructureURL %>"><%= structure.getName(locale) %></aui:a>
 							</td>
 						</tr>
 
@@ -488,7 +515,7 @@ portletURL.setParameter("tabs1", tabs1);
 								<aui:a href="<%= editTemplateURL %>"><%= template.getId() %></aui:a>
 							</td>
 							<td>
-								<aui:a href="<%= editTemplateURL %>"><%= template.getName() %></aui:a>
+								<aui:a href="<%= editTemplateURL %>"><%= template.getName(locale) %></aui:a>
 							</td>
 						</tr>
 
@@ -577,15 +604,13 @@ portletURL.setParameter("tabs1", tabs1);
 </aui:script>
 
 <aui:script use="aui-base">
-	var deleteButtonWrapper = A.one('.delete-articles-button');
+	var buttons = A.all('.delete-articles-button, .expire-articles-button');
 
-	if (deleteButtonWrapper) {
-		var deleteButton = deleteButtonWrapper.one(':button');
-
+	if (buttons.size()) {
 		var toggleDisabled = function(disabled) {
-			deleteButton.attr('disabled', disabled);
+			buttons.all(':button').attr('disabled', disabled);
 
-			deleteButtonWrapper.toggleClass('aui-button-disabled', disabled);
+			buttons.toggleClass('aui-button-disabled', disabled);
 		};
 
 		var resultsGrid = A.one('.results-grid');

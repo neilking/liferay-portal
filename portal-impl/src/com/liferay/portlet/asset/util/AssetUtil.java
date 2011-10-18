@@ -92,13 +92,15 @@ public class AssetUtil {
 				ancestorCategory.getCategoryId()));
 
 			addPortletBreadcrumbEntry(
-				request, ancestorCategory.getName(), portletURL.toString());
+				request, ancestorCategory.getTitleCurrentValue(),
+				portletURL.toString());
 		}
 
 		portletURL.setParameter("categoryId", String.valueOf(assetCategoryId));
 
 		addPortletBreadcrumbEntry(
-			request, assetCategory.getName(), portletURL.toString());
+			request, assetCategory.getTitleCurrentValue(),
+			portletURL.toString());
 	}
 
 	public static void addPortletBreadcrumbEntry(
@@ -130,13 +132,13 @@ public class AssetUtil {
 
 		StringBuffer sb = new StringBuffer();
 
-		sb.append(ListUtil.toString(tags, "name"));
+		sb.append(ListUtil.toString(tags, AssetTag.NAME_ACCESSOR));
 
 		if (!tags.isEmpty()) {
 			sb.append(StringPool.COMMA);
 		}
 
-		sb.append(ListUtil.toString(categories, "name"));
+		sb.append(ListUtil.toString(categories, AssetCategory.NAME_ACCESSOR));
 
 		return sb.toString();
 	}

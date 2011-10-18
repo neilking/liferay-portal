@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.calendar.service;
 
+import com.liferay.portal.service.ServiceWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link CalEventService}.
@@ -23,7 +25,8 @@ package com.liferay.portlet.calendar.service;
  * @see       CalEventService
  * @generated
  */
-public class CalEventServiceWrapper implements CalEventService {
+public class CalEventServiceWrapper implements CalEventService,
+	ServiceWrapper<CalEventService> {
 	public CalEventServiceWrapper(CalEventService calEventService) {
 		_calEventService = calEventService;
 	}
@@ -129,10 +132,10 @@ public class CalEventServiceWrapper implements CalEventService {
 		return _calEventService.hasEvents(groupId, cal, types);
 	}
 
-	public void importICal4j(long groupId, java.io.File file)
+	public void importICal4j(long groupId, java.io.InputStream inputStream)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
-		_calEventService.importICal4j(groupId, file);
+		_calEventService.importICal4j(groupId, inputStream);
 	}
 
 	public com.liferay.portlet.calendar.model.CalEvent updateEvent(
@@ -155,11 +158,25 @@ public class CalEventServiceWrapper implements CalEventService {
 			firstReminder, secondReminder, serviceContext);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public CalEventService getWrappedCalEventService() {
 		return _calEventService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedCalEventService(CalEventService calEventService) {
+		_calEventService = calEventService;
+	}
+
+	public CalEventService getWrappedService() {
+		return _calEventService;
+	}
+
+	public void setWrappedService(CalEventService calEventService) {
 		_calEventService = calEventService;
 	}
 

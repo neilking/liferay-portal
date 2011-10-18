@@ -154,6 +154,10 @@ public abstract class BaseDB implements DB {
 		return CounterLocalServiceUtil.increment();
 	}
 
+	public long increment(String name) throws SystemException {
+		return CounterLocalServiceUtil.increment(name);
+	}
+
 	public boolean isSupportsAlterColumnName() {
 		return _SUPPORTS_ALTER_COLUMN_NAME;
 	}
@@ -374,7 +378,7 @@ public abstract class BaseDB implements DB {
 									sqle.getMessage());
 
 								if (!message.startsWith("Duplicate key name")) {
-									_log.warn(message + ": " + sql);
+									_log.warn(message + ": " + buildSQL(sql));
 								}
 
 								if (message.startsWith("Duplicate entry") ||
@@ -492,7 +496,7 @@ public abstract class BaseDB implements DB {
 		throws IOException;
 
 	protected String[] buildColumnNameTokens(String line) {
-		String[] words = StringUtil.split(line, " ");
+		String[] words = StringUtil.split(line, ' ');
 
 		if (words.length == 7) {
 			words[5] = "not null;";
@@ -506,7 +510,7 @@ public abstract class BaseDB implements DB {
 	}
 
 	protected String[] buildColumnTypeTokens(String line) {
-		String[] words = StringUtil.split(line, " ");
+		String[] words = StringUtil.split(line, ' ');
 
 		String nullable = "";
 

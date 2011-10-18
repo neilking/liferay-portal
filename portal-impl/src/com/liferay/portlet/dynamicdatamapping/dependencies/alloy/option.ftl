@@ -1,13 +1,9 @@
 <#include "../init.ftl">
 
-<#if fieldValue != "">
-	<#assign selected = (field.value == fieldValue)>
-<#else>
-	<#assign selected = (field.value == parentField.predefinedValue)>
-</#if>
+<#assign selected = (fieldStructure.value == fieldValue)>
 
 <#if parentType == "select">
-	<@aui.option cssClass=cssClass label=field.label selected=selected value=field.value />
+	<@aui.option cssClass=cssClass label=fieldStructure.label selected=selected value=fieldStructure.value />
 <#else>
-	<@aui.input checked=selected cssClass=cssClass label=field.label name=parentName type="radio" value=field.value />
+	<@aui.input checked=selected cssClass=cssClass label=fieldStructure.label name=parentName type="radio" value=fieldStructure.value />
 </#if>

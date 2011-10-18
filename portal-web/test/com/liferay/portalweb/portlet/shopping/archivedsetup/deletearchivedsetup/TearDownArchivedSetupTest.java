@@ -30,12 +30,12 @@ public class TearDownArchivedSetupTest extends BaseTestCase {
 				selenium.open("/web/guest/home/");
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
 					try {
-						if (selenium.isElementPresent("link=Shopping Test Page")) {
+						if (selenium.isVisible("link=Shopping Test Page")) {
 							break;
 						}
 					}
@@ -45,16 +45,14 @@ public class TearDownArchivedSetupTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
 				selenium.clickAt("link=Shopping Test Page",
-					RuntimeVariables.replace(""));
+					RuntimeVariables.replace("Shopping Test Page"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
 				selenium.clickAt("//strong/a",
 					RuntimeVariables.replace("Options"));
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
@@ -70,20 +68,19 @@ public class TearDownArchivedSetupTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
 				assertEquals(RuntimeVariables.replace("Configuration"),
 					selenium.getText(
 						"//div[@class='lfr-component lfr-menu-list']/ul/li[2]/a"));
-				selenium.click(
-					"//div[@class='lfr-component lfr-menu-list']/ul/li[2]/a");
+				selenium.clickAt("//div[@class='lfr-component lfr-menu-list']/ul/li[2]/a",
+					RuntimeVariables.replace("Configuration"));
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
 					try {
-						if (selenium.isVisible("//span[@class='taglib-text']")) {
+						if (selenium.isVisible("//a[@class='taglib-icon']/span")) {
 							break;
 						}
 					}
@@ -93,11 +90,9 @@ public class TearDownArchivedSetupTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
-				selenium.clickAt("//span[@class='taglib-text']",
+				selenium.clickAt("//a[@class='taglib-icon']/span",
 					RuntimeVariables.replace("Archive/Restore Setup"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
 
 				boolean shoppingArchivedSetup1Present = selenium.isElementPresent(
 						"//tr[3]/td[4]/span/ul/li/strong/a");
@@ -108,11 +103,14 @@ public class TearDownArchivedSetupTest extends BaseTestCase {
 					continue;
 				}
 
+				selenium.selectFrame("//iframe");
+				assertEquals(RuntimeVariables.replace("Actions"),
+					selenium.getText("//tr[3]/td[4]/span/ul/li/strong/a"));
 				selenium.clickAt("//tr[3]/td[4]/span/ul/li/strong/a",
 					RuntimeVariables.replace("Actions"));
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
@@ -128,7 +126,6 @@ public class TearDownArchivedSetupTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
 				assertEquals(RuntimeVariables.replace("Delete"),
 					selenium.getText(
 						"//div[@class='lfr-component lfr-menu-list']/ul/li[2]/a"));
@@ -137,9 +134,9 @@ public class TearDownArchivedSetupTest extends BaseTestCase {
 				selenium.waitForPageToLoad("30000");
 				assertTrue(selenium.getConfirmation()
 								   .matches("^Are you sure you want to delete this[\\s\\S]$"));
-				selenium.saveScreenShotAndSource();
 
 			case 2:
+				selenium.selectFrame("relative=top");
 
 				boolean shoppingArchivedSetup2Present = selenium.isElementPresent(
 						"//tr[3]/td[4]/span/ul/li/strong/a");
@@ -150,11 +147,14 @@ public class TearDownArchivedSetupTest extends BaseTestCase {
 					continue;
 				}
 
+				selenium.selectFrame("//iframe");
+				assertEquals(RuntimeVariables.replace("Actions"),
+					selenium.getText("//tr[3]/td[4]/span/ul/li/strong/a"));
 				selenium.clickAt("//tr[3]/td[4]/span/ul/li/strong/a",
 					RuntimeVariables.replace("Actions"));
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
@@ -170,7 +170,6 @@ public class TearDownArchivedSetupTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
 				assertEquals(RuntimeVariables.replace("Delete"),
 					selenium.getText(
 						"//div[@class='lfr-component lfr-menu-list']/ul/li[2]/a"));
@@ -179,9 +178,9 @@ public class TearDownArchivedSetupTest extends BaseTestCase {
 				selenium.waitForPageToLoad("30000");
 				assertTrue(selenium.getConfirmation()
 								   .matches("^Are you sure you want to delete this[\\s\\S]$"));
-				selenium.saveScreenShotAndSource();
 
 			case 3:
+				selenium.selectFrame("relative=top");
 
 				boolean shoppingArchivedSetup3Present = selenium.isElementPresent(
 						"//tr[3]/td[4]/span/ul/li/strong/a");
@@ -192,11 +191,14 @@ public class TearDownArchivedSetupTest extends BaseTestCase {
 					continue;
 				}
 
+				selenium.selectFrame("//iframe");
+				assertEquals(RuntimeVariables.replace("Actions"),
+					selenium.getText("//tr[3]/td[4]/span/ul/li/strong/a"));
 				selenium.clickAt("//tr[3]/td[4]/span/ul/li/strong/a",
 					RuntimeVariables.replace("Actions"));
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
@@ -212,7 +214,6 @@ public class TearDownArchivedSetupTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
 				assertEquals(RuntimeVariables.replace("Delete"),
 					selenium.getText(
 						"//div[@class='lfr-component lfr-menu-list']/ul/li[2]/a"));
@@ -221,9 +222,9 @@ public class TearDownArchivedSetupTest extends BaseTestCase {
 				selenium.waitForPageToLoad("30000");
 				assertTrue(selenium.getConfirmation()
 								   .matches("^Are you sure you want to delete this[\\s\\S]$"));
-				selenium.saveScreenShotAndSource();
 
 			case 4:
+				selenium.selectFrame("relative=top");
 
 				boolean shoppingArchivedSetup4Present = selenium.isElementPresent(
 						"//tr[3]/td[4]/span/ul/li/strong/a");
@@ -234,11 +235,14 @@ public class TearDownArchivedSetupTest extends BaseTestCase {
 					continue;
 				}
 
+				selenium.selectFrame("//iframe");
+				assertEquals(RuntimeVariables.replace("Actions"),
+					selenium.getText("//tr[3]/td[4]/span/ul/li/strong/a"));
 				selenium.clickAt("//tr[3]/td[4]/span/ul/li/strong/a",
 					RuntimeVariables.replace("Actions"));
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
@@ -254,7 +258,6 @@ public class TearDownArchivedSetupTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
 				assertEquals(RuntimeVariables.replace("Delete"),
 					selenium.getText(
 						"//div[@class='lfr-component lfr-menu-list']/ul/li[2]/a"));
@@ -263,9 +266,9 @@ public class TearDownArchivedSetupTest extends BaseTestCase {
 				selenium.waitForPageToLoad("30000");
 				assertTrue(selenium.getConfirmation()
 								   .matches("^Are you sure you want to delete this[\\s\\S]$"));
-				selenium.saveScreenShotAndSource();
 
 			case 5:
+				selenium.selectFrame("relative=top");
 
 				boolean shoppingArchivedSetup5Present = selenium.isElementPresent(
 						"//tr[3]/td[4]/span/ul/li/strong/a");
@@ -276,11 +279,14 @@ public class TearDownArchivedSetupTest extends BaseTestCase {
 					continue;
 				}
 
+				selenium.selectFrame("//iframe");
+				assertEquals(RuntimeVariables.replace("Actions"),
+					selenium.getText("//tr[3]/td[4]/span/ul/li/strong/a"));
 				selenium.clickAt("//tr[3]/td[4]/span/ul/li/strong/a",
 					RuntimeVariables.replace("Actions"));
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
@@ -296,7 +302,6 @@ public class TearDownArchivedSetupTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
 				assertEquals(RuntimeVariables.replace("Delete"),
 					selenium.getText(
 						"//div[@class='lfr-component lfr-menu-list']/ul/li[2]/a"));
@@ -305,9 +310,10 @@ public class TearDownArchivedSetupTest extends BaseTestCase {
 				selenium.waitForPageToLoad("30000");
 				assertTrue(selenium.getConfirmation()
 								   .matches("^Are you sure you want to delete this[\\s\\S]$"));
-				selenium.saveScreenShotAndSource();
 
 			case 6:
+				selenium.selectFrame("relative=top");
+
 			case 100:
 				label = -1;
 			}

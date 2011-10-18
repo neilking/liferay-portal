@@ -17,6 +17,8 @@
 <%@ include file="/html/portlet/journal_articles/init.jsp" %>
 
 <%
+String redirect = ParamUtil.getString(request, "redirect");
+
 String articleId = ParamUtil.getString(request, "articleId");
 double version = ParamUtil.getDouble(request, "version");
 %>
@@ -119,7 +121,26 @@ double version = ParamUtil.getDouble(request, "version");
 				articleURL.setParameter("articleId", article.getArticleId());
 				articleURL.setParameter("version", String.valueOf(article.getVersion()));
 
-				rowHREF = articleURL.toString();
+				if (pageUrl.equals("viewInContext")) {
+					AssetRendererFactory assetRendererFactory = AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(JournalArticle.class.getName());
+
+					AssetRenderer assetRenderer = assetRendererFactory.getAssetRenderer(article.getId());
+
+					String viewFullContentURLString = articleURL.toString();
+
+					viewFullContentURLString = HttpUtil.setParameter(viewFullContentURLString, "redirect", currentURL);
+
+					rowHREF = assetRenderer.getURLViewInContext(liferayPortletRequest, liferayPortletResponse, viewFullContentURLString);
+
+					rowHREF = HttpUtil.setParameter(rowHREF, "redirect", currentURL);
+
+					if (Validator.isNull(rowHREF)) {
+						rowHREF = articleURL.toString();
+					}
+				}
+				else {
+					rowHREF = articleURL.toString();
+				}
 			}
 
 			String target = null;
@@ -150,7 +171,7 @@ double version = ParamUtil.getDouble(request, "version");
 
 			rowTextEntry = (TextSearchEntry)rowTextEntry.clone();
 
-			rowTextEntry.setName(article.getTitle(locale));
+			rowTextEntry.setName(HtmlUtil.escape(article.getTitle(locale)));
 
 			row.addText(rowTextEntry);
 
@@ -205,6 +226,18 @@ double version = ParamUtil.getDouble(request, "version");
 
 			<c:choose>
 				<c:when test="<%= (articleDisplay != null) && !expired %>">
+					<c:if test='<%= pageUrl.equals("normal") %>'>
+						<portlet:renderURL var="backURL">
+							<portlet:param name="struts_action" value="/journal_articles/view" />
+							<portlet:param name="redirect" value="<%= redirect %>" />
+						</portlet:renderURL>
+
+						<liferay-ui:header
+							backURL="<%= backURL %>"
+							localizeTitle="<%= false %>"
+							title="<%= article.getTitle(locale) %>"
+						/>
+					</c:if>
 
 					<%
 					AssetEntryServiceUtil.incrementViewCounter(JournalArticle.class.getName(), articleDisplay.getResourcePrimKey());

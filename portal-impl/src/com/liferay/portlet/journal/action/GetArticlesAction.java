@@ -14,10 +14,10 @@
 
 package com.liferay.portlet.journal.action;
 
-import com.liferay.portal.kernel.dao.search.DAOParamUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -39,7 +39,6 @@ import com.liferay.portlet.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.portlet.journal.util.JournalUtil;
 import com.liferay.portlet.journal.util.comparator.ArticleDisplayDateComparator;
 import com.liferay.portlet.journal.util.comparator.ArticleModifiedDateComparator;
-import com.liferay.util.servlet.ServletResponseUtil;
 
 import java.text.DateFormat;
 
@@ -89,17 +88,17 @@ public class GetArticlesAction extends Action {
 		throws Exception {
 
 		long companyId = PortalUtil.getCompanyId(request);
-		long groupId = DAOParamUtil.getLong(request, "groupId");
+		long groupId = ParamUtil.getLong(request, "groupId");
 		String articleId = null;
 		Double version = null;
 		String title = null;
 		String description = null;
 		String content = null;
-		String type = DAOParamUtil.getString(request, "type");
+		String type = ParamUtil.getString(request, "type");
 		String[] structureIds = StringUtil.split(
-			DAOParamUtil.getString(request, "structureId"));
+			ParamUtil.getString(request, "structureId"));
 		String[] templateIds = StringUtil.split(
-			DAOParamUtil.getString(request, "templateId"));
+			ParamUtil.getString(request, "templateId"));
 
 		Date displayDateGT = null;
 

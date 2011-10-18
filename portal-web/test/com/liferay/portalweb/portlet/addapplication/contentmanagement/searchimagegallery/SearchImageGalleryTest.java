@@ -26,7 +26,7 @@ public class SearchImageGalleryTest extends BaseTestCase {
 		selenium.clickAt("_145_addApplication", RuntimeVariables.replace(""));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -41,21 +41,18 @@ public class SearchImageGalleryTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		selenium.type("layout_configuration_content",
 			RuntimeVariables.replace(""));
-		selenium.saveScreenShotAndSource();
 		selenium.typeKeys("layout_configuration_content",
-			RuntimeVariables.replace("i"));
-		selenium.saveScreenShotAndSource();
+			RuntimeVariables.replace("m"));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isVisible("//div[@title='Image Gallery']")) {
+				if (selenium.isVisible("//div[@title='Media Gallery']")) {
 					break;
 				}
 			}
@@ -65,7 +62,6 @@ public class SearchImageGalleryTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		assertTrue(selenium.isVisible("//div[@title='Image Gallery']"));
+		assertTrue(selenium.isVisible("//div[@title='Media Gallery']"));
 	}
 }

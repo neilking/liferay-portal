@@ -26,7 +26,7 @@ public class SelectPortletScopePage2WCWebContentWCDTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -41,11 +41,9 @@ public class SelectPortletScopePage2WCWebContentWCDTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		selenium.clickAt("link=Web Content Display Test Page3",
 			RuntimeVariables.replace("Web Content Display Test Page3"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace(
 				"Select existing web content or add some web content to be displayed in this portlet."),
 			selenium.getText("//div[@class='portlet-msg-info']"));
@@ -53,12 +51,12 @@ public class SelectPortletScopePage2WCWebContentWCDTest extends BaseTestCase {
 			RuntimeVariables.replace("Select Web Content"));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isVisible("link=Web Content Name")) {
+				if (selenium.isVisible("link=WCD Web Content Title")) {
 					break;
 				}
 			}
@@ -68,19 +66,18 @@ public class SelectPortletScopePage2WCWebContentWCDTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Web Content Name",
-			RuntimeVariables.replace("Web Content Name"));
+		selenium.clickAt("link=WCD Web Content Title",
+			RuntimeVariables.replace("WCD Web Content Title"));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
 				if (selenium.isPartialText(
 							"//form[@id='_86_fm1']/div[1]/span[2]",
-							"Displaying Content: Web Content Name")) {
+							"Displaying Content: WCD Web Content Title")) {
 					break;
 				}
 			}
@@ -90,14 +87,28 @@ public class SelectPortletScopePage2WCWebContentWCDTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		assertTrue(selenium.isPartialText(
 				"//form[@id='_86_fm1']/div[1]/span[2]",
-				"Displaying Content: Web Content Name"));
+				"Displaying Content: WCD Web Content Title"));
 		selenium.clickAt("//input[@value='Save']",
 			RuntimeVariables.replace("Save"));
-		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
+
+		for (int second = 0;; second++) {
+			if (second >= 90) {
+				fail("timeout");
+			}
+
+			try {
+				if (selenium.isVisible("//div[@class='portlet-msg-success']")) {
+					break;
+				}
+			}
+			catch (Exception e) {
+			}
+
+			Thread.sleep(1000);
+		}
+
 		assertEquals(RuntimeVariables.replace(
 				"You have successfully updated the setup."),
 			selenium.getText("//div[@class='portlet-msg-success']"));

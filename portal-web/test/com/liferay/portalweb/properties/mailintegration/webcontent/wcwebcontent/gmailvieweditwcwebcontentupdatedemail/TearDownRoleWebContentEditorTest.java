@@ -22,6 +22,10 @@ import com.liferay.portalweb.portal.util.RuntimeVariables;
  */
 public class TearDownRoleWebContentEditorTest extends BaseTestCase {
 	public void testTearDownRoleWebContentEditor() throws Exception {
+		selenium.selectWindow("null");
+		selenium.saveScreenShotAndSource();
+		selenium.selectFrame("relative=top");
+		selenium.saveScreenShotAndSource();
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
@@ -56,8 +60,9 @@ public class TearDownRoleWebContentEditorTest extends BaseTestCase {
 		selenium.waitForPageToLoad("30000");
 		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace("Actions"),
-			selenium.getText("//strong/a"));
-		selenium.clickAt("//strong/a", RuntimeVariables.replace("Actions"));
+			selenium.getText("//span[@title='Actions']/ul/li/strong/a"));
+		selenium.clickAt("//span[@title='Actions']/ul/li/strong/a",
+			RuntimeVariables.replace("Actions"));
 
 		for (int second = 0;; second++) {
 			if (second >= 60) {

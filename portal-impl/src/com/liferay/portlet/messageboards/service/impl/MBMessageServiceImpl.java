@@ -16,10 +16,10 @@ package com.liferay.portlet.messageboards.service.impl;
 
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.parsers.bbcode.BBCodeTranslatorUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ObjectValuePair;
-import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -31,7 +31,7 @@ import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
-import com.liferay.portal.util.PropsUtil;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.messageboards.LockedThreadException;
 import com.liferay.portlet.messageboards.NoSuchCategoryException;
 import com.liferay.portlet.messageboards.model.MBCategory;
@@ -44,7 +44,6 @@ import com.liferay.portlet.messageboards.service.base.MBMessageServiceBaseImpl;
 import com.liferay.portlet.messageboards.service.permission.MBCategoryPermission;
 import com.liferay.portlet.messageboards.service.permission.MBDiscussionPermission;
 import com.liferay.portlet.messageboards.service.permission.MBMessagePermission;
-import com.liferay.portlet.messageboards.util.BBCodeUtil;
 import com.liferay.portlet.messageboards.util.comparator.MessageCreateDateComparator;
 import com.liferay.util.RSSUtil;
 
@@ -56,13 +55,17 @@ import com.sun.syndication.feed.synd.SyndFeed;
 import com.sun.syndication.feed.synd.SyndFeedImpl;
 import com.sun.syndication.io.FeedException;
 
+import java.io.InputStream;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 /**
  * @author Brian Wing Shun Chan
  * @author Mika Koivisto
+ * @author Shuyang Zhou
  */
 public class MBMessageServiceImpl extends MBMessageServiceBaseImpl {
 
@@ -88,8 +91,8 @@ public class MBMessageServiceImpl extends MBMessageServiceBaseImpl {
 	public MBMessage addMessage(
 			long groupId, long categoryId, long threadId, long parentMessageId,
 			String subject, String body, String format,
-			List<ObjectValuePair<String, byte[]>> files, boolean anonymous,
-			double priority, boolean allowPingbacks,
+			List<ObjectValuePair<String, InputStream>> inputStreamOVPs,
+			boolean anonymous, double priority, boolean allowPingbacks,
 			ServiceContext serviceContext)
 		throws PortalException, SystemException {
 
@@ -105,7 +108,7 @@ public class MBMessageServiceImpl extends MBMessageServiceBaseImpl {
 				getPermissionChecker(), groupId, categoryId,
 				ActionKeys.ADD_FILE)) {
 
-			files.clear();
+			inputStreamOVPs = Collections.emptyList();
 		}
 
 		boolean preview = GetterUtil.getBoolean(
@@ -127,13 +130,14 @@ public class MBMessageServiceImpl extends MBMessageServiceBaseImpl {
 
 		return mbMessageLocalService.addMessage(
 			getGuestOrUserId(), null, groupId, categoryId, threadId,
-			parentMessageId, subject, body, format, files, anonymous, priority,
-			allowPingbacks, serviceContext);
+			parentMessageId, subject, body, format, inputStreamOVPs,
+			anonymous, priority, allowPingbacks, serviceContext);
 	}
 
 	public MBMessage addMessage(
 			long groupId, long categoryId, String subject, String body,
-			String format, List<ObjectValuePair<String, byte[]>> files,
+			String format,
+			List<ObjectValuePair<String, InputStream>> inputStreamOVPs,
 			boolean anonymous, double priority, boolean allowPingbacks,
 			ServiceContext serviceContext)
 		throws PortalException, SystemException {
@@ -146,7 +150,7 @@ public class MBMessageServiceImpl extends MBMessageServiceBaseImpl {
 				getPermissionChecker(), groupId, categoryId,
 				ActionKeys.ADD_FILE)) {
 
-			files.clear();
+			inputStreamOVPs = Collections.emptyList();
 		}
 
 		if (!MBCategoryPermission.contains(
@@ -158,7 +162,8 @@ public class MBMessageServiceImpl extends MBMessageServiceBaseImpl {
 
 		return mbMessageLocalService.addMessage(
 			getGuestOrUserId(), null, groupId, categoryId, subject, body,
-			format, files, anonymous, priority, allowPingbacks, serviceContext);
+			format, inputStreamOVPs, anonymous, priority, allowPingbacks,
+			serviceContext);
 	}
 
 	public void deleteDiscussionMessage(
@@ -450,7 +455,16 @@ public class MBMessageServiceImpl extends MBMessageServiceBaseImpl {
 			getPermissionChecker(), messageId, ActionKeys.VIEW);
 
 		return mbMessageLocalService.getMessageDisplay(
-			messageId, status, threadView, includePrevAndNext);
+			getGuestOrUserId(), messageId, status, threadView,
+			includePrevAndNext);
+	}
+
+	public int getThreadAnswersCount(
+			long groupId, long categoryId, long threadId)
+		throws SystemException {
+
+		return mbMessagePersistence.filterCountByG_C_T_A(
+			groupId, categoryId, threadId, true);
 	}
 
 	public List<MBMessage> getThreadMessages(
@@ -469,7 +483,7 @@ public class MBMessageServiceImpl extends MBMessageServiceBaseImpl {
 	}
 
 	public int getThreadMessagesCount(
-		long groupId, long categoryId, long threadId, int status)
+			long groupId, long categoryId, long threadId, int status)
 		throws SystemException {
 
 		if (status == WorkflowConstants.STATUS_ANY) {
@@ -546,6 +560,12 @@ public class MBMessageServiceImpl extends MBMessageServiceBaseImpl {
 		mbMessageLocalService.unsubscribeMessage(getUserId(), messageId);
 	}
 
+	public void updateAnswer(long messageId, boolean answer, boolean cascade)
+		throws PortalException, SystemException {
+
+		mbMessageLocalService.updateAnswer(messageId, answer, cascade);
+	}
+
 	public MBMessage updateDiscussionMessage(
 			String className, long classPK, String permissionClassName,
 			long permissionClassPK, long permissionOwnerId, long messageId,
@@ -567,7 +587,7 @@ public class MBMessageServiceImpl extends MBMessageServiceBaseImpl {
 
 	public MBMessage updateMessage(
 			long messageId, String subject, String body,
-			List<ObjectValuePair<String, byte[]>> files,
+			List<ObjectValuePair<String, InputStream>> inputStreamOVPs,
 			List<String> existingFiles, double priority, boolean allowPingbacks,
 			ServiceContext serviceContext)
 		throws PortalException, SystemException {
@@ -597,7 +617,7 @@ public class MBMessageServiceImpl extends MBMessageServiceBaseImpl {
 				getPermissionChecker(), message.getGroupId(),
 				message.getCategoryId(), ActionKeys.ADD_FILE)) {
 
-			files.clear();
+			inputStreamOVPs = Collections.emptyList();
 		}
 
 		if (!MBCategoryPermission.contains(
@@ -611,8 +631,8 @@ public class MBMessageServiceImpl extends MBMessageServiceBaseImpl {
 		}
 
 		return mbMessageLocalService.updateMessage(
-			getGuestOrUserId(), messageId, subject, body, files, existingFiles,
-			priority, allowPingbacks, serviceContext);
+			getGuestOrUserId(), messageId, subject, body, inputStreamOVPs,
+			existingFiles, priority, allowPingbacks, serviceContext);
 	}
 
 	protected void checkReplyToPermission(
@@ -676,13 +696,14 @@ public class MBMessageServiceImpl extends MBMessageServiceBaseImpl {
 			if (displayStyle.equals(RSSUtil.DISPLAY_STYLE_ABSTRACT)) {
 				value = StringUtil.shorten(
 					HtmlUtil.extractText(message.getBody()),
-					_RSS_ABSTRACT_LENGTH, StringPool.BLANK);
+					PropsValues.MESSAGE_BOARDS_RSS_ABSTRACT_LENGTH,
+					StringPool.BLANK);
 			}
 			else if (displayStyle.equals(RSSUtil.DISPLAY_STYLE_TITLE)) {
 				value = StringPool.BLANK;
 			}
 			else {
-				value = BBCodeUtil.getHTML(message);
+				value = BBCodeTranslatorUtil.getHTML(message.getBody());
 
 				value = StringUtil.replace(
 					value,
@@ -714,7 +735,7 @@ public class MBMessageServiceImpl extends MBMessageServiceBaseImpl {
 
 			SyndContent syndContent = new SyndContentImpl();
 
-			syndContent.setType(RSSUtil.DEFAULT_ENTRY_TYPE);
+			syndContent.setType(RSSUtil.ENTRY_TYPE_DEFAULT);
 			syndContent.setValue(value);
 
 			syndEntry.setDescription(syndContent);
@@ -729,8 +750,5 @@ public class MBMessageServiceImpl extends MBMessageServiceBaseImpl {
 			throw new SystemException(fe);
 		}
 	}
-
-	private static final int _RSS_ABSTRACT_LENGTH = GetterUtil.getInteger(
-		PropsUtil.get(PropsKeys.MESSAGE_BOARDS_RSS_ABSTRACT_LENGTH));
 
 }

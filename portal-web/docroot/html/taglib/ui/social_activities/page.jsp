@@ -20,7 +20,6 @@
 <%@ page import="com.liferay.portlet.social.model.SocialActivityFeedEntry" %>
 <%@ page import="com.liferay.portlet.social.service.SocialActivityInterpreterLocalServiceUtil" %>
 <%@ page import="com.liferay.portlet.social.service.SocialActivityLocalServiceUtil" %>
-
 <%@ page import="com.liferay.util.RSSUtil" %>
 
 <%@ page import="com.sun.syndication.feed.synd.SyndContent" %>
@@ -34,6 +33,7 @@
 String className = (String)request.getAttribute("liferay-ui:social-activities:className");
 long classPK = GetterUtil.getLong((String)request.getAttribute("liferay-ui:social-activities:classPK"));
 List<SocialActivity> activities = (List<SocialActivity>)request.getAttribute("liferay-ui:social-activities:activities");
+boolean displayRSSFeed = GetterUtil.getBoolean((String)request.getAttribute("liferay-ui:social-activities:displayRSSFeed"));
 boolean feedEnabled = GetterUtil.getBoolean((String)request.getAttribute("liferay-ui:social-activities:feedEnabled"));
 String feedTitle = (String)request.getAttribute("liferay-ui:social-activities:feedTitle");
 String feedLink = (String)request.getAttribute("liferay-ui:social-activities:feedLink");
@@ -48,12 +48,12 @@ Format timeFormatDate = FastDateFormatFactoryUtil.getTime(locale, timeZone);
 %>
 
 <c:choose>
-	<c:when test="<%= themeDisplay.isStateExclusive() %>">
+	<c:when test="<%= themeDisplay.isStateExclusive() && displayRSSFeed %>">
 
 		<%
 		SyndFeed syndFeed = new SyndFeedImpl();
 
-		syndFeed.setFeedType(RSSUtil.DEFAULT_FEED_TYPE);
+		syndFeed.setFeedType(RSSUtil.FEED_TYPE_DEFAULT);
 		syndFeed.setLink(feedLink);
 		syndFeed.setTitle(HtmlUtil.extractText(feedTitle));
 		syndFeed.setDescription(HtmlUtil.extractText(feedTitle));
@@ -81,7 +81,7 @@ Format timeFormatDate = FastDateFormatFactoryUtil.getTime(locale, timeZone);
 
 			SyndContent syndContent = new SyndContentImpl();
 
-			syndContent.setType(RSSUtil.DEFAULT_ENTRY_TYPE);
+			syndContent.setType(RSSUtil.ENTRY_TYPE_DEFAULT);
 			syndContent.setValue(activityFeedEntry.getBody());
 
 			syndEntry.setDescription(syndContent);

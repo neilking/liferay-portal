@@ -76,11 +76,18 @@ public class DBLoader {
 
 					sb.setIndex(0);
 
-					PreparedStatement ps = con.prepareStatement(sql);
+					try {
+						PreparedStatement ps = con.prepareStatement(sql);
 
-					ps.executeUpdate();
+						ps.executeUpdate();
 
-					ps.close();
+						ps.close();
+					}
+					catch (Exception e) {
+						System.out.println(sql);
+
+						throw e;
+					}
 				}
 			}
 		}

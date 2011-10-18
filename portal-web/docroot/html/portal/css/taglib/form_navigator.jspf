@@ -20,7 +20,9 @@
 	float: right;
 	margin: 0 0 0 15px;
 	padding: 10px;
+	position: relative;
 	width: 30%;
+	z-index: 1;
 }
 
 .taglib-form-navigator .form-navigator h3 {
@@ -113,6 +115,18 @@
 .taglib-form-navigator .form-section {
 	float: left;
 	width: 63%;
+}
+
+.taglib-form-navigator .form-section .aui-fieldset {
+	display: table-cell;
+}
+
+.ie .form-section .aui-fieldset {
+	display: block;
+}
+
+.taglib-form-navigator .form-section .aui-field-input, .taglib-form-navigator .lfr-change-logo img {
+	max-width: 100% !important;
 }
 
 .ie6 .taglib-form-navigator .form-section {

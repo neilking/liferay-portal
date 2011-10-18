@@ -16,7 +16,6 @@ package com.liferay.portal.service.impl;
 
 import com.liferay.portal.ImageTypeException;
 import com.liferay.portal.NoSuchImageException;
-import com.liferay.portal.image.DatabaseHook;
 import com.liferay.portal.image.HookFactory;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -25,14 +24,13 @@ import com.liferay.portal.kernel.image.ImageBag;
 import com.liferay.portal.kernel.image.ImageProcessorUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.servlet.ImageServletTokenUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.model.Image;
 import com.liferay.portal.model.impl.ImageImpl;
 import com.liferay.portal.service.base.ImageLocalServiceBaseImpl;
 import com.liferay.portal.util.PropsUtil;
-import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.webserver.WebServerServletTokenUtil;
 
 import java.awt.image.RenderedImage;
 
@@ -51,6 +49,7 @@ import java.util.List;
  */
 public class ImageLocalServiceImpl extends ImageLocalServiceBaseImpl {
 
+	@Override
 	public void afterPropertiesSet() {
 		ClassLoader classLoader = getClass().getClassLoader();
 
@@ -142,14 +141,15 @@ public class ImageLocalServiceImpl extends ImageLocalServiceBaseImpl {
 			return;
 		}
 
-		if (PropsValues.IMAGE_HOOK_IMPL.equals(DatabaseHook.class.getName()) &&
+		/*if (PropsValues.IMAGE_HOOK_IMPL.equals(
+				DatabaseHook.class.getName()) &&
 			(imagePersistence.getListeners().length == 0)) {
 
 			runSQL("delete from Image where imageId = " + imageId);
 
 			imagePersistence.clearCache();
 		}
-		else {
+		else {*/
 			try {
 				Image image = getImage(imageId);
 
@@ -161,7 +161,7 @@ public class ImageLocalServiceImpl extends ImageLocalServiceBaseImpl {
 			}
 			catch (NoSuchImageException nsie) {
 			}
-		}
+		//}
 	}
 
 	public Image getCompanyLogo(long imageId) {
@@ -319,7 +319,7 @@ public class ImageLocalServiceImpl extends ImageLocalServiceBaseImpl {
 
 		imagePersistence.update(image, false);
 
-		ImageServletTokenUtil.resetToken(imageId);
+		WebServerServletTokenUtil.resetToken(imageId);
 
 		return image;
 	}
@@ -361,18 +361,6 @@ public class ImageLocalServiceImpl extends ImageLocalServiceBaseImpl {
 		}
 		catch (IOException ioe) {
 			throw new SystemException(ioe);
-		}
-		finally {
-			if (is != null) {
-				try {
-					is.close();
-				}
-				catch (IOException ioe) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(ioe);
-					}
-				}
-			}
 		}
 	}
 

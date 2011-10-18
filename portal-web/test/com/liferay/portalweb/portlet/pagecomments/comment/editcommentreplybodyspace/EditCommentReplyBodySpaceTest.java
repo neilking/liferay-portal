@@ -25,12 +25,12 @@ public class EditCommentReplyBodySpaceTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent("link=Page Comments Test Page")) {
+				if (selenium.isVisible("link=Page Comments Test Page")) {
 					break;
 				}
 			}
@@ -40,40 +40,73 @@ public class EditCommentReplyBodySpaceTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		selenium.clickAt("link=Page Comments Test Page",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Page Comments Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		assertEquals(RuntimeVariables.replace("This is a test reply comment."),
-			selenium.getText("//form/div/div/div[3]/div/div[3]/div/div[1]"));
-		assertEquals(RuntimeVariables.replace("Edit"),
+		assertEquals(RuntimeVariables.replace("PC Comment Reply"),
 			selenium.getText(
-				"//div[3]/div/div[3]/div/div[3]/div/div[4]/div/span/a/span"));
-		selenium.clickAt("//div[3]/div/div[3]/div/div[3]/div/div[4]/div/span/a/span",
+				"xPath=(//div[@class='lfr-discussion-message'])[2]"));
+		assertEquals(RuntimeVariables.replace("Edit"),
+			selenium.getText("//div[2]/div[3]/div/div[2]/ul/li[3]/span/a/span"));
+		selenium.clickAt("//div[2]/div[3]/div/div[2]/ul/li[3]/span/a/span",
 			RuntimeVariables.replace("Edit"));
-		selenium.type("_107_editReplyBody2", RuntimeVariables.replace(""));
-		selenium.saveScreenShotAndSource();
-		selenium.keyPress("_107_editReplyBody2",
-			RuntimeVariables.replace("\\48"));
-		selenium.keyPress("_107_editReplyBody2", RuntimeVariables.replace("\\8"));
-		selenium.clickAt("//input[@value='Publish' and @disabled='']",
-			RuntimeVariables.replace(""));
-		Thread.sleep(5000);
-		assertTrue(selenium.isVisible("_107_editReplyBody2"));
-		assertTrue(selenium.isVisible(
-				"//input[@value='Publish' and @disabled='']"));
+
+		for (int second = 0;; second++) {
+			if (second >= 90) {
+				fail("timeout");
+			}
+
+			try {
+				if (selenium.isVisible(
+							"//textarea[@name='_107_editReplyBody2']")) {
+					break;
+				}
+			}
+			catch (Exception e) {
+			}
+
+			Thread.sleep(1000);
+		}
+
+		selenium.type("//textarea[@name='_107_editReplyBody2']",
+			RuntimeVariables.replace(" "));
+		selenium.clickAt("xPath=(//input[@value='Publish'])[2]",
+			RuntimeVariables.replace("Publish"));
+
+		for (int second = 0;; second++) {
+			if (second >= 90) {
+				fail("timeout");
+			}
+
+			try {
+				if (RuntimeVariables.replace("Please enter a valid message.")
+										.equals(selenium.getText(
+								"//div[@class='lfr-message-response portlet-msg-error']"))) {
+					break;
+				}
+			}
+			catch (Exception e) {
+			}
+
+			Thread.sleep(1000);
+		}
+
+		assertEquals(RuntimeVariables.replace("Please enter a valid message."),
+			selenium.getText(
+				"//div[@class='lfr-message-response portlet-msg-error']"));
+		assertTrue(selenium.isVisible("//textarea[@name='_107_editReplyBody2']"));
+		assertTrue(selenium.isVisible("xPath=(//input[@value='Publish'])[2]"));
 		assertFalse(selenium.isTextPresent(
-				"Your request completed successfully."));
+				"Your request processed successfully."));
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent("link=Page Comments Test Page")) {
+				if (selenium.isVisible("link=Page Comments Test Page")) {
 					break;
 				}
 			}
@@ -83,12 +116,11 @@ public class EditCommentReplyBodySpaceTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		selenium.clickAt("link=Page Comments Test Page",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Page Comments Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		assertEquals(RuntimeVariables.replace("This is a test reply comment."),
-			selenium.getText("//form/div/div/div[3]/div/div[3]/div/div[1]"));
+		assertEquals(RuntimeVariables.replace("PC Comment Reply"),
+			selenium.getText(
+				"xPath=(//div[@class='lfr-discussion-message'])[2]"));
 	}
 }

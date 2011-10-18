@@ -25,12 +25,12 @@ public class AddUserSocialNetworkTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent("link=Control Panel")) {
+				if (selenium.isVisible("link=Control Panel")) {
 					break;
 				}
 			}
@@ -40,49 +40,27 @@ public class AddUserSocialNetworkTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Control Panel", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Control Panel",
+			RuntimeVariables.replace("Control Panel"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-
-		for (int second = 0;; second++) {
-			if (second >= 60) {
-				fail("timeout");
-			}
-
-			try {
-				if (selenium.isElementPresent("link=Users")) {
-					break;
-				}
-			}
-			catch (Exception e) {
-			}
-
-			Thread.sleep(1000);
-		}
-
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Users", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Users and Organizations",
+			RuntimeVariables.replace("Users and Organizations"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.type("_125_keywords", RuntimeVariables.replace("selen01"));
-		selenium.saveScreenShotAndSource();
+		selenium.type("//input[@id='_125_keywords']",
+			RuntimeVariables.replace("selen01"));
 		selenium.clickAt("//input[@value='Search']",
 			RuntimeVariables.replace(""));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 		selenium.clickAt("//td[2]/a", RuntimeVariables.replace("User Name"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("_125_socialNetworkLink", RuntimeVariables.replace(""));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isVisible("_125_facebookSn")) {
+				if (selenium.isVisible("//a[@id='_125_socialNetworkLink']")) {
 					break;
 				}
 			}
@@ -92,21 +70,61 @@ public class AddUserSocialNetworkTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.type("_125_facebookSn", RuntimeVariables.replace("selenium01"));
-		selenium.saveScreenShotAndSource();
-		selenium.type("_125_mySpaceSn", RuntimeVariables.replace("selenium01"));
-		selenium.saveScreenShotAndSource();
-		selenium.type("_125_twitterSn", RuntimeVariables.replace("selenium01"));
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("//input[@value='Save']", RuntimeVariables.replace(""));
+		assertTrue(selenium.isPartialText("//a[@id='_125_socialNetworkLink']",
+				"Social Network"));
+		selenium.clickAt("//a[@id='_125_socialNetworkLink']",
+			RuntimeVariables.replace("Social Network"));
+
+		for (int second = 0;; second++) {
+			if (second >= 90) {
+				fail("timeout");
+			}
+
+			try {
+				if (selenium.isVisible("//input[@id='_125_facebookSn']")) {
+					break;
+				}
+			}
+			catch (Exception e) {
+			}
+
+			Thread.sleep(1000);
+		}
+
+		selenium.type("//input[@id='_125_facebookSn']",
+			RuntimeVariables.replace("selenium01"));
+		selenium.type("//input[@id='_125_mySpaceSn']",
+			RuntimeVariables.replace("selenium01"));
+		selenium.type("//input[@id='_125_twitterSn']",
+			RuntimeVariables.replace("selenium01"));
+		selenium.clickAt("//input[@value='Save']",
+			RuntimeVariables.replace("Save"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
+
+		for (int second = 0;; second++) {
+			if (second >= 90) {
+				fail("timeout");
+			}
+
+			try {
+				if (selenium.isVisible("//div[@class='portlet-msg-success']")) {
+					break;
+				}
+			}
+			catch (Exception e) {
+			}
+
+			Thread.sleep(1000);
+		}
+
 		assertEquals(RuntimeVariables.replace(
 				"Your request completed successfully."),
-			selenium.getText("//section/div/div/div/div[1]"));
-		assertEquals("selenium01", selenium.getValue("_125_facebookSn"));
-		assertEquals("selenium01", selenium.getValue("_125_mySpaceSn"));
-		assertEquals("selenium01", selenium.getValue("_125_twitterSn"));
+			selenium.getText("//div[@class='portlet-msg-success']"));
+		assertEquals("selenium01",
+			selenium.getValue("//input[@id='_125_facebookSn']"));
+		assertEquals("selenium01",
+			selenium.getValue("//input[@id='_125_mySpaceSn']"));
+		assertEquals("selenium01",
+			selenium.getValue("//input[@id='_125_twitterSn']"));
 	}
 }

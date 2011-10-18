@@ -15,6 +15,8 @@
 package com.liferay.portlet.documentlibrary.util;
 
 import com.liferay.portal.kernel.configuration.Filter;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -32,6 +34,8 @@ import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.model.Group;
+import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portlet.PortletPreferencesFactoryUtil;
@@ -65,7 +69,7 @@ public class DLUtil {
 
 	public static void addPortletBreadcrumbEntries(
 			DLFileShortcut dlFileShortcut, HttpServletRequest request,
-			RenderResponse renderResponse)
+			RenderResponse renderResponse, boolean showGlobally)
 		throws Exception {
 
 		Folder folder = dlFileShortcut.getFolder();
@@ -73,16 +77,17 @@ public class DLUtil {
 		if (folder.getFolderId() !=
 				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 
-			addPortletBreadcrumbEntries(folder, request, renderResponse);
+			addPortletBreadcrumbEntries(
+				folder, request, renderResponse, showGlobally);
 		}
 
 		PortletURL portletURL = renderResponse.createRenderURL();
 
 		portletURL.setParameter(
-			"struts_action", "/document_library/view_file_shortcut");
+			"struts_action", "/document_library/view_file_entry");
 		portletURL.setParameter(
-			"fileShortcutId",
-			String.valueOf(dlFileShortcut.getFileShortcutId()));
+			"fileEntryId",
+			String.valueOf(dlFileShortcut.getToFileEntryId()));
 
 		PortalUtil.addPortletBreadcrumbEntry(
 			request, dlFileShortcut.getToTitle(), portletURL.toString());
@@ -90,7 +95,7 @@ public class DLUtil {
 
 	public static void addPortletBreadcrumbEntries(
 			FileEntry fileEntry, HttpServletRequest request,
-			RenderResponse renderResponse)
+			RenderResponse renderResponse, boolean showGlobally)
 		throws Exception {
 
 		Folder folder = fileEntry.getFolder();
@@ -98,7 +103,8 @@ public class DLUtil {
 		if (folder.getFolderId() !=
 				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 
-			addPortletBreadcrumbEntries(folder, request, renderResponse);
+			addPortletBreadcrumbEntries(
+				folder, request, renderResponse, showGlobally);
 		}
 
 		PortletURL portletURL = renderResponse.createRenderURL();
@@ -115,7 +121,7 @@ public class DLUtil {
 
 	public static void addPortletBreadcrumbEntries(
 			Folder folder, HttpServletRequest request,
-			LiferayPortletResponse liferayPortletResponse)
+			LiferayPortletResponse liferayPortletResponse, boolean showGlobally)
 		throws Exception {
 
 		ThemeDisplay themeDisplay =	(ThemeDisplay)request.getAttribute(
@@ -134,27 +140,26 @@ public class DLUtil {
 		portletURL.setParameter(
 			"viewFileEntrySearch", Boolean.TRUE.toString());
 		portletURL.setParameter("viewFolders", Boolean.TRUE.toString());
+		portletURL.setParameter("viewSortButton", Boolean.TRUE.toString());
+
+		Map<String, Object> data = new HashMap<String, Object>();
+
+		data.put("folder-id", _getDefaultFolderId(request));
+		data.put("refresh-folders", Boolean.TRUE.toString());
 
 		PortalUtil.addPortletBreadcrumbEntry(
 			request, themeDisplay.translate("documents-home"),
-			portletURL.toString());
+			portletURL.toString(), data);
 
-		addPortletBreadcrumbEntries(folder, request, portletURL);
+		addPortletBreadcrumbEntries(folder, request, portletURL, showGlobally);
 	}
 
 	public static void addPortletBreadcrumbEntries(
 			Folder folder, HttpServletRequest request,
-			PortletURL portletURL)
+			PortletURL portletURL, boolean showGlobally)
 		throws Exception {
 
-		PortletPreferences preferences =
-			PortletPreferencesFactoryUtil.getPortletPreferences(
-				request, PortalUtil.getPortletId(request));
-
-		long defaultFolderId = GetterUtil.getLong(
-			preferences.getValue(
-				"rootFolderId",
-				String.valueOf(DLFolderConstants.DEFAULT_PARENT_FOLDER_ID)));
+		long defaultFolderId = _getDefaultFolderId(request);
 
 		List<Folder> ancestorFolders = Collections.emptyList();
 
@@ -184,7 +189,9 @@ public class DLUtil {
 
 			Map<String, Object> data = new HashMap<String, Object>();
 
-			data.put("folderId", ancestorFolder.getFolderId());
+			data.put("folder-id", ancestorFolder.getFolderId());
+			data.put("refresh-folders", Boolean.TRUE.toString());
+			data.put("show-globally", String.valueOf(showGlobally));
 
 			PortalUtil.addPortletBreadcrumbEntry(
 				request, ancestorFolder.getName(), portletURL.toString(), data);
@@ -203,7 +210,9 @@ public class DLUtil {
 
 			Map<String, Object> data = new HashMap<String, Object>();
 
-			data.put("folderId", folderId);
+			data.put("folder-id", folderId);
+			data.put("refresh-folders", Boolean.TRUE.toString());
+			data.put("show-globally", String.valueOf(showGlobally));
 
 			PortalUtil.addPortletBreadcrumbEntry(
 				request, folder.getName(), portletURL.toString(), data);
@@ -212,7 +221,7 @@ public class DLUtil {
 
 	public static void addPortletBreadcrumbEntries(
 			Folder folder, HttpServletRequest request,
-			RenderResponse renderResponse)
+			RenderResponse renderResponse, boolean showGlobally)
 		throws Exception {
 
 		String strutsAction = ParamUtil.getString(
@@ -235,20 +244,25 @@ public class DLUtil {
 			portletURL.setParameter("struts_action", strutsAction);
 			portletURL.setParameter("groupId", String.valueOf(groupId));
 
+			Map<String, Object> data = new HashMap<String, Object>();
+
+			data.put("folder-id", _getDefaultFolderId(request));
+			data.put("refresh-folders", Boolean.TRUE.toString());
+
 			PortalUtil.addPortletBreadcrumbEntry(
 				request, themeDisplay.translate("documents-home"),
-				portletURL.toString());
+				portletURL.toString(), data);
 		}
 		else {
 			portletURL.setParameter("struts_action", "/document_library/view");
 		}
 
-		addPortletBreadcrumbEntries(folder, request, portletURL);
+		addPortletBreadcrumbEntries(folder, request, portletURL, showGlobally);
 	}
 
 	public static void addPortletBreadcrumbEntries(
 			long folderId, HttpServletRequest request,
-			RenderResponse renderResponse)
+			RenderResponse renderResponse, boolean showGlobally)
 		throws Exception {
 
 		if (folderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
@@ -257,7 +271,8 @@ public class DLUtil {
 			if (folder.getFolderId() !=
 					DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 
-				addPortletBreadcrumbEntries(folder, request, renderResponse);
+				addPortletBreadcrumbEntries(
+					folder, request, renderResponse, showGlobally);
 			}
 		}
 	}
@@ -292,12 +307,54 @@ public class DLUtil {
 		return 0;
 	}
 
+	public static String getDividedPath(long id) {
+		StringBundler sb = new StringBundler(16);
+
+		long dividend = id;
+
+		while ((dividend / _DIVISOR) != 0) {
+			sb.append(StringPool.SLASH);
+			sb.append(dividend % _DIVISOR);
+
+			dividend = dividend / _DIVISOR;
+		}
+
+		sb.append(StringPool.SLASH);
+		sb.append(id);
+
+		return sb.toString();
+	}
+
 	public static String getFileIcon(String extension) {
 		return _instance._getFileIcon(extension);
 	}
 
 	public static String getGenericName(String extension) {
 		return _instance._getGenericName(extension);
+	}
+
+	public static long[] getGroupIds(long groupId)
+		throws PortalException, SystemException {
+
+		Group scopeGroup = GroupLocalServiceUtil.getGroup(groupId);
+
+		Group companyGroup = GroupLocalServiceUtil.getCompanyGroup(
+			scopeGroup.getCompanyId());
+
+		if (scopeGroup.isLayout()) {
+			return new long[] {
+				scopeGroup.getParentGroupId(), companyGroup.getGroupId()
+			};
+		}
+		else {
+			return new long[] {groupId, companyGroup.getGroupId()};
+		}
+	}
+
+	public static long[] getGroupIds(ThemeDisplay themeDisplay)
+		throws PortalException, SystemException {
+
+		return getGroupIds(themeDisplay.getScopeGroupId());
 	}
 
 	public static OrderByComparator getRepositoryModelOrderByComparator(
@@ -315,12 +372,12 @@ public class DLUtil {
 			orderByComparator = new RepositoryModelCreateDateComparator(
 				orderByAsc);
 		}
-		else if (orderByCol.equals("modifiedDate")) {
-			orderByComparator = new RepositoryModelModifiedDateComparator(
+		else if (orderByCol.equals("downloads")) {
+			orderByComparator = new RepositoryModelReadCountComparator(
 				orderByAsc);
 		}
-		else if (orderByCol.equals("readCount")) {
-			orderByComparator = new RepositoryModelReadCountComparator(
+		else if (orderByCol.equals("modifiedDate")) {
+			orderByComparator = new RepositoryModelModifiedDateComparator(
 				orderByAsc);
 		}
 		else if (orderByCol.equals("size")) {
@@ -353,6 +410,19 @@ public class DLUtil {
 		sb.append(languageId);
 
 		return sb.toString();
+	}
+
+	private static long _getDefaultFolderId(HttpServletRequest request)
+		throws Exception {
+
+		PortletPreferences portletPreferences =
+			PortletPreferencesFactoryUtil.getPortletPreferences(
+				request, PortalUtil.getPortletId(request));
+
+		return GetterUtil.getLong(
+			portletPreferences.getValue(
+				"rootFolderId",
+				String.valueOf(DLFolderConstants.DEFAULT_PARENT_FOLDER_ID)));
 	}
 
 	private DLUtil() {
@@ -421,6 +491,8 @@ public class DLUtil {
 	private static final String _DEFAULT_FILE_ICON = "page";
 
 	private static final String _DEFAULT_GENERIC_NAME = "default";
+
+	private static final long _DIVISOR = 256;
 
 	private static Log _log = LogFactoryUtil.getLog(DLUtil.class);
 

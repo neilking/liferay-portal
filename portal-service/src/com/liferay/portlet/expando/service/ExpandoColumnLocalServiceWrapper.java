@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.expando.service;
 
+import com.liferay.portal.service.ServiceWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link ExpandoColumnLocalService}.
@@ -24,7 +26,8 @@ package com.liferay.portlet.expando.service;
  * @generated
  */
 public class ExpandoColumnLocalServiceWrapper
-	implements ExpandoColumnLocalService {
+	implements ExpandoColumnLocalService,
+		ServiceWrapper<ExpandoColumnLocalService> {
 	public ExpandoColumnLocalServiceWrapper(
 		ExpandoColumnLocalService expandoColumnLocalService) {
 		_expandoColumnLocalService = expandoColumnLocalService;
@@ -285,8 +288,7 @@ public class ExpandoColumnLocalServiceWrapper
 	}
 
 	public void deleteColumn(long tableId, java.lang.String name)
-		throws com.liferay.portal.kernel.exception.PortalException,
-			com.liferay.portal.kernel.exception.SystemException {
+		throws com.liferay.portal.kernel.exception.SystemException {
 		_expandoColumnLocalService.deleteColumn(tableId, name);
 	}
 
@@ -335,8 +337,7 @@ public class ExpandoColumnLocalServiceWrapper
 
 	public com.liferay.portlet.expando.model.ExpandoColumn getColumn(
 		long tableId, java.lang.String name)
-		throws com.liferay.portal.kernel.exception.PortalException,
-			com.liferay.portal.kernel.exception.SystemException {
+		throws com.liferay.portal.kernel.exception.SystemException {
 		return _expandoColumnLocalService.getColumn(tableId, name);
 	}
 
@@ -355,6 +356,12 @@ public class ExpandoColumnLocalServiceWrapper
 	}
 
 	public java.util.List<com.liferay.portlet.expando.model.ExpandoColumn> getColumns(
+		long tableId, java.util.Collection<java.lang.String> names)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _expandoColumnLocalService.getColumns(tableId, names);
+	}
+
+	public java.util.List<com.liferay.portlet.expando.model.ExpandoColumn> getColumns(
 		long companyId, long classNameId, java.lang.String tableName)
 		throws com.liferay.portal.kernel.exception.SystemException {
 		return _expandoColumnLocalService.getColumns(companyId, classNameId,
@@ -362,10 +369,26 @@ public class ExpandoColumnLocalServiceWrapper
 	}
 
 	public java.util.List<com.liferay.portlet.expando.model.ExpandoColumn> getColumns(
+		long companyId, long classNameId, java.lang.String tableName,
+		java.util.Collection<java.lang.String> names)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _expandoColumnLocalService.getColumns(companyId, classNameId,
+			tableName, names);
+	}
+
+	public java.util.List<com.liferay.portlet.expando.model.ExpandoColumn> getColumns(
 		long companyId, java.lang.String className, java.lang.String tableName)
 		throws com.liferay.portal.kernel.exception.SystemException {
 		return _expandoColumnLocalService.getColumns(companyId, className,
 			tableName);
+	}
+
+	public java.util.List<com.liferay.portlet.expando.model.ExpandoColumn> getColumns(
+		long companyId, java.lang.String className, java.lang.String tableName,
+		java.util.Collection<java.lang.String> columnNames)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _expandoColumnLocalService.getColumns(companyId, className,
+			tableName, columnNames);
 	}
 
 	public int getColumnsCount(long tableId)
@@ -452,11 +475,26 @@ public class ExpandoColumnLocalServiceWrapper
 			typeSettings);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public ExpandoColumnLocalService getWrappedExpandoColumnLocalService() {
 		return _expandoColumnLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedExpandoColumnLocalService(
+		ExpandoColumnLocalService expandoColumnLocalService) {
+		_expandoColumnLocalService = expandoColumnLocalService;
+	}
+
+	public ExpandoColumnLocalService getWrappedService() {
+		return _expandoColumnLocalService;
+	}
+
+	public void setWrappedService(
 		ExpandoColumnLocalService expandoColumnLocalService) {
 		_expandoColumnLocalService = expandoColumnLocalService;
 	}

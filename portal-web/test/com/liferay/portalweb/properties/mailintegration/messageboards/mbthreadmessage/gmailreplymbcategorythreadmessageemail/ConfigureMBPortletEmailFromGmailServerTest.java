@@ -23,7 +23,7 @@ import com.liferay.portalweb.portal.util.RuntimeVariables;
 public class ConfigureMBPortletEmailFromGmailServerTest extends BaseTestCase {
 	public void testConfigureMBPortletEmailFromGmailServer()
 		throws Exception {
-		selenium.open("/web/guest/home/");
+		selenium.open("/web/site-name");
 
 		for (int second = 0;; second++) {
 			if (second >= 60) {
@@ -31,7 +31,7 @@ public class ConfigureMBPortletEmailFromGmailServerTest extends BaseTestCase {
 			}
 
 			try {
-				if (selenium.isVisible("link=Message Boards Test Page")) {
+				if (selenium.isElementPresent("link=Message Boards Test Page")) {
 					break;
 				}
 			}
@@ -47,8 +47,9 @@ public class ConfigureMBPortletEmailFromGmailServerTest extends BaseTestCase {
 		selenium.waitForPageToLoad("30000");
 		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace("Options"),
-			selenium.getText("//strong/a"));
-		selenium.clickAt("//strong/a", RuntimeVariables.replace("Options"));
+			selenium.getText("//span[@title='Options']/ul/li/strong/a"));
+		selenium.clickAt("//span[@title='Options']/ul/li/strong/a",
+			RuntimeVariables.replace("Options"));
 
 		for (int second = 0;; second++) {
 			if (second >= 60) {
@@ -107,8 +108,9 @@ public class ConfigureMBPortletEmailFromGmailServerTest extends BaseTestCase {
 		assertEquals(RuntimeVariables.replace(
 				"You have successfully updated the setup."),
 			selenium.getText("//div[@class='portlet-msg-success']"));
-		assertEquals("Administrator", selenium.getValue("_86_emailFromName"));
+		assertEquals("Administrator",
+			selenium.getValue("//input[@id='_86_emailFromName']"));
 		assertEquals("liferay.qa.server.trunk@gmail.com",
-			selenium.getValue("_86_emailFromAddress"));
+			selenium.getValue("//input[@id='_86_emailFromAddress']"));
 	}
 }

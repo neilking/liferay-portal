@@ -17,12 +17,19 @@
 <%@ include file="/html/taglib/init.jsp" %>
 
 <%
+String cssClass = "staging-icon-menu " + GetterUtil.getString((String) request.getAttribute("liferay-ui:staging:cssClass"));
 boolean extended = GetterUtil.getBoolean((String) request.getAttribute("liferay-ui:staging:extended"));
 long groupId = GetterUtil.getLong((String) request.getAttribute("liferay-ui:staging:groupId"));
+String icon = GetterUtil.getString((String) request.getAttribute("liferay-ui:staging:icon"));
 long layoutSetBranchId = GetterUtil.getLong((String) request.getAttribute("liferay-ui:staging:layoutSetBranchId"));
+String message = GetterUtil.getString((String) request.getAttribute("liferay-ui:staging:message"));
 boolean privateLayout = GetterUtil.getBoolean((String) request.getAttribute("liferay-ui:staging:privateLayout"));
 long selPlid = GetterUtil.getLong((String) request.getAttribute("liferay-ui:staging:selPlid"));
 boolean showManageBranches = GetterUtil.getBoolean((String) request.getAttribute("liferay-ui:staging:showManageBranches"));
+
+if (Validator.isNotNull(icon)) {
+	icon = themeDisplay.getPathThemeImages() + icon;
+}
 
 LayoutSetBranch layoutSetBranch = null;
 List<LayoutSetBranch> layoutSetBranches = null;
@@ -43,15 +50,6 @@ else {
 String publishNowDialogTitle = null;
 String publishScheduleDialogTitle = null;
 
-if (layoutSetBranchId > 0) {
-	publishNowDialogTitle = "publish-x-to-live-now";
-	publishScheduleDialogTitle = "schedule-publication-of-x-to-live";
-}
-else {
-	publishNowDialogTitle = "publish-to-live-now";
-	publishScheduleDialogTitle = "schedule-publication-to-live";
-}
-
 Group liveGroup = null;
 Group stagingGroup = null;
 
@@ -62,15 +60,6 @@ if (group.isStagingGroup()) {
 else if (group.isStaged()) {
 	if (group.isStagedRemotely()) {
 		stagingGroup = group;
-
-		if (layoutSetBranchId > 0) {
-			publishNowDialogTitle = "publish-x-to-remote-live-now";
-			publishScheduleDialogTitle = "schedule-publication-of-x-to-remote-live";
-		}
-		else {
-			publishNowDialogTitle = "publish-to-remote-live-now";
-			publishScheduleDialogTitle = "schedule-publication-to-remote-live";
-		}
 	}
 	else {
 		liveGroup = group;
@@ -83,11 +72,33 @@ if (groupId <= 0) {
 }
 
 layoutSetBranches = LayoutSetBranchLocalServiceUtil.getLayoutSetBranches(stagingGroup.getGroupId(), privateLayout);
+
+if (group.isStaged() && group.isStagedRemotely()) {
+
+	if (layoutSetBranchId > 0 && (layoutSetBranches.size() > 1)) {
+		publishNowDialogTitle = "publish-x-to-remote-live-now";
+		publishScheduleDialogTitle = "schedule-publication-of-x-to-remote-live";
+	}
+	else {
+		publishNowDialogTitle = "publish-to-remote-live-now";
+		publishScheduleDialogTitle = "schedule-publication-to-remote-live";
+	}
+}
+else {
+	if (layoutSetBranchId > 0 && (layoutSetBranches.size() > 1)) {
+		publishNowDialogTitle = "publish-x-to-live-now";
+		publishScheduleDialogTitle = "schedule-publication-of-x-to-live";
+	}
+	else {
+		publishNowDialogTitle = "publish-to-live-now";
+		publishScheduleDialogTitle = "schedule-publication-to-live";
+	}
+}
 %>
 
 <c:if test="<%= stagingGroup != null %>">
 	<span class="staging-icon-menu-container">
-		<liferay-ui:icon-menu align="auto" cssClass="staging-icon-menu" direction="down" extended="<%= extended %>" icon='<%= extended ? themeDisplay.getPathThemeImages() + "/dockbar/staging.png" : StringPool.BLANK %>' message='<%= extended ? "staging" : StringPool.BLANK %>' showWhenSingleIcon="<%= true %>">
+		<liferay-ui:icon-menu align="auto" cssClass="<%= cssClass %>" direction="down" extended="<%= extended %>" icon='<%= extended ? icon : StringPool.BLANK %>' message='<%= extended ? message : StringPool.BLANK %>' showWhenSingleIcon="<%= true %>">
 			<c:if test="<%= (stagingGroup.isStagedRemotely() || GroupPermissionUtil.contains(permissionChecker, liveGroup.getGroupId(), ActionKeys.PUBLISH_STAGING)) %>">
 
 				<%
@@ -187,7 +198,14 @@ layoutSetBranches = LayoutSetBranchLocalServiceUtil.getLayoutSetBranches(staging
 					<portlet:param name="selPlid" value="<%= String.valueOf(selPlid) %>" />
 				</portlet:renderURL>
 
-				<liferay-ui:icon cssClass="manage-layout-set-branches" id="manageLayoutSetBranches" image="configuration" label="<%= true %>" message='<%= layout.isPrivateLayout() ? "manage-private-pages-variations" : "manage-public-pages-variations" %>' url="<%= layoutSetBranchesURL %>" />
+				<liferay-ui:icon
+					cssClass="manage-layout-set-branches"
+					id="manageLayoutSetBranches"
+					image="configuration"
+					label="<%= true %>"
+					message="manage-site-pages-variations"
+					url="<%= layoutSetBranchesURL %>"
+				/>
 
 				<aui:script use="aui-base">
 					var layoutSetBranchesLink = A.one('#<portlet:namespace />manageLayoutSetBranches');
@@ -207,7 +225,7 @@ layoutSetBranches = LayoutSetBranchLocalServiceUtil.getLayoutSetBranches(staging
 												width: 820
 											},
 										id: '<portlet:namespace />',
-										title: '<liferay-ui:message key='<%= layout.isPrivateLayout() ? "manage-private-pages-variations" : "manage-public-pages-variations" %>' />',
+										title: '<liferay-ui:message key="manage-site-pages-variations" />',
 										uri: event.currentTarget.attr('href')
 									}
 								);

@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.cluster.Address;
 import com.liferay.portal.kernel.cluster.ClusterExecutorUtil;
 import com.liferay.portal.kernel.cluster.ClusterLinkUtil;
 import com.liferay.portal.kernel.cluster.ClusterRequest;
+import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.io.unsync.UnsyncPrintWriter;
 import com.liferay.portal.kernel.log.Log;
@@ -40,6 +41,7 @@ import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.SearchEngineUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
+import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.InstancePool;
 import com.liferay.portal.kernel.util.MethodHandler;
@@ -71,6 +73,8 @@ import com.liferay.portal.util.PrefsPropsUtil;
 import com.liferay.portal.util.ShutdownUtil;
 import com.liferay.portal.util.WebKeys;
 import com.liferay.portlet.ActionResponseImpl;
+import com.liferay.portlet.admin.util.CleanUpPermissionsUtil;
+import com.liferay.portlet.documentlibrary.util.DLPreviewableProcessor;
 import com.liferay.util.log4j.Log4JUtil;
 
 import java.io.File;
@@ -137,8 +141,14 @@ public class EditServerAction extends PortletAction {
 		else if (cmd.equals("cacheSingle")) {
 			cacheSingle();
 		}
+		else if (cmd.equals("cleanUpPermissions")) {
+			CleanUpPermissionsUtil.cleanUpAddToPagePermissions(actionRequest);
+		}
 		else if (cmd.startsWith("convertProcess.")) {
 			redirect = convertProcess(actionRequest, actionResponse, cmd);
+		}
+		else if (cmd.equals("dlPreviews")) {
+			DLPreviewableProcessor.deleteFiles();
 		}
 		else if (cmd.equals("gc")) {
 			gc();
@@ -225,7 +235,7 @@ public class EditServerAction extends PortletAction {
 
 				if (parameters[i].contains(StringPool.EQUAL)) {
 					String[] parameterPair = StringUtil.split(
-						parameters[i], StringPool.EQUAL);
+						parameters[i], CharPool.EQUAL);
 
 					parameter =
 						className + StringPool.PERIOD + parameterPair[0];
@@ -308,6 +318,8 @@ public class EditServerAction extends PortletAction {
 
 			for (Indexer indexer : indexers) {
 				for (long companyId : companyIds) {
+					ShardUtil.pushCompanyService(companyId);
+
 					try {
 						SearchEngineUtil.deletePortletDocuments(
 							companyId, portletId);
@@ -318,6 +330,8 @@ public class EditServerAction extends PortletAction {
 					catch (Exception e) {
 						_log.error(e, e);
 					}
+
+					ShardUtil.popCompanyService();
 				}
 			}
 		}
@@ -361,6 +375,7 @@ public class EditServerAction extends PortletAction {
 		portletObjects.put("out", unsyncPrintWriter);
 
 		try {
+			SessionMessages.add(actionRequest, "language", language);
 			SessionMessages.add(actionRequest, "script", script);
 
 			ScriptingUtil.exec(null, portletObjects, language, script);

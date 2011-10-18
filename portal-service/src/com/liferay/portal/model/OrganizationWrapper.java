@@ -23,7 +23,8 @@ package com.liferay.portal.model;
  * @see       Organization
  * @generated
  */
-public class OrganizationWrapper implements Organization {
+public class OrganizationWrapper implements Organization,
+	ModelWrapper<Organization> {
 	public OrganizationWrapper(Organization organization) {
 		_organization = organization;
 	}
@@ -299,10 +300,6 @@ public class OrganizationWrapper implements Organization {
 		return _organization.isEscapedModel();
 	}
 
-	public void setEscapedModel(boolean escapedModel) {
-		_organization.setEscapedModel(escapedModel);
-	}
-
 	public java.io.Serializable getPrimaryKeyObj() {
 		return _organization.getPrimaryKeyObj();
 	}
@@ -454,7 +451,14 @@ public class OrganizationWrapper implements Organization {
 		return _organization.isRoot();
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedModel}
+	 */
 	public Organization getWrappedOrganization() {
+		return _organization;
+	}
+
+	public Organization getWrappedModel() {
 		return _organization;
 	}
 

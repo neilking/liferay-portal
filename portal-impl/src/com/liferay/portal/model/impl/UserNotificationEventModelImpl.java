@@ -17,6 +17,7 @@ package com.liferay.portal.model.impl;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.CacheModel;
@@ -29,8 +30,6 @@ import com.liferay.portlet.expando.model.ExpandoBridge;
 import com.liferay.portlet.expando.util.ExpandoBridgeFactoryUtil;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Proxy;
 
 import java.sql.Types;
 
@@ -63,12 +62,13 @@ public class UserNotificationEventModelImpl extends BaseModelImpl<UserNotificati
 			{ "type_", Types.VARCHAR },
 			{ "timestamp", Types.BIGINT },
 			{ "deliverBy", Types.BIGINT },
-			{ "payload", Types.CLOB }
+			{ "payload", Types.CLOB },
+			{ "archived", Types.BOOLEAN }
 		};
-	public static final String TABLE_SQL_CREATE = "create table UserNotificationEvent (uuid_ VARCHAR(75) null,userNotificationEventId LONG not null primary key,companyId LONG,userId LONG,type_ VARCHAR(75) null,timestamp LONG,deliverBy LONG,payload TEXT null)";
+	public static final String TABLE_SQL_CREATE = "create table UserNotificationEvent (uuid_ VARCHAR(75) null,userNotificationEventId LONG not null primary key,companyId LONG,userId LONG,type_ VARCHAR(75) null,timestamp LONG,deliverBy LONG,payload TEXT null,archived BOOLEAN)";
 	public static final String TABLE_SQL_DROP = "drop table UserNotificationEvent";
-	public static final String ORDER_BY_JPQL = " ORDER BY userNotificationEvent.timestamp ASC";
-	public static final String ORDER_BY_SQL = " ORDER BY UserNotificationEvent.timestamp ASC";
+	public static final String ORDER_BY_JPQL = " ORDER BY userNotificationEvent.timestamp DESC";
+	public static final String ORDER_BY_SQL = " ORDER BY UserNotificationEvent.timestamp DESC";
 	public static final String DATA_SOURCE = "liferayDataSource";
 	public static final String SESSION_FACTORY = "liferaySessionFactory";
 	public static final String TX_MANAGER = "liferayTransactionManager";
@@ -78,15 +78,12 @@ public class UserNotificationEventModelImpl extends BaseModelImpl<UserNotificati
 	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
 				"value.object.finder.cache.enabled.com.liferay.portal.model.UserNotificationEvent"),
 			true);
-
-	public Class<?> getModelClass() {
-		return UserNotificationEvent.class;
-	}
-
-	public String getModelClassName() {
-		return UserNotificationEvent.class.getName();
-	}
-
+	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.column.bitmask.enabled.com.liferay.portal.model.UserNotificationEvent"),
+			true);
+	public static long ARCHIVED_COLUMN_BITMASK = 1L;
+	public static long USERID_COLUMN_BITMASK = 2L;
+	public static long UUID_COLUMN_BITMASK = 4L;
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(com.liferay.portal.util.PropsUtil.get(
 				"lock.expiration.time.com.liferay.portal.model.UserNotificationEvent"));
 
@@ -109,6 +106,14 @@ public class UserNotificationEventModelImpl extends BaseModelImpl<UserNotificati
 		setPrimaryKey(((Long)primaryKeyObj).longValue());
 	}
 
+	public Class<?> getModelClass() {
+		return UserNotificationEvent.class;
+	}
+
+	public String getModelClassName() {
+		return UserNotificationEvent.class.getName();
+	}
+
 	public String getUuid() {
 		if (_uuid == null) {
 			return StringPool.BLANK;
@@ -119,7 +124,15 @@ public class UserNotificationEventModelImpl extends BaseModelImpl<UserNotificati
 	}
 
 	public void setUuid(String uuid) {
+		if (_originalUuid == null) {
+			_originalUuid = _uuid;
+		}
+
 		_uuid = uuid;
+	}
+
+	public String getOriginalUuid() {
+		return GetterUtil.getString(_originalUuid);
 	}
 
 	public long getUserNotificationEventId() {
@@ -143,6 +156,14 @@ public class UserNotificationEventModelImpl extends BaseModelImpl<UserNotificati
 	}
 
 	public void setUserId(long userId) {
+		_columnBitmask |= USERID_COLUMN_BITMASK;
+
+		if (!_setOriginalUserId) {
+			_setOriginalUserId = true;
+
+			_originalUserId = _userId;
+		}
+
 		_userId = userId;
 	}
 
@@ -152,6 +173,10 @@ public class UserNotificationEventModelImpl extends BaseModelImpl<UserNotificati
 
 	public void setUserUuid(String userUuid) {
 		_userUuid = userUuid;
+	}
+
+	public long getOriginalUserId() {
+		return _originalUserId;
 	}
 
 	public String getType() {
@@ -196,20 +221,43 @@ public class UserNotificationEventModelImpl extends BaseModelImpl<UserNotificati
 		_payload = payload;
 	}
 
+	public boolean getArchived() {
+		return _archived;
+	}
+
+	public boolean isArchived() {
+		return _archived;
+	}
+
+	public void setArchived(boolean archived) {
+		_columnBitmask |= ARCHIVED_COLUMN_BITMASK;
+
+		if (!_setOriginalArchived) {
+			_setOriginalArchived = true;
+
+			_originalArchived = _archived;
+		}
+
+		_archived = archived;
+	}
+
+	public boolean getOriginalArchived() {
+		return _originalArchived;
+	}
+
+	public long getColumnBitmask() {
+		return _columnBitmask;
+	}
+
 	@Override
 	public UserNotificationEvent toEscapedModel() {
-		if (isEscapedModel()) {
-			return (UserNotificationEvent)this;
+		if (_escapedModelProxy == null) {
+			_escapedModelProxy = (UserNotificationEvent)ProxyUtil.newProxyInstance(_classLoader,
+					_escapedModelProxyInterfaces,
+					new AutoEscapeBeanHandler(this));
 		}
-		else {
-			if (_escapedModelProxy == null) {
-				_escapedModelProxy = (UserNotificationEvent)Proxy.newProxyInstance(_classLoader,
-						_escapedModelProxyInterfaces,
-						new AutoEscapeBeanHandler(this));
-			}
 
-			return _escapedModelProxy;
-		}
+		return _escapedModelProxy;
 	}
 
 	@Override
@@ -239,6 +287,7 @@ public class UserNotificationEventModelImpl extends BaseModelImpl<UserNotificati
 		userNotificationEventImpl.setTimestamp(getTimestamp());
 		userNotificationEventImpl.setDeliverBy(getDeliverBy());
 		userNotificationEventImpl.setPayload(getPayload());
+		userNotificationEventImpl.setArchived(getArchived());
 
 		userNotificationEventImpl.resetOriginalValues();
 
@@ -257,6 +306,8 @@ public class UserNotificationEventModelImpl extends BaseModelImpl<UserNotificati
 		else {
 			value = 0;
 		}
+
+		value = value * -1;
 
 		if (value != 0) {
 			return value;
@@ -297,6 +348,19 @@ public class UserNotificationEventModelImpl extends BaseModelImpl<UserNotificati
 
 	@Override
 	public void resetOriginalValues() {
+		UserNotificationEventModelImpl userNotificationEventModelImpl = this;
+
+		userNotificationEventModelImpl._originalUuid = userNotificationEventModelImpl._uuid;
+
+		userNotificationEventModelImpl._originalUserId = userNotificationEventModelImpl._userId;
+
+		userNotificationEventModelImpl._setOriginalUserId = false;
+
+		userNotificationEventModelImpl._originalArchived = userNotificationEventModelImpl._archived;
+
+		userNotificationEventModelImpl._setOriginalArchived = false;
+
+		userNotificationEventModelImpl._columnBitmask = 0;
 	}
 
 	@Override
@@ -337,12 +401,14 @@ public class UserNotificationEventModelImpl extends BaseModelImpl<UserNotificati
 			userNotificationEventCacheModel.payload = null;
 		}
 
+		userNotificationEventCacheModel.archived = getArchived();
+
 		return userNotificationEventCacheModel;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(17);
+		StringBundler sb = new StringBundler(19);
 
 		sb.append("{uuid=");
 		sb.append(getUuid());
@@ -360,13 +426,15 @@ public class UserNotificationEventModelImpl extends BaseModelImpl<UserNotificati
 		sb.append(getDeliverBy());
 		sb.append(", payload=");
 		sb.append(getPayload());
+		sb.append(", archived=");
+		sb.append(getArchived());
 		sb.append("}");
 
 		return sb.toString();
 	}
 
 	public String toXmlString() {
-		StringBundler sb = new StringBundler(28);
+		StringBundler sb = new StringBundler(31);
 
 		sb.append("<model><model-name>");
 		sb.append("com.liferay.portal.model.UserNotificationEvent");
@@ -404,6 +472,10 @@ public class UserNotificationEventModelImpl extends BaseModelImpl<UserNotificati
 			"<column><column-name>payload</column-name><column-value><![CDATA[");
 		sb.append(getPayload());
 		sb.append("]]></column-value></column>");
+		sb.append(
+			"<column><column-name>archived</column-name><column-value><![CDATA[");
+		sb.append(getArchived());
+		sb.append("]]></column-value></column>");
 
 		sb.append("</model>");
 
@@ -415,14 +487,21 @@ public class UserNotificationEventModelImpl extends BaseModelImpl<UserNotificati
 			UserNotificationEvent.class
 		};
 	private String _uuid;
+	private String _originalUuid;
 	private long _userNotificationEventId;
 	private long _companyId;
 	private long _userId;
 	private String _userUuid;
+	private long _originalUserId;
+	private boolean _setOriginalUserId;
 	private String _type;
 	private long _timestamp;
 	private long _deliverBy;
 	private String _payload;
+	private boolean _archived;
+	private boolean _originalArchived;
+	private boolean _setOriginalArchived;
 	private transient ExpandoBridge _expandoBridge;
+	private long _columnBitmask;
 	private UserNotificationEvent _escapedModelProxy;
 }

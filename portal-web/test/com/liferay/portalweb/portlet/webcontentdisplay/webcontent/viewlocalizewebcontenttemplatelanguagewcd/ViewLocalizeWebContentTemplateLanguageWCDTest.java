@@ -26,13 +26,12 @@ public class ViewLocalizeWebContentTemplateLanguageWCDTest extends BaseTestCase 
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent(
-							"link=Web Content Display Test Page")) {
+				if (selenium.isVisible("link=Web Content Display Test Page")) {
 					break;
 				}
 			}
@@ -42,19 +41,17 @@ public class ViewLocalizeWebContentTemplateLanguageWCDTest extends BaseTestCase 
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		selenium.clickAt("link=Web Content Display Test Page",
 			RuntimeVariables.replace("Web Content Display Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (RuntimeVariables.replace("Web Content Page Name")
+				if (RuntimeVariables.replace("Hello World Page Name")
 										.equals(selenium.getText(
 								"//td[@class='page-name']"))) {
 					break;
@@ -66,20 +63,19 @@ public class ViewLocalizeWebContentTemplateLanguageWCDTest extends BaseTestCase 
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		assertEquals(RuntimeVariables.replace("Web Content Page Name"),
+		assertEquals(RuntimeVariables.replace("Hello World Page Name"),
 			selenium.getText("//td[@class='page-name']"));
-		assertEquals(RuntimeVariables.replace("Web Content Page Description"),
+		assertEquals(RuntimeVariables.replace("Hello World Page Description"),
 			selenium.getText("//td[@class='page-description']"));
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent("link=Language Test Page")) {
+				if (selenium.isVisible("link=Language Test Page")) {
 					break;
 				}
 			}
@@ -89,20 +85,18 @@ public class ViewLocalizeWebContentTemplateLanguageWCDTest extends BaseTestCase 
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		selenium.clickAt("link=Language Test Page",
 			RuntimeVariables.replace("Language Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
 				if (selenium.isElementPresent(
-							"//img[@alt='\u4e2d\u6587 (\u4e2d\u56fd)']")) {
+							"//img[@title='\u4e2d\u6587 (\u4e2d\u56fd)']")) {
 					break;
 				}
 			}
@@ -112,21 +106,18 @@ public class ViewLocalizeWebContentTemplateLanguageWCDTest extends BaseTestCase 
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("//img[@alt='\u4e2d\u6587 (\u4e2d\u56fd)']",
-			RuntimeVariables.replace(""));
+		selenium.clickAt("//img[@title='\u4e2d\u6587 (\u4e2d\u56fd)']",
+			RuntimeVariables.replace("\u4e2d\u6587 (\u4e2d\u56fd)"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent(
-							"link=Web Content Display Test Page")) {
+				if (selenium.isVisible("link=Web Content Display Test Page")) {
 					break;
 				}
 			}
@@ -136,11 +127,9 @@ public class ViewLocalizeWebContentTemplateLanguageWCDTest extends BaseTestCase 
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		selenium.clickAt("link=Web Content Display Test Page",
 			RuntimeVariables.replace("Web Content Display Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace(
 				"\u4e16\u754c\u60a8\u597d Page Name"),
 			selenium.getText("//td[@class='page-name']"));
@@ -150,12 +139,12 @@ public class ViewLocalizeWebContentTemplateLanguageWCDTest extends BaseTestCase 
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent("link=Language Test Page")) {
+				if (selenium.isVisible("link=Language Test Page")) {
 					break;
 				}
 			}
@@ -165,20 +154,18 @@ public class ViewLocalizeWebContentTemplateLanguageWCDTest extends BaseTestCase 
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		selenium.clickAt("link=Language Test Page",
 			RuntimeVariables.replace("Language Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent(
-							"//img[@alt='English (United States)']")) {
+				if (selenium.isVisible(
+							"//img[@title='English (United States)']")) {
 					break;
 				}
 			}
@@ -188,21 +175,18 @@ public class ViewLocalizeWebContentTemplateLanguageWCDTest extends BaseTestCase 
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("//img[@alt='English (United States)']",
-			RuntimeVariables.replace(""));
+		selenium.clickAt("//img[@title='English (United States)']",
+			RuntimeVariables.replace("English (United States)"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent(
-							"link=Web Content Display Test Page")) {
+				if (selenium.isVisible("link=Web Content Display Test Page")) {
 					break;
 				}
 			}
@@ -212,19 +196,17 @@ public class ViewLocalizeWebContentTemplateLanguageWCDTest extends BaseTestCase 
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		selenium.clickAt("link=Web Content Display Test Page",
 			RuntimeVariables.replace("Web Content Display Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (RuntimeVariables.replace("Web Content Page Name")
+				if (RuntimeVariables.replace("Hello World Page Name")
 										.equals(selenium.getText(
 								"//td[@class='page-name']"))) {
 					break;
@@ -236,10 +218,9 @@ public class ViewLocalizeWebContentTemplateLanguageWCDTest extends BaseTestCase 
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		assertEquals(RuntimeVariables.replace("Web Content Page Name"),
+		assertEquals(RuntimeVariables.replace("Hello World Page Name"),
 			selenium.getText("//td[@class='page-name']"));
-		assertEquals(RuntimeVariables.replace("Web Content Page Description"),
+		assertEquals(RuntimeVariables.replace("Hello World Page Description"),
 			selenium.getText("//td[@class='page-description']"));
 	}
 }

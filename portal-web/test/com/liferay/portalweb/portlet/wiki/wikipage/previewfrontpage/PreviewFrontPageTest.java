@@ -25,12 +25,12 @@ public class PreviewFrontPageTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent("link=Wiki Test Page")) {
+				if (selenium.isVisible("link=Wiki Test Page")) {
 					break;
 				}
 			}
@@ -40,31 +40,36 @@ public class PreviewFrontPageTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Wiki Test Page", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Wiki Test Page",
+			RuntimeVariables.replace("Wiki Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=This page is empty. Edit it to add some text.",
-			RuntimeVariables.replace(""));
+		assertEquals(RuntimeVariables.replace(
+				"This page is empty. Edit it to add some text."),
+			selenium.getText("//div[@class='wiki-body']/div/a"));
+		selenium.clickAt("//div[@class='wiki-body']/div/a",
+			RuntimeVariables.replace(
+				"This page is empty. Edit it to add some text."));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.type("_36_content",
-			RuntimeVariables.replace("This is a wiki frontpage test."));
-		selenium.saveScreenShotAndSource();
+		Thread.sleep(5000);
+		assertTrue(selenium.isVisible(
+				"//td[@id='cke_contents__36_editor']/iframe"));
+		selenium.selectFrame("//td[@id='cke_contents__36_editor']/iframe");
+		selenium.type("//body",
+			RuntimeVariables.replace("Wiki Front Page Content"));
+		selenium.selectFrame("relative=top");
 		selenium.clickAt("//input[@value='Preview']",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Preview"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		assertEquals(RuntimeVariables.replace("This is a wiki frontpage test."),
-			selenium.getText("//div/div[3]/div"));
+		assertEquals(RuntimeVariables.replace("Wiki Front Page Content"),
+			selenium.getText("//div[@class='preview']/div/p"));
 		selenium.clickAt("//input[@value='Cancel']",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Cancel"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		assertTrue(selenium.isElementPresent(
-				"link=This page is empty. Edit it to add some text."));
+		assertEquals(RuntimeVariables.replace(
+				"This page is empty. Edit it to add some text."),
+			selenium.getText("//div[@class='portlet-msg-info']"));
 		assertFalse(selenium.isTextPresent(
 				"Your request completed successfully."));
-		assertFalse(selenium.isTextPresent("//div[5]/div"));
+		assertFalse(selenium.isTextPresent("Wiki Front Page Content"));
 	}
 }

@@ -28,6 +28,10 @@
 			<name>view-action</name>
 			<value>/search/view</value>
 		</init-param>
+		<init-param>
+			<name>config-jsp</name>
+			<value>/html/portlet/search/configuration.jsp</value>
+		</init-param>
 		<expiration-cache>0</expiration-cache>
 		<supports>
 			<mime-type>text/html</mime-type>
@@ -237,7 +241,7 @@
 	</portlet>
 	<portlet>
 		<portlet-name>20</portlet-name>
-		<display-name>Document Library</display-name>
+		<display-name>Documents and Media</display-name>
 		<portlet-class>com.liferay.portlet.StrutsPortlet</portlet-class>
 		<init-param>
 			<name>view-action</name>
@@ -412,11 +416,15 @@
 	</portlet>
 	<portlet>
 		<portlet-name>31</portlet-name>
-		<display-name>Image Gallery</display-name>
+		<display-name>Media Gallery</display-name>
 		<portlet-class>com.liferay.portlet.StrutsPortlet</portlet-class>
 		<init-param>
 			<name>view-action</name>
-			<value>/image_gallery/view</value>
+			<value>/image_gallery_display/view</value>
+		</init-param>
+		<init-param>
+			<name>config-jsp</name>
+			<value>/html/portlet/image_gallery_display/configuration.jsp</value>
 		</init-param>
 		<expiration-cache>0</expiration-cache>
 		<supports>
@@ -516,26 +524,6 @@
 		<supported-public-render-parameter>nodeName</supported-public-render-parameter>
 		<supported-public-render-parameter>tag</supported-public-render-parameter>
 		<supported-public-render-parameter>title</supported-public-render-parameter>
-	</portlet>
-	<portlet>
-		<portlet-name>37</portlet-name>
-		<display-name>Words</display-name>
-		<portlet-class>com.liferay.portlet.StrutsPortlet</portlet-class>
-		<init-param>
-			<name>view-action</name>
-			<value>/words/view</value>
-		</init-param>
-		<expiration-cache>0</expiration-cache>
-		<supports>
-			<mime-type>text/html</mime-type>
-		</supports>
-		<resource-bundle>com.liferay.portlet.StrutsResourceBundle</resource-bundle>
-		<security-role-ref>
-			<role-name>power-user</role-name>
-		</security-role-ref>
-		<security-role-ref>
-			<role-name>user</role-name>
-		</security-role-ref>
 	</portlet>
 	<portlet>
 		<portlet-name>39</portlet-name>
@@ -648,11 +636,11 @@
 	</portlet>
 	<portlet>
 		<portlet-name>49</portlet-name>
-		<display-name>My Places</display-name>
+		<display-name>My Sites</display-name>
 		<portlet-class>com.liferay.portlet.StrutsPortlet</portlet-class>
 		<init-param>
 			<name>view-action</name>
-			<value>/my_places/view</value>
+			<value>/my_sites/view</value>
 		</init-param>
 		<expiration-cache>0</expiration-cache>
 		<supports>
@@ -1470,7 +1458,7 @@
 	</portlet>
 	<portlet>
 		<portlet-name>110</portlet-name>
-		<display-name>Document Library Display</display-name>
+		<display-name>Documents and Media Display</display-name>
 		<portlet-class>com.liferay.portlet.StrutsPortlet</portlet-class>
 		<init-param>
 			<name>view-action</name>
@@ -1735,6 +1723,23 @@
 		<init-param>
 			<name>view-action</name>
 			<value>/users_admin/view</value>
+		</init-param>
+		<expiration-cache>0</expiration-cache>
+		<supports>
+			<mime-type>text/html</mime-type>
+		</supports>
+		<resource-bundle>com.liferay.portlet.StrutsResourceBundle</resource-bundle>
+		<security-role-ref>
+			<role-name>administrator</role-name>
+		</security-role-ref>
+	</portlet>
+	<portlet>
+		<portlet-name>127</portlet-name>
+		<display-name>User Groups Admin</display-name>
+		<portlet-class>com.liferay.portlet.StrutsPortlet</portlet-class>
+		<init-param>
+			<name>view-action</name>
+			<value>/user_groups_admin/view</value>
 		</init-param>
 		<expiration-cache>0</expiration-cache>
 		<supports>
@@ -2642,6 +2647,27 @@
 		<supported-public-render-parameter>categoryId</supported-public-render-parameter>
 		<supported-public-render-parameter>tag</supported-public-render-parameter>
 	</portlet>
+	<portlet>
+		<portlet-name>176</portlet-name>
+		<display-name>License Manager</display-name>
+		<portlet-class>com.liferay.util.bridges.mvc.MVCPortlet</portlet-class>
+		<init-param>
+			<name>view-jsp</name>
+			<value>/html/portlet/license_manager/view.jsp</value>
+		</init-param>
+		<expiration-cache>0</expiration-cache>
+		<supports>
+			<mime-type>text/html</mime-type>
+		</supports>
+		<resource-bundle>com.liferay.portlet.StrutsResourceBundle</resource-bundle>
+		<security-role-ref>
+			<role-name>administrator</role-name>
+		</security-role-ref>
+	</portlet>
+	<custom-portlet-mode>
+		<portlet-mode>edit_guest</portlet-mode>
+		<portal-managed>true</portal-managed>
+	</custom-portlet-mode>
 	<custom-window-state>
 		<window-state>exclusive</window-state>
 	</custom-window-state>

@@ -16,7 +16,9 @@ package com.liferay.portal.servlet;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.servlet.ServletContextUtil;
+import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
@@ -28,7 +30,6 @@ import com.liferay.portal.servlet.filters.dynamiccss.DynamicCSSUtil;
 import com.liferay.portal.util.MinifierUtil;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.PropsValues;
-import com.liferay.util.servlet.ServletResponseUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -103,7 +104,8 @@ public class ComboServlet extends HttpServlet {
 					modulePath = StringUtil.replaceFirst(
 						p.concat(modulePath), contextPath, StringPool.BLANK);
 
-					bytes = getFileContent(response, modulePath, minifierType);
+					bytes = getFileContent(
+						request, response, modulePath, minifierType);
 				}
 
 				bytesArray[--length] = bytes;
@@ -170,7 +172,8 @@ public class ComboServlet extends HttpServlet {
 	}
 
 	protected byte[] getFileContent(
-			HttpServletResponse response, String path, String minifierType)
+			HttpServletRequest request, HttpServletResponse response,
+			String path, String minifierType)
 		throws IOException {
 
 		String fileContentKey = path.concat(StringPool.QUESTION).concat(
@@ -215,7 +218,7 @@ public class ComboServlet extends HttpServlet {
 
 					try {
 						stringFileContent = DynamicCSSUtil.parseSass(
-							cssRealPath, stringFileContent);
+							request, cssRealPath, stringFileContent);
 					}
 					catch (Exception e) {
 						_log.error(
@@ -225,8 +228,9 @@ public class ComboServlet extends HttpServlet {
 							_log.debug(stringFileContent);
 						}
 
-						response.setStatus(
-							HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+						response.setHeader(
+							HttpHeaders.CACHE_CONTROL,
+							HttpHeaders.CACHE_CONTROL_NO_CACHE_VALUE);
 					}
 
 					stringFileContent = MinifierUtil.minifyCss(

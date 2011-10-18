@@ -14,14 +14,28 @@
 
 package com.liferay.portlet.documentlibrary.util;
 
-import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.repository.model.FileVersion;
 
 /**
+ * Common interface for all the processors of the document library. All
+ * document library processors must implement this interface.
+ *
  * @author Alexander Chow
  * @author Mika Koivisto
+ * @see    AudioProcessor
+ * @see    DLPreviewableProcessor
+ * @see    com.liferay.portal.kernel.image.ImageProcessor
+ * @see    PDFProcessor
+ * @see    com.liferay.portal.kernel.metadata.RawMetadataProcessor
+ * @see    VideoProcessor
  */
 public interface DLProcessor {
 
-	public void trigger(FileEntry fileEntry);
+	/**
+	 * Launches the processor's work with respect to the given file version.
+	 *
+	 * @param fileVersion the latest file version to process
+	 */
+	public void trigger(FileVersion fileVersion);
 
 }

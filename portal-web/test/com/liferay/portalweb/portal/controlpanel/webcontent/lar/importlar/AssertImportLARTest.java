@@ -25,7 +25,7 @@ public class AssertImportLARTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -40,16 +40,12 @@ public class AssertImportLARTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Control Panel", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Control Panel",
+			RuntimeVariables.replace("Control Panel"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		assertEquals(RuntimeVariables.replace("Web Content"),
-			selenium.getText("//div[2]/div[2]/div[2]/ul/li[3]/a"));
-		selenium.clickAt("//div[2]/div[2]/div[2]/ul/li[3]/a",
+		selenium.clickAt("link=Web Content",
 			RuntimeVariables.replace("Web Content"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 		assertTrue(selenium.isElementPresent("//td[2]/a"));
 		assertEquals(RuntimeVariables.replace("Test Web Content Article"),
 			selenium.getText("//td[3]/a"));
@@ -68,21 +64,24 @@ public class AssertImportLARTest extends BaseTestCase {
 		assertTrue(selenium.isElementPresent("//tr[4]/td[6]/a"));
 		assertEquals(RuntimeVariables.replace("Joe Bloggs"),
 			selenium.getText("//tr[4]/td[7]/a"));
-		selenium.clickAt("link=Structures", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Structures",
+			RuntimeVariables.replace("Structures"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace("TEST"),
 			selenium.getText("//td[2]/a"));
-		assertEquals(RuntimeVariables.replace(
-				"Test Web Content Structure\nThis is a test web content structure!"),
+		assertEquals(RuntimeVariables.replace("Test Web Content Structure"),
 			selenium.getText("//td[3]/a"));
-		selenium.clickAt("link=Templates", RuntimeVariables.replace(""));
+		assertEquals(RuntimeVariables.replace(
+				"This is a test web content structure!"),
+			selenium.getText("//td[4]/a"));
+		selenium.clickAt("link=Templates", RuntimeVariables.replace("Templates"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace("TEST"),
 			selenium.getText("//td[2]/a"));
-		assertEquals(RuntimeVariables.replace(
-				"Test Web Content Template\n This is a test web content template!"),
+		assertEquals(RuntimeVariables.replace("Test Web Content Template"),
 			selenium.getText("//td[3]/a"));
+		assertEquals(RuntimeVariables.replace(
+				"This is a test web content template!"),
+			selenium.getText("//td[4]/a"));
 	}
 }

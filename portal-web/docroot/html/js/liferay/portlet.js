@@ -473,128 +473,6 @@
 					);
 				}
 
-				if (!themeDisplay.layoutMaximized) {
-					A.setTimeout(
-						function() {
-							var configurationLink = portlet.all('.portlet-configuration a');
-
-							configurationLink.on(
-								'click',
-								function(event) {
-									var configurationURL = event.currentTarget.attr('href');
-
-									instance.openConfiguration(portlet, portletId, configurationURL, namespacedId);
-
-									event.preventDefault();
-								}
-							);
-						},
-						50
-					);
-
-					A.setTimeout(
-						function() {
-							var minimizeLink = portlet.one('.portlet-minimize a');
-
-							if (minimizeLink) {
-								minimizeLink.on(
-									'click',
-									function(event) {
-										instance.minimize(portlet, minimizeLink);
-
-										event.halt();
-									}
-								);
-							}
-						},
-						50
-					);
-
-					A.setTimeout(
-						function() {
-							var maximizeLink = portlet.one('.portlet-maximize a');
-
-							if (maximizeLink) {
-								maximizeLink.on(
-									'click',
-									function(event) {
-										submitForm(document.hrefFm, event.currentTarget.attr('href'));
-
-										event.halt();
-									}
-								);
-							}
-						},
-						50
-					);
-
-					A.setTimeout(
-						function() {
-							var closeLink = portlet.one('.portlet-close a');
-
-							if (closeLink) {
-								closeLink.on(
-									'click',
-									function(event) {
-										instance.close(portlet);
-
-										event.halt();
-									}
-								);
-							}
-						},
-						50
-					);
-
-					A.setTimeout(
-						function() {
-							var refreshLink = portlet.one('.portlet-refresh a');
-
-							if (refreshLink) {
-								refreshLink.on(
-									'click',
-									A.bind(instance.refresh, instance, portlet)
-								);
-							}
-						},
-						50
-					);
-
-					A.setTimeout(
-						function() {
-							var printLink = portlet.one('.portlet-print a');
-
-							if (printLink) {
-								printLink.on(
-									'click',
-									function(event) {
-										location.href = event.currentTarget.attr('href');
-
-										event.halt();
-									}
-								);
-							}
-						},
-						50
-					);
-
-					A.setTimeout(
-						function() {
-							var portletCSSLink = portlet.one('.portlet-css a');
-
-							if (portletCSSLink) {
-								portletCSSLink.on(
-									'click',
-									function(event) {
-										instance._loadCSSEditor(portletId);
-									}
-								);
-							}
-						},
-						50
-					);
-				}
-
 				Liferay.fire(
 					'portletReady',
 					{
@@ -757,7 +635,7 @@
 
 	Liferay.provide(
 		Portlet,
-		'_loadCSSEditor',
+		'loadCSSEditor',
 		function(portletId) {
 			Liferay.PortletCSS.init(portletId);
 		},

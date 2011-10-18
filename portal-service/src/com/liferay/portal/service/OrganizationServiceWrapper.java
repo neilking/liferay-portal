@@ -23,7 +23,8 @@ package com.liferay.portal.service;
  * @see       OrganizationService
  * @generated
  */
-public class OrganizationServiceWrapper implements OrganizationService {
+public class OrganizationServiceWrapper implements OrganizationService,
+	ServiceWrapper<OrganizationService> {
 	public OrganizationServiceWrapper(OrganizationService organizationService) {
 		_organizationService = organizationService;
 	}
@@ -386,6 +387,7 @@ public class OrganizationServiceWrapper implements OrganizationService {
 	/**
 	* Updates the organization with additional parameters.
 	*
+	* @param organizationId the primary key of the organization
 	* @param parentOrganizationId the primary key of the organization's parent
 	organization
 	* @param name the organization's name
@@ -471,12 +473,26 @@ public class OrganizationServiceWrapper implements OrganizationService {
 			statusId, comments, site, serviceContext);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public OrganizationService getWrappedOrganizationService() {
 		return _organizationService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedOrganizationService(
 		OrganizationService organizationService) {
+		_organizationService = organizationService;
+	}
+
+	public OrganizationService getWrappedService() {
+		return _organizationService;
+	}
+
+	public void setWrappedService(OrganizationService organizationService) {
 		_organizationService = organizationService;
 	}
 

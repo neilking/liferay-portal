@@ -65,6 +65,8 @@ public class ActionKeys {
 
 	public static final String ADD_ITEM = "ADD_ITEM";
 
+	public static final String ADD_LAYOUT = "ADD_LAYOUT";
+
 	public static final String ADD_LAYOUT_BRANCH = "ADD_LAYOUT_BRANCH";
 
 	public static final String ADD_LAYOUT_PROTOTYPE = "ADD_LAYOUT_PROTOTYPE";
@@ -99,6 +101,11 @@ public class ActionKeys {
 	public static final String ADD_REPOSITORY = "ADD_REPOSITORY";
 
 	public static final String ADD_ROLE = "ADD_ROLE";
+
+	public static final String ADD_RULE_GROUP = "ADD_RULE_GROUP";
+
+	public static final String ADD_RULE_GROUP_INSTANCE =
+		"ADD_RULE_GROUP_INSTANCE";
 
 	public static final String ADD_SHORTCUT = "ADD_SHORTCUT";
 
@@ -149,6 +156,11 @@ public class ActionKeys {
 	public static final String EXPIRE = "EXPIRE";
 
 	public static final String EXPORT_ALL_EVENTS = "EXPORT_ALL_EVENTS";
+
+	public static final String EXPORT_IMPORT_LAYOUTS = "EXPORT_IMPORT_LAYOUTS";
+
+	public static final String EXPORT_IMPORT_PORTLET_INFO =
+		"EXPORT_IMPORT_PORTLET_INFO";
 
 	public static final String EXPORT_USER = "EXPORT_USER";
 
@@ -206,6 +218,8 @@ public class ActionKeys {
 
 	public static final String SUBSCRIBE = "SUBSCRIBE";
 
+	public static final String SUBMIT = "SUBMIT";
+
 	public static final String UPDATE = "UPDATE";
 
 	public static final String UPDATE_DISCUSSION = "UPDATE_DISCUSSION";
@@ -218,6 +232,12 @@ public class ActionKeys {
 	public static final String VIEW = "VIEW";
 
 	public static final String VIEW_CONTROL_PANEL = "VIEW_CONTROL_PANEL";
+
+	public static final String VIEW_MEMBERS = "VIEW_MEMBERS";
+
+	public static final String VIEW_STAGING = "VIEW_STAGING";
+
+	public static final String VIEW_TREE = "VIEW_TREE";
 
 	public static final String VIEW_USER = "VIEW_USER";
 

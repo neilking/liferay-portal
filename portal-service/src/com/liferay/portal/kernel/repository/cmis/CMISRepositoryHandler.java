@@ -22,6 +22,10 @@ import com.liferay.portal.kernel.repository.RepositoryException;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.repository.model.Folder;
+import com.liferay.portal.kernel.search.Hits;
+import com.liferay.portal.kernel.search.Query;
+import com.liferay.portal.kernel.search.SearchContext;
+import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.model.CompanyConstants;
@@ -41,14 +45,14 @@ import java.util.Map;
 public abstract class CMISRepositoryHandler extends BaseRepositoryImpl {
 
 	public FileEntry addFileEntry(
-			long folderId, String mimeType, String title, String description,
-			String changeLog, InputStream is, long size,
+			long folderId, String sourceFileName, String mimeType, String title,
+			String description, String changeLog, InputStream is, long size,
 			ServiceContext serviceContext)
 		throws PortalException, SystemException {
 
 		return _baseCmisRepository.addFileEntry(
-			folderId, mimeType, title, description, changeLog, is, size,
-			serviceContext);
+			folderId, sourceFileName, mimeType, title, description, changeLog,
+			is, size, serviceContext);
 	}
 
 	public Folder addFolder(
@@ -287,6 +291,12 @@ public abstract class CMISRepositoryHandler extends BaseRepositoryImpl {
 		return _baseCmisRepository.getSubfolderIds(folderId, recurse);
 	}
 
+	public void getSubfolderIds(List<Long> folderIds, long folderId)
+		throws SystemException {
+
+		_baseCmisRepository.getSubfolderIds(folderIds, folderId);
+	}
+
 	@Override
 	public void initRepository() throws PortalException, SystemException {
 		_baseCmisRepository.initRepository();
@@ -316,6 +326,20 @@ public abstract class CMISRepositoryHandler extends BaseRepositoryImpl {
 
 	public boolean isRefreshBeforePermissionCheck() {
 		return false;
+	}
+
+	public boolean isSupportsMinorVersions(String productName) {
+
+		// LPS-20509
+
+		productName = productName.toLowerCase();
+
+		if (productName.contains("filenet") && productName.contains("p8")) {
+			return false;
+		}
+		else {
+			return true;
+		}
 	}
 
 	public Lock lockFolder(long folderId)
@@ -369,6 +393,17 @@ public abstract class CMISRepositoryHandler extends BaseRepositoryImpl {
 
 		_baseCmisRepository.revertFileEntry(
 			fileEntryId, version, serviceContext);
+	}
+
+	@Override
+	public Hits search(SearchContext searchContext) throws SearchException {
+		return _baseCmisRepository.search(searchContext);
+	}
+
+	public Hits search(SearchContext searchContext, Query query)
+		throws SearchException {
+
+		return _baseCmisRepository.search(searchContext, query);
 	}
 
 	public void setCmisRepository(BaseCmisRepository baseCmisRepository) {

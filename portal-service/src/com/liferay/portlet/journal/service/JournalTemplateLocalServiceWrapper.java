@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.journal.service;
 
+import com.liferay.portal.service.ServiceWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link JournalTemplateLocalService}.
@@ -24,7 +26,8 @@ package com.liferay.portlet.journal.service;
  * @generated
  */
 public class JournalTemplateLocalServiceWrapper
-	implements JournalTemplateLocalService {
+	implements JournalTemplateLocalService,
+		ServiceWrapper<JournalTemplateLocalService> {
 	public JournalTemplateLocalServiceWrapper(
 		JournalTemplateLocalService journalTemplateLocalService) {
 		_journalTemplateLocalService = journalTemplateLocalService;
@@ -269,17 +272,18 @@ public class JournalTemplateLocalServiceWrapper
 	public com.liferay.portlet.journal.model.JournalTemplate addTemplate(
 		long userId, long groupId, java.lang.String templateId,
 		boolean autoTemplateId, java.lang.String structureId,
-		java.lang.String name, java.lang.String description,
+		java.util.Map<java.util.Locale, java.lang.String> nameMap,
+		java.util.Map<java.util.Locale, java.lang.String> descriptionMap,
 		java.lang.String xsl, boolean formatXsl, java.lang.String langType,
 		boolean cacheable, boolean smallImage, java.lang.String smallImageURL,
-		java.io.File smallFile,
+		java.io.File smallImageFile,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		return _journalTemplateLocalService.addTemplate(userId, groupId,
-			templateId, autoTemplateId, structureId, name, description, xsl,
-			formatXsl, langType, cacheable, smallImage, smallImageURL,
-			smallFile, serviceContext);
+			templateId, autoTemplateId, structureId, nameMap, descriptionMap,
+			xsl, formatXsl, langType, cacheable, smallImage, smallImageURL,
+			smallImageFile, serviceContext);
 	}
 
 	public void addTemplateResources(long groupId, java.lang.String templateId,
@@ -460,23 +464,40 @@ public class JournalTemplateLocalServiceWrapper
 
 	public com.liferay.portlet.journal.model.JournalTemplate updateTemplate(
 		long groupId, java.lang.String templateId,
-		java.lang.String structureId, java.lang.String name,
-		java.lang.String description, java.lang.String xsl, boolean formatXsl,
-		java.lang.String langType, boolean cacheable, boolean smallImage,
-		java.lang.String smallImageURL, java.io.File smallFile,
+		java.lang.String structureId,
+		java.util.Map<java.util.Locale, java.lang.String> nameMap,
+		java.util.Map<java.util.Locale, java.lang.String> descriptionMap,
+		java.lang.String xsl, boolean formatXsl, java.lang.String langType,
+		boolean cacheable, boolean smallImage, java.lang.String smallImageURL,
+		java.io.File smallImageFile,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		return _journalTemplateLocalService.updateTemplate(groupId, templateId,
-			structureId, name, description, xsl, formatXsl, langType,
-			cacheable, smallImage, smallImageURL, smallFile, serviceContext);
+			structureId, nameMap, descriptionMap, xsl, formatXsl, langType,
+			cacheable, smallImage, smallImageURL, smallImageFile, serviceContext);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public JournalTemplateLocalService getWrappedJournalTemplateLocalService() {
 		return _journalTemplateLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedJournalTemplateLocalService(
+		JournalTemplateLocalService journalTemplateLocalService) {
+		_journalTemplateLocalService = journalTemplateLocalService;
+	}
+
+	public JournalTemplateLocalService getWrappedService() {
+		return _journalTemplateLocalService;
+	}
+
+	public void setWrappedService(
 		JournalTemplateLocalService journalTemplateLocalService) {
 		_journalTemplateLocalService = journalTemplateLocalService;
 	}

@@ -41,7 +41,15 @@ public interface WebKeys {
 
 	public static final String FILE_ITEM_THRESHOLD_SIZE_EXCEEDED = "FILE_ITEM_THRESHOLD_SIZE_EXCEEDED";
 
+	public static final String FORGOT_PASSWORD_REMINDER_ATTEMPTS = "FORGOT_PASSWORD_REMINDER_ATTEMPTS";
+
+	public static final String FORGOT_PASSWORD_REMINDER_USER = "FORGOT_PASSWORD_REMINDER_USER";
+
+	public static final String FORGOT_PASSWORD_REMINDER_USER_EMAIL_ADDRESS = "FORGOT_PASSWORD_REMINDER_USER_EMAIL_ADDRESS";
+
 	public static final String INVOKER_FILTER_URI = "INVOKER_FILTER_URI";
+
+	public static final String JOURNAL_ARTICLE_DISPLAY = "JOURNAL_ARTICLE_DISPLAY";
 
 	public static final String LAST_PATH = "LAST_PATH";
 
@@ -83,6 +91,8 @@ public interface WebKeys {
 
 	public static final String PORTLET_PREFERENCES_MAP = "PORTLET_PREFERENCES_MAP";
 
+	public static final String PORTLET_RESOURCE_STATIC_URLS = "PORTLET_RESOURCE_STATIC_URLS";
+
 	public static final String REDIRECT = "REDIRECT";
 
 	public static final String RENDER_PORTLET = "RENDER_PORTLET";
@@ -97,6 +107,8 @@ public interface WebKeys {
 
 	public static final String RENDER_PORTLET_RESOURCE = "RENDER_PORTLET_RESOURCE";
 
+	public static final String RUNTIME_PORTLET_IDS = "LIFERAY_SHARED_RUNTIME_PORTLET_IDS";
+
 	public static final String SEARCH_CONTAINER = "SEARCH_CONTAINER";
 
 	public static final String SEARCH_CONTAINER_RESULT_ROW = "SEARCH_CONTAINER_RESULT_ROW";
@@ -107,6 +119,8 @@ public interface WebKeys {
 
 	public static final String SERVLET_CONTEXT_INCLUDE_FILTER_PATH = "SERVLET_CONTEXT_INCLUDE_FILTER_PATH";
 
+	public static final String SERVLET_CONTEXT_INCLUDE_FILTER_STRICT = "SERVLET_CONTEXT_INCLUDE_FILTER_STRICT";
+
 	public static final String SERVLET_CONTEXT_INCLUDE_FILTER_THEME = "SERVLET_CONTEXT_INCLUDE_FILTER_THEME";
 
 	public static final String SERVLET_PATH = "SERVLET_PATH";
@@ -114,6 +128,8 @@ public interface WebKeys {
 	public static final String THEME = "THEME";
 
 	public static final String THEME_DISPLAY = "THEME_DISPLAY";
+
+	public static final String UPLOAD_EXCEPTION = "UPLOAD_EXCEPTION";
 
 	public static final String USER = "USER";
 

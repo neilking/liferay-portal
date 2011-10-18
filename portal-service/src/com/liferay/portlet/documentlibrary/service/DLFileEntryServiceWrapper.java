@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.documentlibrary.service;
 
+import com.liferay.portal.service.ServiceWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link DLFileEntryService}.
@@ -23,22 +25,25 @@ package com.liferay.portlet.documentlibrary.service;
  * @see       DLFileEntryService
  * @generated
  */
-public class DLFileEntryServiceWrapper implements DLFileEntryService {
+public class DLFileEntryServiceWrapper implements DLFileEntryService,
+	ServiceWrapper<DLFileEntryService> {
 	public DLFileEntryServiceWrapper(DLFileEntryService dlFileEntryService) {
 		_dlFileEntryService = dlFileEntryService;
 	}
 
 	public com.liferay.portlet.documentlibrary.model.DLFileEntry addFileEntry(
 		long groupId, long repositoryId, long folderId,
-		java.lang.String mimeType, java.lang.String title,
-		java.lang.String description, java.lang.String changeLog,
-		java.io.InputStream is, long size,
+		java.lang.String sourceFileName, java.lang.String mimeType,
+		java.lang.String title, java.lang.String description,
+		java.lang.String changeLog, long fileEntryTypeId,
+		java.util.Map<java.lang.String, com.liferay.portlet.dynamicdatamapping.storage.Fields> fieldsMap,
+		java.io.File file, java.io.InputStream is, long size,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		return _dlFileEntryService.addFileEntry(groupId, repositoryId,
-			folderId, mimeType, title, description, changeLog, is, size,
-			serviceContext);
+			folderId, sourceFileName, mimeType, title, description, changeLog,
+			fileEntryTypeId, fieldsMap, file, is, size, serviceContext);
 	}
 
 	public void cancelCheckOut(long fileEntryId)
@@ -97,6 +102,13 @@ public class DLFileEntryServiceWrapper implements DLFileEntryService {
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		_dlFileEntryService.deleteFileEntry(groupId, folderId, title);
+	}
+
+	public com.liferay.portlet.documentlibrary.model.DLFileEntry fetchFileEntryByImageId(
+		long imageId)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return _dlFileEntryService.fetchFileEntryByImageId(imageId);
 	}
 
 	public java.io.InputStream getFileAsStream(long fileEntryId,
@@ -228,13 +240,15 @@ public class DLFileEntryServiceWrapper implements DLFileEntryService {
 		long fileEntryId, java.lang.String sourceFileName,
 		java.lang.String mimeType, java.lang.String title,
 		java.lang.String description, java.lang.String changeLog,
-		boolean majorVersion, java.io.InputStream is, long size,
+		boolean majorVersion, long fileEntryTypeId,
+		java.util.Map<java.lang.String, com.liferay.portlet.dynamicdatamapping.storage.Fields> fieldsMap,
+		java.io.File file, java.io.InputStream is, long size,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		return _dlFileEntryService.updateFileEntry(fileEntryId, sourceFileName,
-			mimeType, title, description, changeLog, majorVersion, is, size,
-			serviceContext);
+			mimeType, title, description, changeLog, majorVersion,
+			fileEntryTypeId, fieldsMap, file, is, size, serviceContext);
 	}
 
 	public boolean verifyFileEntryCheckOut(long fileEntryId,
@@ -244,12 +258,26 @@ public class DLFileEntryServiceWrapper implements DLFileEntryService {
 		return _dlFileEntryService.verifyFileEntryCheckOut(fileEntryId, lockUuid);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public DLFileEntryService getWrappedDLFileEntryService() {
 		return _dlFileEntryService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedDLFileEntryService(
 		DLFileEntryService dlFileEntryService) {
+		_dlFileEntryService = dlFileEntryService;
+	}
+
+	public DLFileEntryService getWrappedService() {
+		return _dlFileEntryService;
+	}
+
+	public void setWrappedService(DLFileEntryService dlFileEntryService) {
 		_dlFileEntryService = dlFileEntryService;
 	}
 

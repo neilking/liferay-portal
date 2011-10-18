@@ -46,6 +46,7 @@ long folderId = ParamUtil.getLong(request, "folderId");
 
 	<liferay-ui:error exception="<%= DuplicateFolderNameException.class %>" message="please-enter-a-unique-repository-name" />
 	<liferay-ui:error exception="<%= DuplicateRepositoryNameException.class %>" message="please-enter-a-unique-repository-name" />
+	<liferay-ui:error exception="<%= FolderNameException.class %>" message="please-enter-a-valid-folder-name" />
 	<liferay-ui:error exception="<%= InvalidRepositoryException.class %>" message="please-verify-your-repository-configuration-parameters" />
 	<liferay-ui:error exception="<%= RepositoryNameException.class %>" message="please-enter-a-valid-name" />
 
@@ -183,7 +184,7 @@ long folderId = ParamUtil.getLong(request, "folderId");
 
 <%
 if (repository != null) {
-	DLUtil.addPortletBreadcrumbEntries(repository.getRepositoryId(), request, renderResponse);
+	DLUtil.addPortletBreadcrumbEntries(folderId, request, renderResponse, true);
 
 	PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(pageContext, "edit"), currentURL);
 }

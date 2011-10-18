@@ -23,7 +23,8 @@ package com.liferay.portal.service;
  * @see       PortletLocalService
  * @generated
  */
-public class PortletLocalServiceWrapper implements PortletLocalService {
+public class PortletLocalServiceWrapper implements PortletLocalService,
+	ServiceWrapper<PortletLocalService> {
 	public PortletLocalServiceWrapper(PortletLocalService portletLocalService) {
 		_portletLocalService = portletLocalService;
 	}
@@ -261,6 +262,10 @@ public class PortletLocalServiceWrapper implements PortletLocalService {
 		_portletLocalService.clearCache();
 	}
 
+	public void clearCompanyPortletsPool() {
+		_portletLocalService.clearCompanyPortletsPool();
+	}
+
 	/**
 	* @deprecated {@link #clonePortlet(String)}
 	*/
@@ -379,6 +384,16 @@ public class PortletLocalServiceWrapper implements PortletLocalService {
 			xmls, pluginPackage);
 	}
 
+	public java.util.Map<java.lang.String, com.liferay.portal.model.Portlet> loadGetPortletsPool(
+		long companyId)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _portletLocalService.loadGetPortletsPool(companyId);
+	}
+
+	public void removeCompanyPortletsPool(long companyId) {
+		_portletLocalService.removeCompanyPortletsPool(companyId);
+	}
+
 	public com.liferay.portal.model.Portlet updatePortlet(long companyId,
 		java.lang.String portletId, java.lang.String roles, boolean active)
 		throws com.liferay.portal.kernel.exception.SystemException {
@@ -386,12 +401,26 @@ public class PortletLocalServiceWrapper implements PortletLocalService {
 			active);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public PortletLocalService getWrappedPortletLocalService() {
 		return _portletLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedPortletLocalService(
 		PortletLocalService portletLocalService) {
+		_portletLocalService = portletLocalService;
+	}
+
+	public PortletLocalService getWrappedService() {
+		return _portletLocalService;
+	}
+
+	public void setWrappedService(PortletLocalService portletLocalService) {
 		_portletLocalService = portletLocalService;
 	}
 

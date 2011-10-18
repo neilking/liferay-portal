@@ -47,6 +47,11 @@ public interface DLFileEntry extends DLFileEntryModel, PersistedModel {
 
 	public com.liferay.portal.kernel.util.UnicodeProperties getExtraSettingsProperties();
 
+	public java.util.Map<java.lang.String, com.liferay.portlet.dynamicdatamapping.storage.Fields> getFieldsMap(
+		long fileVersionId)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException;
+
 	public com.liferay.portlet.documentlibrary.model.DLFileVersion getFileVersion()
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException;
@@ -63,7 +68,8 @@ public interface DLFileEntry extends DLFileEntryModel, PersistedModel {
 
 	public java.lang.String getIcon();
 
-	public com.liferay.portlet.documentlibrary.model.DLFileVersion getLatestFileVersion()
+	public com.liferay.portlet.documentlibrary.model.DLFileVersion getLatestFileVersion(
+		boolean trusted)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException;
 
@@ -79,4 +85,7 @@ public interface DLFileEntry extends DLFileEntryModel, PersistedModel {
 
 	public void setExtraSettingsProperties(
 		com.liferay.portal.kernel.util.UnicodeProperties extraSettingsProperties);
+
+	public void setFileVersion(
+		com.liferay.portlet.documentlibrary.model.DLFileVersion dlFileVersion);
 }

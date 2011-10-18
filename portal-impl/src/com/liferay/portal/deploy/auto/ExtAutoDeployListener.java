@@ -27,10 +27,10 @@ import java.io.File;
 public class ExtAutoDeployListener extends BaseAutoDeployListener {
 
 	public ExtAutoDeployListener() {
-		_deployer = new ExtAutoDeployer();
+		_autoDeployer = new ExtAutoDeployer();
 	}
 
-	public void deploy(File file) throws AutoDeployException {
+	public void deploy(File file, String context) throws AutoDeployException {
 		if (_log.isDebugEnabled()) {
 			_log.debug("Invoking deploy for " + file.getPath());
 		}
@@ -40,10 +40,11 @@ public class ExtAutoDeployListener extends BaseAutoDeployListener {
 		}
 
 		if (_log.isInfoEnabled()) {
-			_log.info("Copying web plugin for " + file.getPath());
+			_log.info(
+				"Copying extension environment plugin for " + file.getPath());
 		}
 
-		_deployer.autoDeploy(file.getName());
+		_autoDeployer.autoDeploy(file, context);
 
 		if (_log.isInfoEnabled()) {
 			_log.info(
@@ -56,6 +57,6 @@ public class ExtAutoDeployListener extends BaseAutoDeployListener {
 	private static Log _log = LogFactoryUtil.getLog(
 		ExtAutoDeployListener.class);
 
-	private AutoDeployer _deployer;
+	private AutoDeployer _autoDeployer;
 
 }

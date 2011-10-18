@@ -16,6 +16,7 @@ package com.liferay.portal.model.impl;
 
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.CacheModel;
@@ -27,8 +28,6 @@ import com.liferay.portlet.expando.model.ExpandoBridge;
 import com.liferay.portlet.expando.util.ExpandoBridgeFactoryUtil;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Proxy;
 
 import java.sql.Types;
 
@@ -76,15 +75,10 @@ public class ReleaseModelImpl extends BaseModelImpl<Release>
 	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
 				"value.object.finder.cache.enabled.com.liferay.portal.model.Release"),
 			true);
-
-	public Class<?> getModelClass() {
-		return Release.class;
-	}
-
-	public String getModelClassName() {
-		return Release.class.getName();
-	}
-
+	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.column.bitmask.enabled.com.liferay.portal.model.Release"),
+			true);
+	public static long SERVLETCONTEXTNAME_COLUMN_BITMASK = 1L;
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(com.liferay.portal.util.PropsUtil.get(
 				"lock.expiration.time.com.liferay.portal.model.Release"));
 
@@ -105,6 +99,14 @@ public class ReleaseModelImpl extends BaseModelImpl<Release>
 
 	public void setPrimaryKeyObj(Serializable primaryKeyObj) {
 		setPrimaryKey(((Long)primaryKeyObj).longValue());
+	}
+
+	public Class<?> getModelClass() {
+		return Release.class;
+	}
+
+	public String getModelClassName() {
+		return Release.class.getName();
 	}
 
 	public long getReleaseId() {
@@ -141,6 +143,8 @@ public class ReleaseModelImpl extends BaseModelImpl<Release>
 	}
 
 	public void setServletContextName(String servletContextName) {
+		_columnBitmask |= SERVLETCONTEXTNAME_COLUMN_BITMASK;
+
 		if (_originalServletContextName == null) {
 			_originalServletContextName = _servletContextName;
 		}
@@ -193,20 +197,19 @@ public class ReleaseModelImpl extends BaseModelImpl<Release>
 		_testString = testString;
 	}
 
+	public long getColumnBitmask() {
+		return _columnBitmask;
+	}
+
 	@Override
 	public Release toEscapedModel() {
-		if (isEscapedModel()) {
-			return (Release)this;
+		if (_escapedModelProxy == null) {
+			_escapedModelProxy = (Release)ProxyUtil.newProxyInstance(_classLoader,
+					_escapedModelProxyInterfaces,
+					new AutoEscapeBeanHandler(this));
 		}
-		else {
-			if (_escapedModelProxy == null) {
-				_escapedModelProxy = (Release)Proxy.newProxyInstance(_classLoader,
-						_escapedModelProxyInterfaces,
-						new AutoEscapeBeanHandler(this));
-			}
 
-			return _escapedModelProxy;
-		}
+		return _escapedModelProxy;
 	}
 
 	@Override
@@ -291,6 +294,8 @@ public class ReleaseModelImpl extends BaseModelImpl<Release>
 		ReleaseModelImpl releaseModelImpl = this;
 
 		releaseModelImpl._originalServletContextName = releaseModelImpl._servletContextName;
+
+		releaseModelImpl._columnBitmask = 0;
 	}
 
 	@Override
@@ -433,5 +438,6 @@ public class ReleaseModelImpl extends BaseModelImpl<Release>
 	private boolean _verified;
 	private String _testString;
 	private transient ExpandoBridge _expandoBridge;
+	private long _columnBitmask;
 	private Release _escapedModelProxy;
 }

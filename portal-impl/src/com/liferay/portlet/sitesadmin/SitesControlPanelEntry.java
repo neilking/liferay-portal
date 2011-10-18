@@ -14,9 +14,12 @@
 
 package com.liferay.portlet.sitesadmin;
 
+import com.liferay.portal.model.Group;
 import com.liferay.portal.model.Portlet;
 import com.liferay.portal.security.permission.PermissionChecker;
 import com.liferay.portal.service.GroupLocalServiceUtil;
+import com.liferay.portal.theme.ThemeDisplay;
+import com.liferay.portal.util.PortletCategoryKeys;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.BaseControlPanelEntry;
 
@@ -24,6 +27,8 @@ import java.util.LinkedHashMap;
 
 /**
  * @author Jorge Ferrer
+ * @author Sergio González
+ * @author Miguel Pastor
  */
 public class SitesControlPanelEntry extends BaseControlPanelEntry {
 
@@ -35,8 +40,8 @@ public class SitesControlPanelEntry extends BaseControlPanelEntry {
 			LinkedHashMap<String, Object> groupParams =
 				new LinkedHashMap<String, Object>();
 
-			groupParams.put(
-				"usersGroups", new Long(permissionChecker.getUserId()));
+			groupParams.put("site", true);
+			groupParams.put("usersGroups", permissionChecker.getUserId());
 
 			int count = GroupLocalServiceUtil.searchCount(
 				permissionChecker.getCompanyId(), null, null, groupParams);
@@ -47,6 +52,26 @@ public class SitesControlPanelEntry extends BaseControlPanelEntry {
 		}
 
 		return false;
+	}
+
+	@Override
+	public boolean isVisible(
+			Portlet portlet, String category, ThemeDisplay themeDisplay)
+		throws Exception {
+
+		Group scopeGroup = themeDisplay.getScopeGroup();
+
+		if (scopeGroup.isCompany()) {
+			return false;
+		}
+
+		String controlPanelCategory = themeDisplay.getControlPanelCategory();
+
+		if (controlPanelCategory.equals(PortletCategoryKeys.CONTENT)) {
+			return false;
+		}
+
+		return super.isVisible(portlet, category, themeDisplay);
 	}
 
 }

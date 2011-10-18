@@ -19,7 +19,6 @@ import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.BooleanQueryFactoryUtil;
 import com.liferay.portal.kernel.search.Document;
-import com.liferay.portal.kernel.search.DocumentImpl;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchEngineUtil;
@@ -57,6 +56,10 @@ public class OrganizationIndexer extends BaseIndexer {
 
 	public String[] getClassNames() {
 		return CLASS_NAMES;
+	}
+
+	public String getPortletId() {
+		return PORTLET_ID;
 	}
 
 	@Override
@@ -100,15 +103,15 @@ public class OrganizationIndexer extends BaseIndexer {
 			BooleanQuery searchQuery, SearchContext searchContext)
 		throws Exception {
 
-		addSearchTerm(searchQuery, searchContext, "city", true);
-		addSearchTerm(searchQuery, searchContext, "country", true);
-		addSearchTerm(searchQuery, searchContext, "name", true);
+		addSearchTerm(searchQuery, searchContext, "city", false);
+		addSearchTerm(searchQuery, searchContext, "country", false);
+		addSearchTerm(searchQuery, searchContext, "name", false);
 		addSearchTerm(
 			searchQuery, searchContext, "parentOrganizationId", false);
-		addSearchTerm(searchQuery, searchContext, "region", true);
-		addSearchTerm(searchQuery, searchContext, "street", true);
-		addSearchTerm(searchQuery, searchContext, "type", true);
-		addSearchTerm(searchQuery, searchContext, "zip", true);
+		addSearchTerm(searchQuery, searchContext, "region", false);
+		addSearchTerm(searchQuery, searchContext, "street", false);
+		addSearchTerm(searchQuery, searchContext, "type", false);
+		addSearchTerm(searchQuery, searchContext, "zip", false);
 
 		LinkedHashMap<String, Object> params =
 			(LinkedHashMap<String, Object>)searchContext.getAttribute("params");
@@ -126,12 +129,8 @@ public class OrganizationIndexer extends BaseIndexer {
 	protected void doDelete(Object obj) throws Exception {
 		Organization organization = (Organization)obj;
 
-		Document document = new DocumentImpl();
-
-		document.addUID(PORTLET_ID, organization.getOrganizationId());
-
-		SearchEngineUtil.deleteDocument(
-			organization.getCompanyId(), document.get(Field.UID));
+		deleteDocument(
+			organization.getCompanyId(), organization.getOrganizationId());
 	}
 
 	@Override

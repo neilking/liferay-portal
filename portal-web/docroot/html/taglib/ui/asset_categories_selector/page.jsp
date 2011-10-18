@@ -32,13 +32,22 @@ if (Validator.isNotNull(className)) {
 
 	List<AssetVocabulary> vocabularies = new ArrayList<AssetVocabulary>();
 
-	vocabularies.addAll(AssetVocabularyLocalServiceUtil.getGroupVocabularies(scopeGroupId, false));
+	Group group = themeDisplay.getScopeGroup();
+
+	if (group.isLayout()) {
+		vocabularies.addAll(AssetVocabularyLocalServiceUtil.getGroupVocabularies(group.getParentGroupId(), false));
+	}
+	else {
+		vocabularies.addAll(AssetVocabularyLocalServiceUtil.getGroupVocabularies(scopeGroupId, false));
+	}
 
 	if (scopeGroupId != themeDisplay.getCompanyGroupId()) {
 		vocabularies.addAll(AssetVocabularyLocalServiceUtil.getGroupVocabularies(themeDisplay.getCompanyGroupId(), false));
 	}
 
 	for (AssetVocabulary vocabulary : vocabularies) {
+		vocabulary = vocabulary.toEscapedModel();
+
 		int vocabularyCategoriesCount = AssetCategoryLocalServiceUtil.getVocabularyCategoriesCount(vocabulary.getVocabularyId());
 
 		if (vocabularyCategoriesCount == 0) {
@@ -56,8 +65,8 @@ if (Validator.isNotNull(className)) {
 		if (Validator.isNotNull(className) && (classPK > 0)) {
 			List<AssetCategory> categories = AssetCategoryLocalServiceUtil.getCategories(className, classPK);
 
-			curCategoryIds = ListUtil.toString(categories, "categoryId");
-			curCategoryNames = ListUtil.toString(categories, "name");
+			curCategoryIds = ListUtil.toString(categories, AssetCategory.CATEGORY_ID_ACCESSOR);
+			curCategoryNames = ListUtil.toString(categories, AssetCategory.NAME_ACCESSOR);
 		}
 
 		String curCategoryIdsParam = request.getParameter(hiddenInput + StringPool.UNDERLINE + vocabulary.getVocabularyId());
@@ -67,7 +76,7 @@ if (Validator.isNotNull(className)) {
 			curCategoryNames = StringPool.BLANK;
 		}
 
-		String[] categoryIdsNames = _getCategoryIdsNames(curCategoryIds, curCategoryNames, vocabulary.getVocabularyId());
+		String[] categoryIdsTitles = _getCategoryIdsTitles(curCategoryIds, curCategoryNames, vocabulary.getVocabularyId(), themeDisplay);
 	%>
 
 		<span class="aui-field-content">
@@ -93,8 +102,8 @@ if (Validator.isNotNull(className)) {
 				{
 					className: '<%= className %>',
 					contentBox: '#<%= namespace + randomNamespace %>assetCategoriesSelector_<%= vocabulary.getVocabularyId() %>',
-					curEntries: '<%= HtmlUtil.escapeJS(categoryIdsNames[1]) %>',
-					curEntryIds: '<%= categoryIdsNames[0] %>',
+					curEntries: '<%= HtmlUtil.escapeJS(categoryIdsTitles[1]) %>',
+					curEntryIds: '<%= categoryIdsTitles[0] %>',
 					hiddenInput: '#<%= namespace + hiddenInput + StringPool.UNDERLINE + vocabulary.getVocabularyId() %>',
 					instanceVar: '<%= namespace + randomNamespace %>',
 					labelNode: '#<%= namespace %>assetCategoriesLabel_<%= vocabulary.getVocabularyId() %>',
@@ -115,7 +124,7 @@ else {
 		curCategoryIds = curCategoryIdsParam;
 	}
 
-	String[] categoryIdsNames = _getCategoryIdsNames(curCategoryIds, curCategoryNames, 0);
+	String[] categoryIdsTitles = _getCategoryIdsTitles(curCategoryIds, curCategoryNames, 0, themeDisplay);
 %>
 
 	<div class="lfr-tags-selector-content" id="<%= namespace + randomNamespace %>assetCategoriesSelector">
@@ -127,8 +136,8 @@ else {
 			{
 				className: '<%= className %>',
 				contentBox: '#<%= namespace + randomNamespace %>assetCategoriesSelector',
-				curEntries: '<%= HtmlUtil.escapeJS(categoryIdsNames[1]) %>',
-				curEntryIds: '<%= categoryIdsNames[0] %>',
+				curEntries: '<%= HtmlUtil.escapeJS(categoryIdsTitles[1]) %>',
+				curEntryIds: '<%= categoryIdsTitles[0] %>',
 				hiddenInput: '#<%= namespace + hiddenInput %>',
 				instanceVar: '<%= namespace + randomNamespace %>',
 				portalModelResource: <%= Validator.isNotNull(className) && (ResourceActionsUtil.isPortalModelResource(className) || className.equals(Group.class.getName())) %>
@@ -155,7 +164,7 @@ private long[] _filterCategoryIds(long vocabularyId, long[] categoryIds) throws 
 	return ArrayUtil.toArray(filteredCategoryIds.toArray(new Long[filteredCategoryIds.size()]));
 }
 
-private String[] _getCategoryIdsNames(String categoryIds, String categoryNames, long vocabularyId) throws PortalException, SystemException {
+private String[] _getCategoryIdsTitles(String categoryIds, String categoryNames, long vocabularyId, ThemeDisplay themeDisplay) throws PortalException, SystemException {
 	if (Validator.isNotNull(categoryIds)) {
 		long[] categoryIdsArray = GetterUtil.getLongValues(StringUtil.split(categoryIds));
 
@@ -175,8 +184,8 @@ private String[] _getCategoryIdsNames(String categoryIds, String categoryNames, 
 
 				category = category.toEscapedModel();
 
-				sb.append(category.getName());
-				sb.append(StringPool.COMMA);
+				sb.append(category.getTitle(themeDisplay.getLocale()));
+				sb.append(_CATEGORY_SEPARATOR);
 			}
 
 			sb.setIndex(sb.index() - 1);
@@ -188,4 +197,6 @@ private String[] _getCategoryIdsNames(String categoryIds, String categoryNames, 
 
 	return new String[] {categoryIds, categoryNames};
 }
+
+private static final String _CATEGORY_SEPARATOR = "_CATEGORY_";
 %>

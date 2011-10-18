@@ -73,9 +73,13 @@ public class VelocityEngineImpl implements VelocityEngine {
 	}
 
 	public void init() throws Exception {
+		if (_velocityEngine != null) {
+			return;
+		}
+
 		_velocityEngine = new org.apache.velocity.app.VelocityEngine();
 
-		LiferayResourceLoader.setListeners(
+		LiferayResourceLoader.setVelocityResourceListeners(
 			PropsValues.VELOCITY_ENGINE_RESOURCE_LISTENERS);
 
 		ExtendedProperties extendedProperties = new FastExtendedProperties();

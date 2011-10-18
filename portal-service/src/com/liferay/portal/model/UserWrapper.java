@@ -23,7 +23,7 @@ package com.liferay.portal.model;
  * @see       User
  * @generated
  */
-public class UserWrapper implements User {
+public class UserWrapper implements User, ModelWrapper<User> {
 	public UserWrapper(User user) {
 		_user = user;
 	}
@@ -850,10 +850,6 @@ public class UserWrapper implements User {
 		return _user.isEscapedModel();
 	}
 
-	public void setEscapedModel(boolean escapedModel) {
-		_user.setEscapedModel(escapedModel);
-	}
-
 	public java.io.Serializable getPrimaryKeyObj() {
 		return _user.getPrimaryKeyObj();
 	}
@@ -996,23 +992,23 @@ public class UserWrapper implements User {
 		return _user.getMale();
 	}
 
-	public java.util.List<com.liferay.portal.model.Group> getMyPlaces()
+	public java.util.List<com.liferay.portal.model.Group> getMySites()
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
-		return _user.getMyPlaces();
+		return _user.getMySites();
 	}
 
-	public java.util.List<com.liferay.portal.model.Group> getMyPlaces(int max)
+	public java.util.List<com.liferay.portal.model.Group> getMySites(int max)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
-		return _user.getMyPlaces(max);
+		return _user.getMySites(max);
 	}
 
-	public java.util.List<com.liferay.portal.model.Group> getMyPlaces(
+	public java.util.List<com.liferay.portal.model.Group> getMySites(
 		java.lang.String[] classNames, int max)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
-		return _user.getMyPlaces(classNames, max);
+		return _user.getMySites(classNames, max);
 	}
 
 	public long[] getOrganizationIds()
@@ -1141,10 +1137,10 @@ public class UserWrapper implements User {
 		return _user.hasCompanyMx(emailAddress);
 	}
 
-	public boolean hasMyPlaces()
+	public boolean hasMySites()
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
-		return _user.hasMyPlaces();
+		return _user.hasMySites();
 	}
 
 	public boolean hasOrganization()
@@ -1210,7 +1206,14 @@ public class UserWrapper implements User {
 		return _user.getWebsites();
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedModel}
+	 */
 	public User getWrappedUser() {
+		return _user;
+	}
+
+	public User getWrappedModel() {
 		return _user;
 	}
 

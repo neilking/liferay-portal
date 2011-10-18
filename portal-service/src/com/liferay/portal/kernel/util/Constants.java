@@ -23,6 +23,10 @@ public interface Constants {
 
 	public static final String ADD = "add";
 
+	public static final String ADD_TEMP = "add_temp";
+
+	public static final String ADD_MULTIPLE = "add_multiple";
+
 	public static final String APPROVE = "approve";
 
 	public static final String ASSIGN = "assign";
@@ -43,6 +47,8 @@ public interface Constants {
 
 	public static final String DELETE = "delete";
 
+	public static final String DELETE_TEMP = "delete_temp";
+
 	public static final String DELETE_TRANSLATION = "delete_translation";
 
 	public static final String EDIT = "edit";
@@ -50,6 +56,8 @@ public interface Constants {
 	public static final String EXPIRE = "expire";
 
 	public static final String EXPORT = "export";
+
+	public static final String GET_TEMP = "get_temp";
 
 	public static final String IMPORT = "import";
 
@@ -93,6 +101,8 @@ public interface Constants {
 
 	public static final String SUBSCRIBE_TO_COMMENTS = "subscribe_to_comments";
 
+	public static final String TEST = "test";
+
 	public static final String TRANSLATE = "translate";
 
 	public static final String UNLOCK = "unlock";
@@ -104,7 +114,11 @@ public interface Constants {
 
 	public static final String UPDATE = "update";
 
+	public static final String UPDATE_AND_CHECKIN = "update_and_checkin";
+
 	public static final String VIEW = "view";
+
+	public static final String VOTE = "vote";
 
 	public static final String WRITE = "write";
 

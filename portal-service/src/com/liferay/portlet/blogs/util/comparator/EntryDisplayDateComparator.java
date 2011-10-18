@@ -23,11 +23,15 @@ import com.liferay.portlet.blogs.model.BlogsEntry;
  */
 public class EntryDisplayDateComparator extends OrderByComparator {
 
-	public static String ORDER_BY_ASC = "displayDate ASC, entryId ASC";
+	public static final String ORDER_BY_ASC =
+		"BlogsEntry.displayDate ASC, BlogsEntry.entryId ASC";
 
-	public static String ORDER_BY_DESC = "displayDate DESC, entryId DESC";
+	public static final String ORDER_BY_DESC =
+		"BlogsEntry.displayDate DESC, BlogsEntry.entryId DESC";
 
-	public static String[] ORDER_BY_FIELDS = {"displayDate", "entryId"};
+	public static final String[] ORDER_BY_CONDITION_FIELDS = {"displayDate"};
+
+	public static final String[] ORDER_BY_FIELDS = {"displayDate", "entryId"};
 
 	public EntryDisplayDateComparator() {
 		this(false);
@@ -70,6 +74,11 @@ public class EntryDisplayDateComparator extends OrderByComparator {
 		else {
 			return ORDER_BY_DESC;
 		}
+	}
+
+	@Override
+	public String[] getOrderByConditionFields() {
+		return ORDER_BY_CONDITION_FIELDS;
 	}
 
 	@Override

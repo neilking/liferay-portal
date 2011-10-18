@@ -23,7 +23,7 @@ package com.liferay.portal.model;
  * @see       Layout
  * @generated
  */
-public class LayoutWrapper implements Layout {
+public class LayoutWrapper implements Layout, ModelWrapper<Layout> {
 	public LayoutWrapper(Layout layout) {
 		_layout = layout;
 	}
@@ -277,6 +277,14 @@ public class LayoutWrapper implements Layout {
 		return _layout.getName(languageId, useDefault);
 	}
 
+	public java.lang.String getNameCurrentLanguageId() {
+		return _layout.getNameCurrentLanguageId();
+	}
+
+	public java.lang.String getNameCurrentValue() {
+		return _layout.getNameCurrentValue();
+	}
+
 	/**
 	* Returns a map of the locales and localized names of this layout.
 	*
@@ -315,6 +323,10 @@ public class LayoutWrapper implements Layout {
 	public void setName(java.lang.String name, java.util.Locale locale,
 		java.util.Locale defaultLocale) {
 		_layout.setName(name, locale, defaultLocale);
+	}
+
+	public void setNameCurrentLanguageId(java.lang.String languageId) {
+		_layout.setNameCurrentLanguageId(languageId);
 	}
 
 	/**
@@ -391,6 +403,14 @@ public class LayoutWrapper implements Layout {
 		return _layout.getTitle(languageId, useDefault);
 	}
 
+	public java.lang.String getTitleCurrentLanguageId() {
+		return _layout.getTitleCurrentLanguageId();
+	}
+
+	public java.lang.String getTitleCurrentValue() {
+		return _layout.getTitleCurrentValue();
+	}
+
 	/**
 	* Returns a map of the locales and localized titles of this layout.
 	*
@@ -429,6 +449,10 @@ public class LayoutWrapper implements Layout {
 	public void setTitle(java.lang.String title, java.util.Locale locale,
 		java.util.Locale defaultLocale) {
 		_layout.setTitle(title, locale, defaultLocale);
+	}
+
+	public void setTitleCurrentLanguageId(java.lang.String languageId) {
+		_layout.setTitleCurrentLanguageId(languageId);
 	}
 
 	/**
@@ -506,6 +530,14 @@ public class LayoutWrapper implements Layout {
 		return _layout.getDescription(languageId, useDefault);
 	}
 
+	public java.lang.String getDescriptionCurrentLanguageId() {
+		return _layout.getDescriptionCurrentLanguageId();
+	}
+
+	public java.lang.String getDescriptionCurrentValue() {
+		return _layout.getDescriptionCurrentValue();
+	}
+
 	/**
 	* Returns a map of the locales and localized descriptions of this layout.
 	*
@@ -545,6 +577,10 @@ public class LayoutWrapper implements Layout {
 	public void setDescription(java.lang.String description,
 		java.util.Locale locale, java.util.Locale defaultLocale) {
 		_layout.setDescription(description, locale, defaultLocale);
+	}
+
+	public void setDescriptionCurrentLanguageId(java.lang.String languageId) {
+		_layout.setDescriptionCurrentLanguageId(languageId);
 	}
 
 	/**
@@ -622,6 +658,14 @@ public class LayoutWrapper implements Layout {
 		return _layout.getKeywords(languageId, useDefault);
 	}
 
+	public java.lang.String getKeywordsCurrentLanguageId() {
+		return _layout.getKeywordsCurrentLanguageId();
+	}
+
+	public java.lang.String getKeywordsCurrentValue() {
+		return _layout.getKeywordsCurrentValue();
+	}
+
 	/**
 	* Returns a map of the locales and localized keywordses of this layout.
 	*
@@ -660,6 +704,10 @@ public class LayoutWrapper implements Layout {
 	public void setKeywords(java.lang.String keywords, java.util.Locale locale,
 		java.util.Locale defaultLocale) {
 		_layout.setKeywords(keywords, locale, defaultLocale);
+	}
+
+	public void setKeywordsCurrentLanguageId(java.lang.String languageId) {
+		_layout.setKeywordsCurrentLanguageId(languageId);
 	}
 
 	/**
@@ -737,6 +785,14 @@ public class LayoutWrapper implements Layout {
 		return _layout.getRobots(languageId, useDefault);
 	}
 
+	public java.lang.String getRobotsCurrentLanguageId() {
+		return _layout.getRobotsCurrentLanguageId();
+	}
+
+	public java.lang.String getRobotsCurrentValue() {
+		return _layout.getRobotsCurrentValue();
+	}
+
 	/**
 	* Returns a map of the locales and localized robotses of this layout.
 	*
@@ -775,6 +831,10 @@ public class LayoutWrapper implements Layout {
 	public void setRobots(java.lang.String robots, java.util.Locale locale,
 		java.util.Locale defaultLocale) {
 		_layout.setRobots(robots, locale, defaultLocale);
+	}
+
+	public void setRobotsCurrentLanguageId(java.lang.String languageId) {
+		_layout.setRobotsCurrentLanguageId(languageId);
 	}
 
 	/**
@@ -1034,21 +1094,67 @@ public class LayoutWrapper implements Layout {
 	}
 
 	/**
-	* Returns the layout prototype ID of this layout.
+	* Returns the layout prototype uuid of this layout.
 	*
-	* @return the layout prototype ID of this layout
+	* @return the layout prototype uuid of this layout
 	*/
-	public long getLayoutPrototypeId() {
-		return _layout.getLayoutPrototypeId();
+	public java.lang.String getLayoutPrototypeUuid() {
+		return _layout.getLayoutPrototypeUuid();
 	}
 
 	/**
-	* Sets the layout prototype ID of this layout.
+	* Sets the layout prototype uuid of this layout.
 	*
-	* @param layoutPrototypeId the layout prototype ID of this layout
+	* @param layoutPrototypeUuid the layout prototype uuid of this layout
 	*/
-	public void setLayoutPrototypeId(long layoutPrototypeId) {
-		_layout.setLayoutPrototypeId(layoutPrototypeId);
+	public void setLayoutPrototypeUuid(java.lang.String layoutPrototypeUuid) {
+		_layout.setLayoutPrototypeUuid(layoutPrototypeUuid);
+	}
+
+	/**
+	* Returns the layout prototype link enabled of this layout.
+	*
+	* @return the layout prototype link enabled of this layout
+	*/
+	public boolean getLayoutPrototypeLinkEnabled() {
+		return _layout.getLayoutPrototypeLinkEnabled();
+	}
+
+	/**
+	* Returns <code>true</code> if this layout is layout prototype link enabled.
+	*
+	* @return <code>true</code> if this layout is layout prototype link enabled; <code>false</code> otherwise
+	*/
+	public boolean isLayoutPrototypeLinkEnabled() {
+		return _layout.isLayoutPrototypeLinkEnabled();
+	}
+
+	/**
+	* Sets whether this layout is layout prototype link enabled.
+	*
+	* @param layoutPrototypeLinkEnabled the layout prototype link enabled of this layout
+	*/
+	public void setLayoutPrototypeLinkEnabled(
+		boolean layoutPrototypeLinkEnabled) {
+		_layout.setLayoutPrototypeLinkEnabled(layoutPrototypeLinkEnabled);
+	}
+
+	/**
+	* Returns the template layout uuid of this layout.
+	*
+	* @return the template layout uuid of this layout
+	*/
+	public java.lang.String getTemplateLayoutUuid() {
+		return _layout.getTemplateLayoutUuid();
+	}
+
+	/**
+	* Sets the template layout uuid of this layout.
+	*
+	* @param templateLayoutUuid the template layout uuid of this layout
+	*/
+	public void setTemplateLayoutUuid(java.lang.String templateLayoutUuid) {
+		_layout.setTemplateLayoutUuid(templateLayoutUuid);
 	}
 
 	public boolean isNew() {
@@ -1069,10 +1175,6 @@ public class LayoutWrapper implements Layout {
 
 	public boolean isEscapedModel() {
 		return _layout.isEscapedModel();
-	}
-
-	public void setEscapedModel(boolean escapedModel) {
-		_layout.setEscapedModel(escapedModel);
 	}
 
 	public java.io.Serializable getPrimaryKeyObj() {
@@ -1251,6 +1353,10 @@ public class LayoutWrapper implements Layout {
 		return _layout.getTypeSettingsProperties();
 	}
 
+	public java.lang.String getTypeSettingsProperty(java.lang.String key) {
+		return _layout.getTypeSettingsProperty(key);
+	}
+
 	public com.liferay.portal.model.ColorScheme getWapColorScheme()
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
@@ -1348,12 +1454,23 @@ public class LayoutWrapper implements Layout {
 		return _layout.isTypeURL();
 	}
 
+	public void setLayoutSet(com.liferay.portal.model.LayoutSet layoutSet) {
+		_layout.setLayoutSet(layoutSet);
+	}
+
 	public void setTypeSettingsProperties(
 		com.liferay.portal.kernel.util.UnicodeProperties typeSettingsProperties) {
 		_layout.setTypeSettingsProperties(typeSettingsProperties);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedModel}
+	 */
 	public Layout getWrappedLayout() {
+		return _layout;
+	}
+
+	public Layout getWrappedModel() {
 		return _layout;
 	}
 

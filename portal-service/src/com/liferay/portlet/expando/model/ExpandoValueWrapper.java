@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.expando.model;
 
+import com.liferay.portal.model.ModelWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link ExpandoValue}.
@@ -23,7 +25,8 @@ package com.liferay.portlet.expando.model;
  * @see       ExpandoValue
  * @generated
  */
-public class ExpandoValueWrapper implements ExpandoValue {
+public class ExpandoValueWrapper implements ExpandoValue,
+	ModelWrapper<ExpandoValue> {
 	public ExpandoValueWrapper(ExpandoValue expandoValue) {
 		_expandoValue = expandoValue;
 	}
@@ -227,10 +230,6 @@ public class ExpandoValueWrapper implements ExpandoValue {
 		return _expandoValue.isEscapedModel();
 	}
 
-	public void setEscapedModel(boolean escapedModel) {
-		_expandoValue.setEscapedModel(escapedModel);
-	}
-
 	public java.io.Serializable getPrimaryKeyObj() {
 		return _expandoValue.getPrimaryKeyObj();
 	}
@@ -363,6 +362,12 @@ public class ExpandoValueWrapper implements ExpandoValue {
 		return _expandoValue.getLongArray();
 	}
 
+	public java.io.Serializable getSerializable()
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return _expandoValue.getSerializable();
+	}
+
 	public short getShort()
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
@@ -397,6 +402,11 @@ public class ExpandoValueWrapper implements ExpandoValue {
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		_expandoValue.setBooleanArray(data);
+	}
+
+	public void setColumn(
+		com.liferay.portlet.expando.model.ExpandoColumn column) {
+		_expandoValue.setColumn(column);
 	}
 
 	public void setDate(java.util.Date data)
@@ -483,7 +493,14 @@ public class ExpandoValueWrapper implements ExpandoValue {
 		_expandoValue.setStringArray(data);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedModel}
+	 */
 	public ExpandoValue getWrappedExpandoValue() {
+		return _expandoValue;
+	}
+
+	public ExpandoValue getWrappedModel() {
 		return _expandoValue;
 	}
 

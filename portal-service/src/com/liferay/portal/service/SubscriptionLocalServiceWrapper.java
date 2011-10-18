@@ -23,7 +23,8 @@ package com.liferay.portal.service;
  * @see       SubscriptionLocalService
  * @generated
  */
-public class SubscriptionLocalServiceWrapper implements SubscriptionLocalService {
+public class SubscriptionLocalServiceWrapper implements SubscriptionLocalService,
+	ServiceWrapper<SubscriptionLocalService> {
 	public SubscriptionLocalServiceWrapper(
 		SubscriptionLocalService subscriptionLocalService) {
 		_subscriptionLocalService = subscriptionLocalService;
@@ -301,9 +302,22 @@ public class SubscriptionLocalServiceWrapper implements SubscriptionLocalService
 	}
 
 	public java.util.List<com.liferay.portal.model.Subscription> getUserSubscriptions(
+		long userId, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator orderByComparator)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _subscriptionLocalService.getUserSubscriptions(userId, start,
+			end, orderByComparator);
+	}
+
+	public java.util.List<com.liferay.portal.model.Subscription> getUserSubscriptions(
 		long userId, java.lang.String className)
 		throws com.liferay.portal.kernel.exception.SystemException {
 		return _subscriptionLocalService.getUserSubscriptions(userId, className);
+	}
+
+	public int getUserSubscriptionsCount(long userId)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _subscriptionLocalService.getUserSubscriptionsCount(userId);
 	}
 
 	public boolean isSubscribed(long companyId, long userId,
@@ -313,11 +327,26 @@ public class SubscriptionLocalServiceWrapper implements SubscriptionLocalService
 			className, classPK);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public SubscriptionLocalService getWrappedSubscriptionLocalService() {
 		return _subscriptionLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedSubscriptionLocalService(
+		SubscriptionLocalService subscriptionLocalService) {
+		_subscriptionLocalService = subscriptionLocalService;
+	}
+
+	public SubscriptionLocalService getWrappedService() {
+		return _subscriptionLocalService;
+	}
+
+	public void setWrappedService(
 		SubscriptionLocalService subscriptionLocalService) {
 		_subscriptionLocalService = subscriptionLocalService;
 	}

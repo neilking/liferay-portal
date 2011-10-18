@@ -30,7 +30,7 @@ public class SearchWebContentTest extends BaseTestCase {
 				selenium.open("/web/guest/home/");
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
@@ -45,17 +45,12 @@ public class SearchWebContentTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
 				selenium.clickAt("link=Control Panel",
-					RuntimeVariables.replace(""));
+					RuntimeVariables.replace("Control Panel"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
-				assertEquals(RuntimeVariables.replace("Web Content"),
-					selenium.getText("//div[2]/div[2]/div[2]/ul/li[3]/a"));
-				selenium.clickAt("//div[2]/div[2]/div[2]/ul/li[3]/a",
+				selenium.clickAt("link=Web Content",
 					RuntimeVariables.replace("Web Content"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
 
 				boolean basicVisible = selenium.isVisible("link=\u00ab Basic");
 
@@ -66,29 +61,25 @@ public class SearchWebContentTest extends BaseTestCase {
 				}
 
 				selenium.clickAt("link=\u00ab Basic",
-					RuntimeVariables.replace(""));
+					RuntimeVariables.replace("\u00ab Basic"));
 
 			case 2:
-				selenium.type("_15_keywords",
+				selenium.type("//input[@name='_15_keywords']",
 					RuntimeVariables.replace("web content"));
-				selenium.saveScreenShotAndSource();
 				selenium.clickAt("//input[@value='Search']",
-					RuntimeVariables.replace(""));
+					RuntimeVariables.replace("Search"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
-				selenium.type("_15_keywords", RuntimeVariables.replace(""));
-				selenium.saveScreenShotAndSource();
+				selenium.type("//input[@name='_15_keywords']",
+					RuntimeVariables.replace(""));
 				assertEquals(RuntimeVariables.replace("Web Content Name"),
 					selenium.getText("//td[3]/a"));
-				selenium.type("_15_keywords",
+				selenium.type("//input[@name='_15_keywords']",
 					RuntimeVariables.replace("web1 content1"));
-				selenium.saveScreenShotAndSource();
 				selenium.clickAt("//input[@value='Search']",
-					RuntimeVariables.replace(""));
+					RuntimeVariables.replace("Search"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
-				selenium.type("_15_keywords", RuntimeVariables.replace(""));
-				selenium.saveScreenShotAndSource();
+				selenium.type("//input[@name='_15_keywords']",
+					RuntimeVariables.replace(""));
 				assertFalse(selenium.isElementPresent("link=Web Content Name"));
 
 			case 100:

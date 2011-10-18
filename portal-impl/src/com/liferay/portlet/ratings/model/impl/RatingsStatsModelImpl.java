@@ -16,6 +16,7 @@ package com.liferay.portlet.ratings.model.impl;
 
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.CacheModel;
@@ -29,8 +30,6 @@ import com.liferay.portlet.ratings.model.RatingsStats;
 import com.liferay.portlet.ratings.model.RatingsStatsModel;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Proxy;
 
 import java.sql.Types;
 
@@ -74,15 +73,11 @@ public class RatingsStatsModelImpl extends BaseModelImpl<RatingsStats>
 	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
 				"value.object.finder.cache.enabled.com.liferay.portlet.ratings.model.RatingsStats"),
 			true);
-
-	public Class<?> getModelClass() {
-		return RatingsStats.class;
-	}
-
-	public String getModelClassName() {
-		return RatingsStats.class.getName();
-	}
-
+	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.column.bitmask.enabled.com.liferay.portlet.ratings.model.RatingsStats"),
+			true);
+	public static long CLASSNAMEID_COLUMN_BITMASK = 1L;
+	public static long CLASSPK_COLUMN_BITMASK = 2L;
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(com.liferay.portal.util.PropsUtil.get(
 				"lock.expiration.time.com.liferay.portlet.ratings.model.RatingsStats"));
 
@@ -103,6 +98,14 @@ public class RatingsStatsModelImpl extends BaseModelImpl<RatingsStats>
 
 	public void setPrimaryKeyObj(Serializable primaryKeyObj) {
 		setPrimaryKey(((Long)primaryKeyObj).longValue());
+	}
+
+	public Class<?> getModelClass() {
+		return RatingsStats.class;
+	}
+
+	public String getModelClassName() {
+		return RatingsStats.class.getName();
 	}
 
 	public long getStatsId() {
@@ -126,6 +129,8 @@ public class RatingsStatsModelImpl extends BaseModelImpl<RatingsStats>
 	}
 
 	public void setClassNameId(long classNameId) {
+		_columnBitmask |= CLASSNAMEID_COLUMN_BITMASK;
+
 		if (!_setOriginalClassNameId) {
 			_setOriginalClassNameId = true;
 
@@ -144,6 +149,8 @@ public class RatingsStatsModelImpl extends BaseModelImpl<RatingsStats>
 	}
 
 	public void setClassPK(long classPK) {
+		_columnBitmask |= CLASSPK_COLUMN_BITMASK;
+
 		if (!_setOriginalClassPK) {
 			_setOriginalClassPK = true;
 
@@ -181,20 +188,19 @@ public class RatingsStatsModelImpl extends BaseModelImpl<RatingsStats>
 		_averageScore = averageScore;
 	}
 
+	public long getColumnBitmask() {
+		return _columnBitmask;
+	}
+
 	@Override
 	public RatingsStats toEscapedModel() {
-		if (isEscapedModel()) {
-			return (RatingsStats)this;
+		if (_escapedModelProxy == null) {
+			_escapedModelProxy = (RatingsStats)ProxyUtil.newProxyInstance(_classLoader,
+					_escapedModelProxyInterfaces,
+					new AutoEscapeBeanHandler(this));
 		}
-		else {
-			if (_escapedModelProxy == null) {
-				_escapedModelProxy = (RatingsStats)Proxy.newProxyInstance(_classLoader,
-						_escapedModelProxyInterfaces,
-						new AutoEscapeBeanHandler(this));
-			}
 
-			return _escapedModelProxy;
-		}
+		return _escapedModelProxy;
 	}
 
 	@Override
@@ -283,6 +289,8 @@ public class RatingsStatsModelImpl extends BaseModelImpl<RatingsStats>
 		ratingsStatsModelImpl._originalClassPK = ratingsStatsModelImpl._classPK;
 
 		ratingsStatsModelImpl._setOriginalClassPK = false;
+
+		ratingsStatsModelImpl._columnBitmask = 0;
 	}
 
 	@Override
@@ -377,5 +385,6 @@ public class RatingsStatsModelImpl extends BaseModelImpl<RatingsStats>
 	private double _totalScore;
 	private double _averageScore;
 	private transient ExpandoBridge _expandoBridge;
+	private long _columnBitmask;
 	private RatingsStats _escapedModelProxy;
 }

@@ -26,13 +26,12 @@ public class ConfigurePortletEnableCommentRatingsTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent(
-							"link=Web Content Display Test Page")) {
+				if (selenium.isVisible("link=Web Content Display Test Page")) {
 					break;
 				}
 			}
@@ -42,15 +41,15 @@ public class ConfigurePortletEnableCommentRatingsTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		selenium.clickAt("link=Web Content Display Test Page",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Web Content Display Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
+		assertEquals(RuntimeVariables.replace("Options"),
+			selenium.getText("//strong/a"));
 		selenium.clickAt("//strong/a", RuntimeVariables.replace("Options"));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -66,19 +65,19 @@ public class ConfigurePortletEnableCommentRatingsTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace("Configuration"),
 			selenium.getText(
 				"//div[@class='lfr-component lfr-menu-list']/ul/li[2]/a"));
 		selenium.click("//div[@class='lfr-component lfr-menu-list']/ul/li[2]/a");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isVisible("_86_enableCommentRatingsCheckbox")) {
+				if (selenium.isVisible(
+							"//input[@id='_86_enableCommentRatingsCheckbox']")) {
 					break;
 				}
 			}
@@ -88,29 +87,29 @@ public class ConfigurePortletEnableCommentRatingsTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		assertFalse(selenium.isChecked("_86_enableCommentRatingsCheckbox"));
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("_86_enableCommentRatingsCheckbox",
-			RuntimeVariables.replace(""));
-		selenium.clickAt("//input[@value='Save']", RuntimeVariables.replace(""));
+		assertFalse(selenium.isChecked(
+				"//input[@id='_86_enableCommentRatingsCheckbox']"));
+		selenium.clickAt("//input[@id='_86_enableCommentRatingsCheckbox']",
+			RuntimeVariables.replace("Enable Comment Ratings"));
+		assertTrue(selenium.isChecked(
+				"//input[@id='_86_enableCommentRatingsCheckbox']"));
+		selenium.clickAt("//input[@value='Save']",
+			RuntimeVariables.replace("Save"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace(
 				"You have successfully updated the setup."),
-			selenium.getText("//div[@id='p_p_id_86_']/div/div"));
-		assertTrue(selenium.isChecked("_86_enableCommentRatingsCheckbox"));
-		selenium.saveScreenShotAndSource();
+			selenium.getText("//div[@class='portlet-msg-success']"));
+		assertTrue(selenium.isChecked(
+				"//input[@id='_86_enableCommentRatingsCheckbox']"));
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent(
-							"link=Web Content Display Test Page")) {
+				if (selenium.isVisible("link=Web Content Display Test Page")) {
 					break;
 				}
 			}
@@ -120,17 +119,12 @@ public class ConfigurePortletEnableCommentRatingsTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		selenium.clickAt("link=Web Content Display Test Page",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Web Content Display Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		assertTrue(selenium.isTextPresent("This is a test wcd web content."));
-		assertEquals(RuntimeVariables.replace(
-				"This is a test wcd web content comment."),
-			selenium.getText("//div/div[3]/div/div[1]"));
-		assertEquals(RuntimeVariables.replace(
-				"0 (0 Votes) The average rating is 0 stars out of 5."),
-			selenium.getText("//div[3]/div/div[1]/div/div/div/div/div"));
+		assertEquals(RuntimeVariables.replace("WCD Web Content Comment"),
+			selenium.getText("//div[@class='lfr-discussion-message']"));
+		assertEquals(RuntimeVariables.replace("0 (0 Votes)"),
+			selenium.getText("//div[3]/div/div[2]/div/div/div/div"));
 	}
 }

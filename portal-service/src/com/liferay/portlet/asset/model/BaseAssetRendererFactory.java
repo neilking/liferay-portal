@@ -27,6 +27,8 @@ import com.liferay.portal.service.LayoutLocalServiceUtil;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portlet.asset.service.AssetEntryLocalServiceUtil;
 
+import java.util.Map;
+
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
 
@@ -67,6 +69,10 @@ public abstract class BaseAssetRendererFactory implements AssetRendererFactory {
 		return _classNameId;
 	}
 
+	public Map<Long, String> getClassTypes(long[] groupId) throws Exception {
+		return  null;
+	}
+
 	public String getIconPath(PortletRequest portletRequest) {
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -91,11 +97,15 @@ public abstract class BaseAssetRendererFactory implements AssetRendererFactory {
 			PermissionChecker permissionChecker, long classPK, String actionId)
 		throws Exception {
 
-		return true;
+		return _PERMISSION;
+	}
+
+	public boolean isLinkable() {
+		return _LINKABLE;
 	}
 
 	public boolean isSelectable() {
-		return true;
+		return _SELECTABLE;
 	}
 
 	public void setClassNameId(long classNameId) {
@@ -119,6 +129,12 @@ public abstract class BaseAssetRendererFactory implements AssetRendererFactory {
 	protected String getIconPath(ThemeDisplay themeDisplay) {
 		return themeDisplay.getPathThemeImages() + "/common/page.png";
 	}
+
+	private static final boolean _LINKABLE = false;
+
+	private static final boolean _PERMISSION = true;
+
+	private static final boolean _SELECTABLE = true;
 
 	private long _classNameId;
 	private String _portletId;

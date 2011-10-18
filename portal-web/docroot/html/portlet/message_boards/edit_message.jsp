@@ -103,6 +103,7 @@ if (Validator.isNull(redirect)) {
 		message.setThreadId(temp.getThreadId());
 		message.setSubject(subject);
 		message.setBody(body);
+		message.setFormat(messageFormat);
 		message.setAttachments(temp.isAttachments());
 		message.setAnonymous(temp.isAnonymous());
 	}
@@ -118,6 +119,7 @@ if (Validator.isNull(redirect)) {
 		message.setThreadId(threadId);
 		message.setSubject(subject);
 		message.setBody(body);
+		message.setFormat(messageFormat);
 		message.setAttachments(attachments);
 		message.setAnonymous(BeanParamUtil.getBoolean(message, request, "anonymous"));
 	}
@@ -149,7 +151,7 @@ if (Validator.isNull(redirect)) {
 	<portlet:param name="struts_action" value="/message_boards/edit_message" />
 </portlet:actionURL>
 
-<aui:form action="<%= editMessageURL %>" enctype="multipart/form-data" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "saveMessage(false);" %>'>
+<aui:form action="<%= editMessageURL %>" enctype='<%= attachments ? "multipart/form-data" : "" %>' method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "saveMessage(false);" %>'>
 	<aui:input name="<%= Constants.CMD %>" type="hidden" />
 	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 	<aui:input name="messageId" type="hidden" value="<%= messageId %>" />
@@ -223,7 +225,7 @@ if (Validator.isNull(redirect)) {
 				for (int i = 0; i < existingAttachments.length; i++) {
 					String existingPath = existingAttachments[i];
 
-					String existingName = StringUtil.extractLast(existingPath, StringPool.SLASH);
+					String existingName = StringUtil.extractLast(existingPath, CharPool.SLASH);
 				%>
 
 					<tr>
@@ -270,10 +272,9 @@ if (Validator.isNull(redirect)) {
 			boolean question = threadAsQuestionByDefault;
 
 			if (message != null) {
-				boolean questionFlag = MBMessageFlagLocalServiceUtil.hasQuestionFlag(messageId);
-				boolean answerFlag = MBMessageFlagLocalServiceUtil.hasAnswerFlag(messageId);
+				thread = MBThreadLocalServiceUtil.getThread(threadId);
 
-				if (questionFlag || answerFlag) {
+				if (thread.isQuestion() || message.isAnswer()) {
 					question = true;
 				}
 			}

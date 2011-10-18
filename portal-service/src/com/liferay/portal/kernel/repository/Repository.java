@@ -19,10 +19,15 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.repository.model.Folder;
+import com.liferay.portal.kernel.search.Hits;
+import com.liferay.portal.kernel.search.Query;
+import com.liferay.portal.kernel.search.SearchContext;
+import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.model.Lock;
 import com.liferay.portal.service.ServiceContext;
 
+import java.io.File;
 import java.io.InputStream;
 
 import java.util.List;
@@ -33,8 +38,14 @@ import java.util.List;
 public interface Repository {
 
 	public FileEntry addFileEntry(
-			long folderId, String mimeType, String title, String description,
-			String changeLog, InputStream is, long size,
+			long folderId, String sourceFileName, String mimeType, String title,
+			String description, String changeLog, File file,
+			ServiceContext serviceContext)
+		throws PortalException, SystemException;
+
+	public FileEntry addFileEntry(
+			long folderId, String sourceFileName, String mimeType, String title,
+			String description, String changeLog, InputStream is, long size,
 			ServiceContext serviceContext)
 		throws PortalException, SystemException;
 
@@ -128,8 +139,19 @@ public interface Repository {
 			int end, OrderByComparator obc)
 		throws SystemException;
 
+	public List<Object> getFoldersAndFileEntriesAndFileShortcuts(
+			long folderId, int status, String[] mimetypes,
+			boolean includeMountFolders, int start, int end,
+			OrderByComparator obc)
+		throws SystemException;
+
 	public int getFoldersAndFileEntriesAndFileShortcutsCount(
 			long folderId, int status, boolean includeMountFolders)
+		throws SystemException;
+
+	public int getFoldersAndFileEntriesAndFileShortcutsCount(
+			long folderId, int status, String[] mimetypes,
+			boolean includeMountFolders)
 		throws SystemException;
 
 	public int getFoldersCount(long parentFolderId, boolean includeMountfolders)
@@ -153,6 +175,9 @@ public interface Repository {
 		throws SystemException;
 
 	public long getRepositoryId();
+
+	public void getSubfolderIds(List<Long> folderIds, long folderId)
+		throws SystemException;
 
 	public List<Long> getSubfolderIds(long folderId, boolean recurse)
 		throws SystemException;
@@ -184,10 +209,21 @@ public interface Repository {
 			long fileEntryId, String version, ServiceContext serviceContext)
 		throws PortalException, SystemException;
 
+	public Hits search(SearchContext searchContext) throws SearchException;
+
+	public Hits search(SearchContext searchContext, Query query)
+		throws SearchException;
+
 	public void unlockFolder(long folderId, String lockUuid)
 		throws PortalException, SystemException;
 
 	public void unlockFolder(long parentFolderId, String title, String lockUuid)
+		throws PortalException, SystemException;
+
+	public FileEntry updateFileEntry(
+			long fileEntryId, String sourceFileName, String mimeType,
+			String title, String description, String changeLog,
+			boolean majorVersion, File file, ServiceContext serviceContext)
 		throws PortalException, SystemException;
 
 	public FileEntry updateFileEntry(

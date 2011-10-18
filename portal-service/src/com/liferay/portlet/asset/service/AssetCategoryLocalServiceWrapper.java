@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.asset.service;
 
+import com.liferay.portal.service.ServiceWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link AssetCategoryLocalService}.
@@ -24,7 +26,8 @@ package com.liferay.portlet.asset.service;
  * @generated
  */
 public class AssetCategoryLocalServiceWrapper
-	implements AssetCategoryLocalService {
+	implements AssetCategoryLocalService,
+		ServiceWrapper<AssetCategoryLocalService> {
 	public AssetCategoryLocalServiceWrapper(
 		AssetCategoryLocalService assetCategoryLocalService) {
 		_assetCategoryLocalService = assetCategoryLocalService;
@@ -315,20 +318,10 @@ public class AssetCategoryLocalServiceWrapper
 		_assetCategoryLocalService.deleteVocabularyCategories(vocabularyId);
 	}
 
-	public java.lang.String[] getCategoryNames()
+	public com.liferay.portlet.asset.model.AssetCategory fetchCategory(
+		long categoryId)
 		throws com.liferay.portal.kernel.exception.SystemException {
-		return _assetCategoryLocalService.getCategoryNames();
-	}
-
-	public java.lang.String[] getCategoryNames(long classNameId, long classPK)
-		throws com.liferay.portal.kernel.exception.SystemException {
-		return _assetCategoryLocalService.getCategoryNames(classNameId, classPK);
-	}
-
-	public java.lang.String[] getCategoryNames(java.lang.String className,
-		long classPK)
-		throws com.liferay.portal.kernel.exception.SystemException {
-		return _assetCategoryLocalService.getCategoryNames(className, classPK);
+		return _assetCategoryLocalService.fetchCategory(categoryId);
 	}
 
 	public java.util.List<com.liferay.portlet.asset.model.AssetCategory> getCategories()
@@ -358,6 +351,22 @@ public class AssetCategoryLocalServiceWrapper
 	public long[] getCategoryIds(java.lang.String className, long classPK)
 		throws com.liferay.portal.kernel.exception.SystemException {
 		return _assetCategoryLocalService.getCategoryIds(className, classPK);
+	}
+
+	public java.lang.String[] getCategoryNames()
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _assetCategoryLocalService.getCategoryNames();
+	}
+
+	public java.lang.String[] getCategoryNames(long classNameId, long classPK)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _assetCategoryLocalService.getCategoryNames(classNameId, classPK);
+	}
+
+	public java.lang.String[] getCategoryNames(java.lang.String className,
+		long classPK)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _assetCategoryLocalService.getCategoryNames(className, classPK);
 	}
 
 	public java.util.List<com.liferay.portlet.asset.model.AssetCategory> getChildCategories(
@@ -455,11 +464,26 @@ public class AssetCategoryLocalServiceWrapper
 			categoryProperties, serviceContext);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public AssetCategoryLocalService getWrappedAssetCategoryLocalService() {
 		return _assetCategoryLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedAssetCategoryLocalService(
+		AssetCategoryLocalService assetCategoryLocalService) {
+		_assetCategoryLocalService = assetCategoryLocalService;
+	}
+
+	public AssetCategoryLocalService getWrappedService() {
+		return _assetCategoryLocalService;
+	}
+
+	public void setWrappedService(
 		AssetCategoryLocalService assetCategoryLocalService) {
 		_assetCategoryLocalService = assetCategoryLocalService;
 	}

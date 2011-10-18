@@ -16,48 +16,46 @@
 
 <%@ include file="/html/portlet/init.jsp" %>
 
-<%@ page import="com.liferay.portal.NoSuchModelException" %>
-<%@ page import="com.liferay.portal.kernel.repository.model.FileEntry" %>
-<%@ page import="com.liferay.portal.kernel.search.Hits" %>
-<%@ page import="com.liferay.portal.kernel.portlet.LiferayPortletResponse" %>
-<%@ page import="com.liferay.portal.kernel.portlet.LiferayPortletRequest" %>
-<%@ page import="com.liferay.portal.kernel.xml.Document" %>
-<%@ page import="com.liferay.portal.kernel.xml.Element" %>
-<%@ page import="com.liferay.portal.kernel.xml.SAXReaderUtil" %>
-<%@ page import="com.liferay.portal.security.permission.comparator.ModelResourceComparator" %>
-<%@ page import="com.liferay.portlet.asset.AssetRendererFactoryRegistryUtil" %>
-<%@ page import="com.liferay.portlet.asset.NoSuchEntryException" %>
-<%@ page import="com.liferay.portlet.asset.NoSuchTagException" %>
-<%@ page import="com.liferay.portlet.asset.NoSuchTagPropertyException" %>
-<%@ page import="com.liferay.portlet.asset.model.AssetCategory" %>
-<%@ page import="com.liferay.portlet.asset.model.AssetEntry" %>
-<%@ page import="com.liferay.portlet.asset.model.AssetRenderer" %>
-<%@ page import="com.liferay.portlet.asset.model.AssetRendererFactory" %>
-<%@ page import="com.liferay.portlet.asset.model.AssetTag" %>
-<%@ page import="com.liferay.portlet.asset.model.AssetTagProperty" %>
-<%@ page import="com.liferay.portlet.asset.model.AssetVocabulary" %>
-<%@ page import="com.liferay.portlet.asset.service.AssetCategoryLocalServiceUtil" %>
-<%@ page import="com.liferay.portlet.asset.service.AssetEntryLocalServiceUtil" %>
-<%@ page import="com.liferay.portlet.asset.service.AssetEntryServiceUtil" %>
-<%@ page import="com.liferay.portlet.asset.service.AssetTagLocalServiceUtil" %>
-<%@ page import="com.liferay.portlet.asset.service.AssetTagPropertyLocalServiceUtil" %>
-<%@ page import="com.liferay.portlet.asset.service.AssetVocabularyLocalServiceUtil" %>
-<%@ page import="com.liferay.portlet.asset.service.persistence.AssetEntryQuery" %>
-<%@ page import="com.liferay.portlet.asset.util.AssetUtil" %>
-<%@ page import="com.liferay.portlet.assetpublisher.search.AssetDisplayTerms" %>
-<%@ page import="com.liferay.portlet.assetpublisher.search.AssetSearch" %>
-<%@ page import="com.liferay.portlet.assetpublisher.search.AssetSearchTerms" %>
-<%@ page import="com.liferay.portlet.assetpublisher.util.AssetPublisherUtil" %>
-<%@ page import="com.liferay.portlet.documentlibrary.model.DLFileEntryConstants" %>
-<%@ page import="com.liferay.portlet.documentlibrary.service.DLAppLocalServiceUtil" %>
-<%@ page import="com.liferay.portlet.documentlibrary.util.DocumentConversionUtil" %>
-<%@ page import="com.liferay.portlet.imagegallery.model.IGImage" %>
-<%@ page import="com.liferay.portlet.imagegallery.service.IGImageLocalServiceUtil" %>
-<%@ page import="com.liferay.portlet.journal.model.JournalArticle" %>
-<%@ page import="com.liferay.portlet.journal.model.JournalStructure" %>
-<%@ page import="com.liferay.portlet.journal.service.JournalStructureServiceUtil" %>
-<%@ page import="com.liferay.util.RSSUtil" %>
-<%@ page import="com.liferay.util.xml.DocUtil" %>
+<%@ page import="com.liferay.portal.NoSuchModelException" %><%@
+page import="com.liferay.portal.kernel.repository.model.FileEntry" %><%@
+page import="com.liferay.portal.kernel.search.Hits" %><%@
+page import="com.liferay.portal.kernel.xml.Document" %><%@
+page import="com.liferay.portal.kernel.xml.Element" %><%@
+page import="com.liferay.portal.kernel.xml.SAXReaderUtil" %><%@
+page import="com.liferay.portal.security.permission.comparator.ModelResourceComparator" %><%@
+page import="com.liferay.portlet.asset.AssetRendererFactoryRegistryUtil" %><%@
+page import="com.liferay.portlet.asset.NoSuchEntryException" %><%@
+page import="com.liferay.portlet.asset.NoSuchTagException" %><%@
+page import="com.liferay.portlet.asset.NoSuchTagPropertyException" %><%@
+page import="com.liferay.portlet.asset.model.AssetCategory" %><%@
+page import="com.liferay.portlet.asset.model.AssetEntry" %><%@
+page import="com.liferay.portlet.asset.model.AssetRenderer" %><%@
+page import="com.liferay.portlet.asset.model.AssetRendererFactory" %><%@
+page import="com.liferay.portlet.asset.model.AssetTag" %><%@
+page import="com.liferay.portlet.asset.model.AssetTagProperty" %><%@
+page import="com.liferay.portlet.asset.model.AssetVocabulary" %><%@
+page import="com.liferay.portlet.asset.service.AssetCategoryLocalServiceUtil" %><%@
+page import="com.liferay.portlet.asset.service.AssetEntryLocalServiceUtil" %><%@
+page import="com.liferay.portlet.asset.service.AssetEntryServiceUtil" %><%@
+page import="com.liferay.portlet.asset.service.AssetTagLocalServiceUtil" %><%@
+page import="com.liferay.portlet.asset.service.AssetTagPropertyLocalServiceUtil" %><%@
+page import="com.liferay.portlet.asset.service.AssetVocabularyLocalServiceUtil" %><%@
+page import="com.liferay.portlet.asset.service.persistence.AssetEntryQuery" %><%@
+page import="com.liferay.portlet.asset.util.AssetUtil" %><%@
+page import="com.liferay.portlet.assetpublisher.search.AssetDisplayTerms" %><%@
+page import="com.liferay.portlet.assetpublisher.search.AssetSearch" %><%@
+page import="com.liferay.portlet.assetpublisher.search.AssetSearchTerms" %><%@
+page import="com.liferay.portlet.assetpublisher.util.AssetPublisherUtil" %><%@
+page import="com.liferay.portlet.documentlibrary.model.DLFileEntry" %><%@
+page import="com.liferay.portlet.documentlibrary.model.DLFileEntryConstants" %><%@
+page import="com.liferay.portlet.documentlibrary.model.DLFolderConstants" %><%@
+page import="com.liferay.portlet.documentlibrary.service.DLAppLocalServiceUtil" %><%@
+page import="com.liferay.portlet.documentlibrary.util.DocumentConversionUtil" %><%@
+page import="com.liferay.portlet.journal.model.JournalArticle" %><%@
+page import="com.liferay.portlet.journal.model.JournalStructure" %><%@
+page import="com.liferay.portlet.journal.service.JournalStructureLocalServiceUtil" %><%@
+page import="com.liferay.util.RSSUtil" %><%@
+page import="com.liferay.util.xml.DocUtil" %>
 
 <%
 PortletPreferences preferences = renderRequest.getPreferences();
@@ -80,9 +78,19 @@ long[] groupIds = AssetPublisherUtil.getGroupIds(preferences, scopeGroupId, layo
 
 long[] availableClassNameIds = AssetRendererFactoryRegistryUtil.getClassNameIds();
 
+long layoutRevisionClassNameId = PortalUtil.getClassNameId(LayoutRevision.class);
+
+if (ArrayUtil.contains(availableClassNameIds, layoutRevisionClassNameId)) {
+	availableClassNameIds = ArrayUtil.remove(availableClassNameIds, layoutRevisionClassNameId);
+}
+
 boolean anyAssetType = GetterUtil.getBoolean(preferences.getValue("anyAssetType", Boolean.TRUE.toString()));
 
 long[] classNameIds = AssetPublisherUtil.getClassNameIds(preferences, availableClassNameIds);
+
+long[] classTypeIds = GetterUtil.getLongValues(portletPreferences.getValues("classTypeIds", null));
+
+String customUserAttributes = GetterUtil.getString(preferences.getValue("customUserAttributes", StringPool.BLANK));
 
 AssetEntryQuery assetEntryQuery = new AssetEntryQuery();
 
@@ -97,14 +105,18 @@ if (selectionStyle.equals("dynamic")) {
 	}
 
 	allAssetTagNames = AssetPublisherUtil.getAssetTagNames(preferences, scopeGroupId);
+
+	assetEntryQuery.setClassTypeIds(classTypeIds);
+
+	AssetPublisherUtil.addUserAttributes(user, StringUtil.split(customUserAttributes), assetEntryQuery);
 }
 
 long assetVocabularyId = GetterUtil.getLong(preferences.getValue("assetVocabularyId", StringPool.BLANK));
 
 long assetCategoryId = ParamUtil.getLong(request, "categoryId");
 
-String assetCategoryName = null;
-String assetVocabularyName = null;
+String assetCategoryTitle = null;
+String assetVocabularyTitle = null;
 
 if (assetCategoryId > 0) {
 	assetEntryQuery.setAllCategoryIds(new long[] {assetCategoryId});
@@ -113,15 +125,15 @@ if (assetCategoryId > 0) {
 
 	assetCategory = assetCategory.toEscapedModel();
 
-	assetCategoryName = assetCategory.getName();
+	assetCategoryTitle = assetCategory.getTitle(locale);
 
 	AssetVocabulary assetVocabulary = AssetVocabularyLocalServiceUtil.getAssetVocabulary(assetCategory.getVocabularyId());
 
 	assetVocabulary = assetVocabulary.toEscapedModel();
 
-	assetVocabularyName = assetVocabulary.getName();
+	assetVocabularyTitle = assetVocabulary.getTitle(locale);
 
-	PortalUtil.setPageKeywords(assetCategory.getName(), request);
+	PortalUtil.setPageKeywords(assetCategoryTitle, request);
 }
 
 String assetTagName = ParamUtil.getString(request, "tag");
@@ -195,6 +207,9 @@ boolean openOfficeServerEnabled = PrefsPropsUtil.getBoolean(PropsKeys.OPENOFFICE
 boolean enableConversions = openOfficeServerEnabled && (extensions != null) && (extensions.length > 0);
 boolean enablePrint = GetterUtil.getBoolean(preferences.getValue("enablePrint", null));
 boolean enableFlags = GetterUtil.getBoolean(preferences.getValue("enableFlags", null));
+boolean enableSocialBookmarks = GetterUtil.getBoolean(preferences.getValue("enableSocialBookmarks", null), true);
+String socialBookmarksDisplayStyle = preferences.getValue("socialBookmarksDisplayStyle", "horizontal");
+String socialBookmarksDisplayPosition = preferences.getValue("socialBookmarksDisplayPosition", "bottom");
 
 String defaultMetadataFields = StringPool.BLANK;
 String allMetadataFields = "create-date,modified-date,publish-date,expiration-date,priority,author,view-count,categories,tags,ratings";

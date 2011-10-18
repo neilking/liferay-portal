@@ -25,12 +25,12 @@ public class SearchRenameWikiPageTitleTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent("link=Wiki Test Page")) {
+				if (selenium.isVisible("link=Wiki Test Page")) {
 					break;
 				}
 			}
@@ -40,17 +40,16 @@ public class SearchRenameWikiPageTitleTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Wiki Test Page", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Wiki Test Page",
+			RuntimeVariables.replace("Wiki Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.type("_36_keywords", RuntimeVariables.replace("Wiki Page Test"));
-		selenium.saveScreenShotAndSource();
+		selenium.type("//input[@id='_36_keywords']",
+			RuntimeVariables.replace("Wiki Page Title"));
 		selenium.clickAt("//input[@value='Search']",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Search"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		assertTrue(selenium.isElementPresent("link=Wiki Page Test Renamed"));
-		assertFalse(selenium.isElementPresent("link=Wiki Page Test"));
+		assertEquals(RuntimeVariables.replace("Wiki2 Page2 Title2"),
+			selenium.getText("//td[3]/a"));
+		assertFalse(selenium.isTextPresent("Wiki Page Title"));
 	}
 }

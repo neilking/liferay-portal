@@ -21,10 +21,12 @@ import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.ProgressTracker;
 import com.liferay.portal.kernel.util.ProgressTrackerThreadLocal;
+import com.liferay.portal.kernel.util.StreamUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -55,9 +57,9 @@ import com.liferay.portlet.wiki.model.WikiPageConstants;
 import com.liferay.portlet.wiki.service.WikiPageLocalServiceUtil;
 import com.liferay.portlet.wiki.translators.MediaWikiToCreoleTranslator;
 
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -79,22 +81,22 @@ public class MediaWikiImporter implements WikiImporter {
 	public static final String SHARED_IMAGES_TITLE = "SharedImages";
 
 	public void importPages(
-			long userId, WikiNode node, File[] files,
+			long userId, WikiNode node, InputStream[] inputStreams,
 			Map<String, String[]> options)
 		throws PortalException {
 
-		if ((files.length < 1) || (files[0] == null) || (!files[0].exists())) {
+		if ((inputStreams.length < 1) || (inputStreams[0] == null)) {
 			throw new PortalException("The pages file is mandatory");
 		}
 
-		File pagesFile = files[0];
-		File usersFile = files[1];
-		File imagesFile = files[2];
+		InputStream pagesInputStream = inputStreams[0];
+		InputStream usersInputStream = inputStreams[1];
+		InputStream imagesInputStream = inputStreams[2];
 
 		try {
-			Document doc = SAXReaderUtil.read(pagesFile);
+			Document doc = SAXReaderUtil.read(pagesInputStream);
 
-			Map<String, String> usersMap = readUsersFile(usersFile);
+			Map<String, String> usersMap = readUsersFile(usersInputStream);
 
 			Element root = doc.getRootElement();
 
@@ -102,9 +104,9 @@ public class MediaWikiImporter implements WikiImporter {
 
 			processSpecialPages(userId, node, root, specialNamespaces);
 			processRegularPages(
-				userId, node, root, specialNamespaces, usersMap, imagesFile,
-				options);
-			processImages(userId, node, imagesFile);
+				userId, node, root, specialNamespaces, usersMap,
+				imagesInputStream, options);
+			processImages(userId, node, imagesInputStream);
 
 			moveFrontPage(userId, node, options);
 		}
@@ -208,7 +210,7 @@ public class MediaWikiImporter implements WikiImporter {
 		return false;
 	}
 
-	protected boolean isValidImage(String[] paths, byte[] bytes) {
+	protected boolean isValidImage(String[] paths, InputStream inputStream) {
 		if (ArrayUtil.contains(_SPECIAL_MEDIA_WIKI_DIRS, paths[0])) {
 			return false;
 		}
@@ -222,7 +224,7 @@ public class MediaWikiImporter implements WikiImporter {
 		String fileName = paths[paths.length - 1];
 
 		try {
-			DLStoreUtil.validate(fileName, true, bytes);
+			DLStoreUtil.validate(fileName, true, inputStream);
 		}
 		catch (PortalException pe) {
 			return false;
@@ -295,10 +297,11 @@ public class MediaWikiImporter implements WikiImporter {
 		return StringUtil.shorten(title, 75);
 	}
 
-	protected void processImages(long userId, WikiNode node, File imagesFile)
+	protected void processImages(
+			long userId, WikiNode node, InputStream imagesInputStream)
 		throws Exception {
 
-		if ((imagesFile == null) || (!imagesFile.exists())) {
+		if (imagesInputStream == null) {
 			return;
 		}
 
@@ -307,7 +310,8 @@ public class MediaWikiImporter implements WikiImporter {
 
 		int count = 0;
 
-		ZipReader zipReader = ZipReaderFactoryUtil.getZipReader(imagesFile);
+		ZipReader zipReader = ZipReaderFactoryUtil.getZipReader(
+			imagesInputStream);
 
 		List<String> entries = zipReader.getEntries();
 
@@ -330,49 +334,67 @@ public class MediaWikiImporter implements WikiImporter {
 			}
 		}
 
-		List<ObjectValuePair<String, byte[]>> attachments =
-			new ArrayList<ObjectValuePair<String, byte[]>>();
+		List<ObjectValuePair<String, InputStream>> inputStreamOVPs =
+			new ArrayList<ObjectValuePair<String, InputStream>>();
 
-		int percentage = 50;
+		try {
+			int percentage = 50;
 
-		for (int i = 0; i < entries.size(); i++) {
-			String entry = entries.get(i);
+			for (int i = 0; i < entries.size(); i++) {
+				String entry = entries.get(i);
 
-			String key = entry;
-			byte[] value = zipReader.getEntryAsByteArray(entry);
+				String key = entry;
 
-			String[] paths = StringUtil.split(key, StringPool.SLASH);
+				InputStream inputStream = zipReader.getEntryAsInputStream(
+					entry);
 
-			if (!isValidImage(paths, value)) {
-				if (_log.isInfoEnabled()) {
-					_log.info("Ignoring " + key);
+				String[] paths = StringUtil.split(key, CharPool.SLASH);
+
+				if (!isValidImage(paths, inputStream)) {
+					if (_log.isInfoEnabled()) {
+						_log.info("Ignoring " + key);
+					}
+
+					continue;
 				}
 
-				continue;
+				String fileName = paths[paths.length - 1].toLowerCase();
+
+				ObjectValuePair<String, InputStream> inputStreamOVP =
+					new ObjectValuePair<String, InputStream>(
+						fileName, inputStream);
+
+				inputStreamOVPs.add(inputStreamOVP);
+
+				count++;
+
+				if ((i % 5) == 0) {
+					WikiPageLocalServiceUtil.addPageAttachments(
+						userId, node.getNodeId(), SHARED_IMAGES_TITLE,
+						inputStreamOVPs);
+
+					inputStreamOVPs.clear();
+
+					percentage = Math.min(50 + (i * 50) / total, 99);
+
+					progressTracker.updateProgress(percentage);
+				}
 			}
 
-			String fileName = paths[paths.length - 1].toLowerCase();
-
-			attachments.add(
-				new ObjectValuePair<String, byte[]>(fileName, value));
-
-			count++;
-
-			if ((i % 5) == 0) {
+			if (!inputStreamOVPs.isEmpty()) {
 				WikiPageLocalServiceUtil.addPageAttachments(
-					userId, node.getNodeId(), SHARED_IMAGES_TITLE, attachments);
-
-				attachments.clear();
-
-				percentage = Math.min(50 + (i * 50) / total, 99);
-
-				progressTracker.updateProgress(percentage);
+					userId, node.getNodeId(), SHARED_IMAGES_TITLE,
+					inputStreamOVPs);
 			}
 		}
+		finally {
+			for (ObjectValuePair<String, InputStream> inputStreamOVP :
+					inputStreamOVPs) {
 
-		if (!attachments.isEmpty()) {
-			WikiPageLocalServiceUtil.addPageAttachments(
-				userId, node.getNodeId(), SHARED_IMAGES_TITLE, attachments);
+				InputStream inputStream = inputStreamOVP.getValue();
+
+				StreamUtil.cleanUp(inputStream);
+			}
 		}
 
 		zipReader.close();
@@ -385,7 +407,7 @@ public class MediaWikiImporter implements WikiImporter {
 	protected void processRegularPages(
 		long userId, WikiNode node, Element root,
 		List<String> specialNamespaces, Map<String, String> usersMap,
-		File imagesFile, Map<String, String[]> options) {
+		InputStream imagesInputStream, Map<String, String[]> options) {
 
 		boolean importLatestVersion = MapUtil.getBoolean(
 			options, WikiImporterKeys.OPTIONS_IMPORT_LATEST_VERSION);
@@ -404,7 +426,7 @@ public class MediaWikiImporter implements WikiImporter {
 		int percentage = 10;
 		int maxPercentage = 50;
 
-		if ((imagesFile == null) || (!imagesFile.exists())) {
+		if (imagesInputStream == null) {
 			maxPercentage = 99;
 		}
 
@@ -631,17 +653,17 @@ public class MediaWikiImporter implements WikiImporter {
 		return namespaces;
 	}
 
-	protected Map<String, String> readUsersFile(File usersFile)
+	protected Map<String, String> readUsersFile(InputStream usersInputStream)
 		throws IOException {
 
-		if ((usersFile == null) || (!usersFile.exists())) {
+		if (usersInputStream == null) {
 			return Collections.emptyMap();
 		}
 
 		Map<String, String> usersMap = new HashMap<String, String>();
 
-		UnsyncBufferedReader unsyncBufferedReader =
-			new UnsyncBufferedReader(new FileReader(usersFile));
+		UnsyncBufferedReader unsyncBufferedReader = new UnsyncBufferedReader(
+			new InputStreamReader(usersInputStream));
 
 		String line = unsyncBufferedReader.readLine();
 

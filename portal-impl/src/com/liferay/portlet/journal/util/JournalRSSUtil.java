@@ -18,19 +18,18 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.Image;
 import com.liferay.portal.service.ImageLocalServiceUtil;
 import com.liferay.portlet.documentlibrary.service.DLAppLocalServiceUtil;
-import com.liferay.portlet.imagegallery.model.IGImage;
-import com.liferay.portlet.imagegallery.service.IGImageLocalServiceUtil;
+import com.liferay.portlet.documentlibrary.util.ImageProcessor;
 import com.liferay.portlet.journal.model.JournalArticle;
 import com.liferay.portlet.journal.model.JournalFeed;
 import com.liferay.portlet.journal.service.JournalArticleLocalServiceUtil;
@@ -108,23 +107,44 @@ public class JournalRSSUtil {
 	public static List<SyndEnclosure> getDLEnclosures(
 		String portalURL, String url) {
 
-		List<SyndEnclosure> enclosures = new ArrayList<SyndEnclosure>();
+		List<SyndEnclosure> syndEnclosures = new ArrayList<SyndEnclosure>();
 
 		FileEntry fileEntry = getFileEntry(url);
 
-		if (fileEntry != null) {
-			SyndEnclosure enclosure = new SyndEnclosureImpl();
-
-			enclosure.setLength(fileEntry.getSize());
-
-			enclosure.setType(fileEntry.getMimeType());
-
-			enclosure.setUrl(portalURL + url);
-
-			enclosures.add(enclosure);
+		if (fileEntry == null) {
+			return syndEnclosures;
 		}
 
-		return enclosures;
+		SyndEnclosure syndEnclosure = new SyndEnclosureImpl();
+
+		syndEnclosure.setLength(fileEntry.getSize());
+		syndEnclosure.setType(fileEntry.getMimeType());
+		syndEnclosure.setUrl(portalURL + url);
+
+		syndEnclosures.add(syndEnclosure);
+
+		return syndEnclosures;
+	}
+
+	public static List<SyndLink> getDLLinks(String portalURL, String url) {
+		List<SyndLink> syndLinks = new ArrayList<SyndLink>();
+
+		FileEntry fileEntry = getFileEntry(url);
+
+		if (fileEntry == null) {
+			return syndLinks;
+		}
+
+		SyndLink syndLink = new SyndLinkImpl();
+
+		syndLink.setHref(portalURL + url);
+		syndLink.setLength(fileEntry.getSize());
+		syndLink.setRel("enclosure");
+		syndLink.setType(fileEntry.getMimeType());
+
+		syndLinks.add(syndLink);
+
+		return syndLinks;
 	}
 
 	public static FileEntry getFileEntry(String url) {
@@ -136,7 +156,7 @@ public class JournalRSSUtil {
 			queryString);
 
 		if (url.startsWith("/documents/")) {
-			String[] pathArray = StringUtil.split(url, StringPool.SLASH);
+			String[] pathArray = StringUtil.split(url, CharPool.SLASH);
 
 			long groupId = GetterUtil.getLong(pathArray[2]);
 			long folderId = GetterUtil.getLong(pathArray[3]);
@@ -187,72 +207,49 @@ public class JournalRSSUtil {
 		return fileEntry;
 	}
 
-	public static List<SyndLink> getDLLinks(String portalURL, String url) {
-		List<SyndLink> links = new ArrayList<SyndLink>();
-
-		FileEntry fileEntry = getFileEntry(url);
-
-		if (fileEntry != null) {
-			SyndLink link = new SyndLinkImpl();
-
-			link.setHref(portalURL + url);
-
-			link.setLength(fileEntry.getSize());
-
-			link.setRel("enclosure");
-
-			link.setType(fileEntry.getMimeType());
-
-			links.add(link);
-		}
-
-		return links;
-	}
-
 	public static List<SyndEnclosure> getIGEnclosures(
 		String portalURL, String url) {
 
-		List<SyndEnclosure> enclosures = new ArrayList<SyndEnclosure>();
+		List<SyndEnclosure> syndEnclosures = new ArrayList<SyndEnclosure>();
 
-		Image image = getImage(url);
+		Object[] imageProperties = getImageProperties(url);
 
-		if (image != null) {
-			SyndEnclosure enclosure = new SyndEnclosureImpl();
-
-			enclosure.setLength(image.getSize());
-
-			enclosure.setType(
-				MimeTypesUtil.getContentType("*." + image.getType()));
-
-			enclosure.setUrl(portalURL + url);
-
-			enclosures.add(enclosure);
+		if (imageProperties == null) {
+			return syndEnclosures;
 		}
 
-		return enclosures;
+		SyndEnclosure syndEnclosure = new SyndEnclosureImpl();
+
+		syndEnclosure.setLength((Long)imageProperties[1]);
+		syndEnclosure.setType(
+			MimeTypesUtil.getContentType("*." + imageProperties[0]));
+		syndEnclosure.setUrl(portalURL + url);
+
+		syndEnclosures.add(syndEnclosure);
+
+		return syndEnclosures;
 	}
 
 	public static List<SyndLink> getIGLinks(String portalURL, String url) {
-		List<SyndLink> links = new ArrayList<SyndLink>();
+		List<SyndLink> syndLinks = new ArrayList<SyndLink>();
 
-		Image image = getImage(url);
+		Object[] imageProperties = getImageProperties(url);
 
-		if (image != null) {
-			SyndLink link = new SyndLinkImpl();
-
-			link.setHref(portalURL + url);
-
-			link.setLength(image.getSize());
-
-			link.setRel("enclosure");
-
-			link.setType(
-				MimeTypesUtil.getContentType("*." + image.getType()));
-
-			links.add(link);
+		if (imageProperties == null) {
+			return syndLinks;
 		}
 
-		return links;
+		SyndLink syndLink = new SyndLinkImpl();
+
+		syndLink.setHref(portalURL + url);
+		syndLink.setLength((Long)imageProperties[1]);
+		syndLink.setRel("enclosure");
+		syndLink.setType(
+			MimeTypesUtil.getContentType("*." + imageProperties[0]));
+
+		syndLinks.add(syndLink);
+
+		return syndLinks;
 	}
 
 	public static Image getImage(String url) {
@@ -288,28 +285,37 @@ public class JournalRSSUtil {
 				}
 			}
 		}
-		else if (parameters.containsKey("uuid") &&
-				 parameters.containsKey("groupId")) {
 
-			try {
-				String uuid = parameters.get("uuid")[0];
-				long groupId = GetterUtil.getLong(parameters.get("groupId")[0]);
+		return image;
+	}
 
-				IGImage igImage =
-					IGImageLocalServiceUtil.getImageByUuidAndGroupId(
-						uuid, groupId);
+	protected static Object[] getImageProperties(String url) {
+		String type = null;
+		long size = 0;
 
-				image = ImageLocalServiceUtil.getImage(
-					igImage.getLargeImageId());
-			}
-			catch (Exception e) {
-				if (_log.isWarnEnabled()) {
-					_log.warn(e, e);
-				}
+		Image image = getImage(url);
+
+		if (image != null) {
+			type = image.getType();
+			size = image.getSize();
+		}
+		else {
+			FileEntry fileEntry = getFileEntry(url);
+
+			if ((fileEntry != null) &&
+				ImageProcessor.getImageMimeTypes().contains(
+					fileEntry.getMimeType())) {
+
+				type = fileEntry.getExtension();
+				size = fileEntry.getSize();
 			}
 		}
 
-		return image;
+		if (Validator.isNotNull(type)) {
+			return new Object[] {type, size};
+		}
+
+		return null;
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(JournalRSSUtil.class);

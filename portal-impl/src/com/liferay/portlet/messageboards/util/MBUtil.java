@@ -14,6 +14,7 @@
 
 package com.liferay.portlet.messageboards.util;
 
+import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
@@ -187,7 +188,8 @@ public class MBUtil {
 		}
 	}
 
-	public static void collectPartContent(Part part, MBMailMessage collector)
+	public static void collectPartContent(
+			Part part, MBMailMessage mbMailMessage)
 		throws Exception {
 
 		Object partContent = part.getContent();
@@ -210,18 +212,20 @@ public class MBUtil {
 				bytes = JavaMailUtil.getBytes(part);
 			}
 
-			collector.addFile(part.getFileName(), bytes);
+			mbMailMessage.addBytes(part.getFileName(), bytes);
 		}
 		else {
 			if (partContent instanceof MimeMultipart) {
-				collectMultipartContent((MimeMultipart)partContent, collector);
+				MimeMultipart mimeMultipart = (MimeMultipart)partContent;
+
+				collectMultipartContent(mimeMultipart, mbMailMessage);
 			}
 			else if (partContent instanceof String) {
 				if (contentType.startsWith("text/html")) {
-					collector.setHtmlBody((String)partContent);
+					mbMailMessage.setHtmlBody((String)partContent);
 				}
 				else {
-					collector.setPlainBody((String)partContent);
+					mbMailMessage.setPlainBody((String)partContent);
 				}
 			}
 		}
@@ -255,16 +259,21 @@ public class MBUtil {
 		return categoryId;
 	}
 
-	public static String getEmailFromAddress(PortletPreferences preferences) {
-		String emailFromAddress = PropsValues.MESSAGE_BOARDS_EMAIL_FROM_ADDRESS;
+	public static String getEmailFromAddress(
+			PortletPreferences preferences, long companyId)
+		throws SystemException {
 
-		return preferences.getValue("emailFromAddress", emailFromAddress);
+		return PortalUtil.getEmailFromAddress(
+			preferences, companyId,
+			PropsValues.MESSAGE_BOARDS_EMAIL_FROM_ADDRESS);
 	}
 
-	public static String getEmailFromName(PortletPreferences preferences) {
-		String emailFromName = PropsValues.MESSAGE_BOARDS_EMAIL_FROM_NAME;
+	public static String getEmailFromName(
+			PortletPreferences preferences, long companyId)
+		throws SystemException {
 
-		return preferences.getValue("emailFromName", emailFromName);
+		return PortalUtil.getEmailFromName(
+			preferences, companyId, PropsValues.MESSAGE_BOARDS_EMAIL_FROM_NAME);
 	}
 
 	public static boolean getEmailHtmlFormat(PortletPreferences preferences) {
@@ -441,7 +450,8 @@ public class MBUtil {
 		String editorImpl = PropsUtil.get(BB_CODE_EDITOR_WYSIWYG_IMPL_KEY);
 
 		if (messageFormat.equals("bbcode") &&
-			!editorImpl.equals("ckeditor_bbcode")) {
+			!(editorImpl.equals("bbcode") ||
+			  editorImpl.equals("ckeditor_bbcode"))) {
 
 			messageFormat = "html";
 		}
@@ -593,7 +603,7 @@ public class MBUtil {
 			preferences, "ranks", languageId);
 
 		for (int i = 0; i < ranks.length; i++) {
-			String[] kvp = StringUtil.split(ranks[i], StringPool.EQUAL);
+			String[] kvp = StringUtil.split(ranks[i], CharPool.EQUAL);
 
 			String kvpName = kvp[0];
 			int kvpPosts = GetterUtil.getInteger(kvp[1]);
@@ -627,13 +637,13 @@ public class MBUtil {
 			preferences, "ranks", languageId);
 
 		for (int i = 0; i < ranks.length; i++) {
-			String[] kvp = StringUtil.split(ranks[i], StringPool.EQUAL);
+			String[] kvp = StringUtil.split(ranks[i], CharPool.EQUAL);
 
 			String curRank = kvp[0];
 			String curRankValue = kvp[1];
 
 			String[] curRankValueKvp = StringUtil.split(
-				curRankValue, StringPool.COLON);
+				curRankValue, CharPool.COLON);
 
 			if (curRankValueKvp.length <= 1) {
 				int posts = GetterUtil.getInteger(curRankValue);
@@ -726,6 +736,10 @@ public class MBUtil {
 
 	private static String _getParentMessageIdFromSubject(Message message)
 		throws Exception {
+
+		if (message.getSubject() == null) {
+			return null;
+		}
 
 		String parentMessageId = null;
 

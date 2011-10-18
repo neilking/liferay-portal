@@ -22,13 +22,15 @@ import com.liferay.portalweb.portal.util.RuntimeVariables;
  */
 public class TranslateEnglishDutchTest extends BaseTestCase {
 	public void testTranslateEnglishDutch() throws Exception {
+		selenium.open("/web/guest/home/");
+
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent("link=Translator Test Page")) {
+				if (selenium.isVisible("link=Translator Test Page")) {
 					break;
 				}
 			}
@@ -38,19 +40,17 @@ public class TranslateEnglishDutchTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.click(RuntimeVariables.replace("link=Translator Test Page"));
+		selenium.clickAt("link=Translator Test Page",
+			RuntimeVariables.replace("Translator Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.select("_26_id",
-			RuntimeVariables.replace("label=English to Dutch"));
-		selenium.type("_26_text",
+		selenium.type("//textarea[@id='_26_text']",
 			RuntimeVariables.replace(
 				"My name is Liferay Translator, fluent in over 6 million forms of communication."));
-		selenium.saveScreenShotAndSource();
-		selenium.click(RuntimeVariables.replace("//input[@value='Translate']"));
+		selenium.select("//select[@id='_26_id']",
+			RuntimeVariables.replace("English to Dutch"));
+		selenium.clickAt("//input[@value='Translate']",
+			RuntimeVariables.replace("Translate"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 		assertTrue(selenium.isTextPresent(
 				"Mijn naam is Vertaler Liferay, vloeiend in meer dan 6 miljoen vormen van mededeling."));
 	}

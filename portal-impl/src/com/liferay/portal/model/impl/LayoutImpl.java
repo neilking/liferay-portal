@@ -79,6 +79,10 @@ public class LayoutImpl extends LayoutBaseImpl {
 			return LayoutFriendlyURLException.TOO_SHORT;
 		}
 
+		if (friendlyURL.length() > LayoutConstants.FRIENDLY_URL_MAX_LENGTH) {
+			return LayoutFriendlyURLException.TOO_LONG;
+		}
+
 		if (!friendlyURL.startsWith(StringPool.SLASH)) {
 			return LayoutFriendlyURLException.DOES_NOT_START_WITH_SLASH;
 		}
@@ -390,6 +394,12 @@ public class LayoutImpl extends LayoutBaseImpl {
 		return _typeSettingsProperties;
 	}
 
+	public String getTypeSettingsProperty(String key) {
+		UnicodeProperties typeSettingsProperties = getTypeSettingsProperties();
+
+		return typeSettingsProperties.getProperty(key);
+	}
+
 	public ColorScheme getWapColorScheme()
 		throws PortalException, SystemException {
 
@@ -610,6 +620,24 @@ public class LayoutImpl extends LayoutBaseImpl {
 		else {
 			return false;
 		}
+	}
+
+	@Override
+	public void setGroupId(long groupId) {
+		super.setGroupId(groupId);
+
+		_layoutSet = null;
+	}
+
+	public void setLayoutSet(LayoutSet layoutSet) {
+		_layoutSet = layoutSet;
+	}
+
+	@Override
+	public void setPrivateLayout(boolean privateLayout) {
+		super.setPrivateLayout(privateLayout);
+
+		_layoutSet = null;
 	}
 
 	@Override

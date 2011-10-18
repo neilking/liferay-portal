@@ -15,9 +15,9 @@
 package com.liferay.portal.webdav;
 
 import com.liferay.portal.kernel.servlet.HttpHeaders;
+import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Tuple;
 import com.liferay.portal.kernel.util.Validator;
@@ -161,7 +161,7 @@ public class BaseWebDAVTestCase extends TestCase {
 					methodName.startsWith("test")) {
 
 					String testName = StringUtil.extractLast(
-						stackTraceElement.getClassName(), StringPool.PERIOD);
+						stackTraceElement.getClassName(), CharPool.PERIOD);
 
 					testName = StringUtil.replace(
 						testName,
@@ -193,9 +193,10 @@ public class BaseWebDAVTestCase extends TestCase {
 		if (data != null) {
 			request.setContent(data);
 
-			if (headers.containsKey(HttpHeaders.CONTENT_TYPE)) {
-				request.setContentType(
-					headers.remove(HttpHeaders.CONTENT_TYPE));
+			String contentType = headers.remove(HttpHeaders.CONTENT_TYPE);
+
+			if (contentType != null) {
+				request.setContentType(contentType);
 			}
 			else {
 				request.setContentType(ContentTypes.TEXT_PLAIN);

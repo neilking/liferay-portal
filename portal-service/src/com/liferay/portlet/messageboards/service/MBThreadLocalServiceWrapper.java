@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.messageboards.service;
 
+import com.liferay.portal.service.ServiceWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link MBThreadLocalService}.
@@ -23,7 +25,8 @@ package com.liferay.portlet.messageboards.service;
  * @see       MBThreadLocalService
  * @generated
  */
-public class MBThreadLocalServiceWrapper implements MBThreadLocalService {
+public class MBThreadLocalServiceWrapper implements MBThreadLocalService,
+	ServiceWrapper<MBThreadLocalService> {
 	public MBThreadLocalServiceWrapper(
 		MBThreadLocalService mbThreadLocalService) {
 		_mbThreadLocalService = mbThreadLocalService;
@@ -245,6 +248,14 @@ public class MBThreadLocalServiceWrapper implements MBThreadLocalService {
 		_mbThreadLocalService.setBeanIdentifier(beanIdentifier);
 	}
 
+	public com.liferay.portlet.messageboards.model.MBThread addThread(
+		long categoryId,
+		com.liferay.portlet.messageboards.model.MBMessage message)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return _mbThreadLocalService.addThread(categoryId, message);
+	}
+
 	public void deleteThread(long threadId)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
@@ -327,6 +338,11 @@ public class MBThreadLocalServiceWrapper implements MBThreadLocalService {
 			status, subscribed, includeAnonymous);
 	}
 
+	public java.util.List<com.liferay.portlet.messageboards.model.MBThread> getNoAssetThreads()
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _mbThreadLocalService.getNoAssetThreads();
+	}
+
 	public java.util.List<com.liferay.portlet.messageboards.model.MBThread> getPriorityThreads(
 		long categoryId, double priority)
 		throws com.liferay.portal.kernel.exception.PortalException,
@@ -361,6 +377,18 @@ public class MBThreadLocalServiceWrapper implements MBThreadLocalService {
 		return _mbThreadLocalService.getThreadsCount(groupId, categoryId, status);
 	}
 
+	public boolean hasAnswerMessage(long threadId)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _mbThreadLocalService.hasAnswerMessage(threadId);
+	}
+
+	public com.liferay.portlet.messageboards.model.MBThread incrementViewCounter(
+		long threadId, int increment)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return _mbThreadLocalService.incrementViewCounter(threadId, increment);
+	}
+
 	public com.liferay.portlet.messageboards.model.MBThread moveThread(
 		long groupId, long categoryId, long threadId)
 		throws com.liferay.portal.kernel.exception.PortalException,
@@ -377,6 +405,15 @@ public class MBThreadLocalServiceWrapper implements MBThreadLocalService {
 			serviceContext);
 	}
 
+	public void updateQuestion(long threadId, boolean question)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		_mbThreadLocalService.updateQuestion(threadId, question);
+	}
+
+	/**
+	* @deprecated {@link #incrementViewCounter(long, int)}
+	*/
 	public com.liferay.portlet.messageboards.model.MBThread updateThread(
 		long threadId, int viewCount)
 		throws com.liferay.portal.kernel.exception.PortalException,
@@ -384,12 +421,26 @@ public class MBThreadLocalServiceWrapper implements MBThreadLocalService {
 		return _mbThreadLocalService.updateThread(threadId, viewCount);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public MBThreadLocalService getWrappedMBThreadLocalService() {
 		return _mbThreadLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedMBThreadLocalService(
 		MBThreadLocalService mbThreadLocalService) {
+		_mbThreadLocalService = mbThreadLocalService;
+	}
+
+	public MBThreadLocalService getWrappedService() {
+		return _mbThreadLocalService;
+	}
+
+	public void setWrappedService(MBThreadLocalService mbThreadLocalService) {
 		_mbThreadLocalService = mbThreadLocalService;
 	}
 

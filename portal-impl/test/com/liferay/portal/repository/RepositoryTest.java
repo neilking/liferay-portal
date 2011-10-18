@@ -21,9 +21,7 @@ import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.UnicodeProperties;
-import com.liferay.portal.model.Layout;
 import com.liferay.portal.repository.liferayrepository.LiferayRepository;
-import com.liferay.portal.service.LayoutLocalServiceUtil;
 import com.liferay.portal.service.RepositoryServiceUtil;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.util.PortalUtil;
@@ -50,29 +48,27 @@ public class RepositoryTest extends TestCase {
 
 		long classNameId = PortalUtil.getClassNameId(LiferayRepository.class);
 
-		repositoryIds[0] = RepositoryServiceUtil.mountRepository(
-			getGroupId(), classNameId,
+		repositoryIds[0] = RepositoryServiceUtil.addRepository(
+			TestPropsValues.getGroupId(), classNameId,
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, "Test 1", "Test 1",
 			PortletKeys.DOCUMENT_LIBRARY, new UnicodeProperties(),
 			new ServiceContext());
 
 		DLFolder dlFolder = DLFolderServiceUtil.addFolder(
-			getGroupId(), getGroupId(),
+			TestPropsValues.getGroupId(), TestPropsValues.getGroupId(), false,
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, "Folder", "Folder",
 			new ServiceContext());
 
-		repositoryIds[1] = RepositoryServiceUtil.mountRepository(
-			getGroupId(), classNameId, dlFolder.getFolderId(), "Test 2",
-			"Test 2", PortletKeys.DOCUMENT_LIBRARY, new UnicodeProperties(),
-			new ServiceContext());
+		repositoryIds[1] = RepositoryServiceUtil.addRepository(
+			TestPropsValues.getGroupId(), classNameId, dlFolder.getFolderId(),
+			"Test 2", "Test 2", PortletKeys.DOCUMENT_LIBRARY,
+			new UnicodeProperties(), new ServiceContext());
 
 		// Delete repositories
 
-		RepositoryServiceUtil.unmountRepositories(getGroupId());
+		RepositoryServiceUtil.unmountRepositories(TestPropsValues.getGroupId());
 
-		for (int i = 0; i < repositoryIds.length; i++) {
-			long repositoryId = repositoryIds[i];
-
+		for (long repositoryId : repositoryIds) {
 			try {
 				RepositoryServiceUtil.getLocalRepositoryImpl(repositoryId);
 
@@ -87,12 +83,12 @@ public class RepositoryTest extends TestCase {
 
 		// One default and one mapped repository
 
-		long defaultRepositoryId = getGroupId();
+		long defaultRepositoryId = TestPropsValues.getGroupId();
 
 		long classNameId = PortalUtil.getClassNameId(LiferayRepository.class);
 
-		long dlRepositoryId = RepositoryServiceUtil.mountRepository(
-			getGroupId(), classNameId,
+		long dlRepositoryId = RepositoryServiceUtil.addRepository(
+			TestPropsValues.getGroupId(), classNameId,
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, "Test 1", "Test 1",
 			PortletKeys.DOCUMENT_LIBRARY, new UnicodeProperties(),
 			new ServiceContext());
@@ -114,28 +110,32 @@ public class RepositoryTest extends TestCase {
 			LocalRepository localRepository =
 				RepositoryServiceUtil.getLocalRepositoryImpl(repositoryId);
 
-			FileEntry fileEntry1 = localRepository.addFileEntry(
-				TestPropsValues.USER_ID,
-				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-				ContentTypes.TEXT_PLAIN,
+			String name1 =
 				String.valueOf(DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) +
-					".txt",
-				StringPool.BLANK, StringPool.BLANK, inputStream,
-				_TEST_CONTENT.length(), new ServiceContext());
+					".txt";
+
+			FileEntry fileEntry1 = localRepository.addFileEntry(
+				TestPropsValues.getUserId(),
+				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, name1,
+				ContentTypes.TEXT_PLAIN, name1, StringPool.BLANK,
+				StringPool.BLANK, inputStream, _TEST_CONTENT.length(),
+				new ServiceContext());
 
 			fileEntryIds[i] = fileEntry1.getFileEntryId();
 
 			Folder folder = localRepository.addFolder(
-				TestPropsValues.USER_ID,
+				TestPropsValues.getUserId(),
 				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 				String.valueOf(repositoryId), String.valueOf(repositoryId),
 				new ServiceContext());
 
 			folderIds[i] = folder.getFolderId();
 
+			String name2 = String.valueOf(folderIds[i]) + ".txt";
+
 			FileEntry fileEntry2 = localRepository.addFileEntry(
-				TestPropsValues.USER_ID, folderIds[i], ContentTypes.TEXT_PLAIN,
-				String.valueOf(folderIds[i]) + ".txt", StringPool.BLANK,
+				TestPropsValues.getUserId(), folderIds[i], name2,
+				ContentTypes.TEXT_PLAIN, name2, StringPool.BLANK,
 				StringPool.BLANK, inputStream, _TEST_CONTENT.length(),
 				new ServiceContext());
 
@@ -157,7 +157,7 @@ public class RepositoryTest extends TestCase {
 
 		// Delete repositories
 
-		RepositoryServiceUtil.unmountRepositories(getGroupId());
+		RepositoryServiceUtil.unmountRepositories(TestPropsValues.getGroupId());
 
 		for (int i = 0; i < repositoryIds.length; i++) {
 			long repositoryId = repositoryIds[i];
@@ -179,20 +179,7 @@ public class RepositoryTest extends TestCase {
 		}
 	}
 
-	protected static long getGroupId() throws Exception {
-		if (_groupId == 0) {
-			Layout layout = LayoutLocalServiceUtil.getLayout(
-				TestPropsValues.LAYOUT_PLID);
-
-			_groupId = layout.getGroupId();
-		}
-
-		return _groupId;
-	}
-
 	private static final String _TEST_CONTENT =
 		"LIFERAY\nEnterprise. Open Source. For Life.";
-
-	private static long _groupId;
 
 }

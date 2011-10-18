@@ -18,9 +18,8 @@ import com.liferay.portal.kernel.cache.ThreadLocalCachable;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.search.Indexer;
-import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringPool;
@@ -112,7 +111,7 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 
 		for (int i = 0; i < tagProperties.length; i++) {
 			String[] tagProperty = StringUtil.split(
-				tagProperties[i], StringPool.COLON);
+				tagProperties[i], CharPool.COLON);
 
 			String key = StringPool.BLANK;
 
@@ -215,7 +214,7 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 
 		// Indexer
 
-		reindex(entries);
+		assetEntryLocalService.reindex(entries);
 	}
 
 	public void deleteTag(long tagId) throws PortalException, SystemException {
@@ -441,9 +440,7 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 			tagProperties = new String[0];
 		}
 
-		if (!tag.getName().equals(name) &&
-			hasTag(tag.getGroupId(), name)) {
-
+		if (!name.equals(tag.getName()) && hasTag(tag.getGroupId(), name)) {
 			throw new DuplicateTagException(
 				"A tag with the name " + name + " already exists");
 		}
@@ -478,7 +475,7 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 
 		for (int i = 0; i < tagProperties.length; i++) {
 			String[] tagProperty = StringUtil.split(
-				tagProperties[i], StringPool.COLON);
+				tagProperties[i], CharPool.COLON);
 
 			String key = StringPool.BLANK;
 
@@ -504,24 +501,15 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 			List<AssetEntry> entries = assetTagPersistence.getAssetEntries(
 				tag.getTagId());
 
-			reindex(entries);
+			assetEntryLocalService.reindex(entries);
 		}
 
 		return tag;
 	}
 
 	protected String[] getTagNames(List <AssetTag>tags) {
-		return StringUtil.split(ListUtil.toString(tags, "name"));
-	}
-
-	protected void reindex(List<AssetEntry> entries) throws PortalException {
-		for (AssetEntry entry : entries) {
-			String className = PortalUtil.getClassName(entry.getClassNameId());
-
-			Indexer indexer = IndexerRegistryUtil.getIndexer(className);
-
-			indexer.reindex(className, entry.getClassPK());
-		}
+		return StringUtil.split(
+			ListUtil.toString(tags, AssetTag.NAME_ACCESSOR));
 	}
 
 	protected void validate(String name) throws PortalException {

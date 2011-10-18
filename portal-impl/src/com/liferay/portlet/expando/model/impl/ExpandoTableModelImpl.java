@@ -16,6 +16,7 @@ package com.liferay.portlet.expando.model.impl;
 
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.CacheModel;
@@ -26,8 +27,6 @@ import com.liferay.portlet.expando.model.ExpandoTable;
 import com.liferay.portlet.expando.model.ExpandoTableModel;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Proxy;
 
 import java.sql.Types;
 
@@ -69,15 +68,12 @@ public class ExpandoTableModelImpl extends BaseModelImpl<ExpandoTable>
 	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
 				"value.object.finder.cache.enabled.com.liferay.portlet.expando.model.ExpandoTable"),
 			true);
-
-	public Class<?> getModelClass() {
-		return ExpandoTable.class;
-	}
-
-	public String getModelClassName() {
-		return ExpandoTable.class.getName();
-	}
-
+	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.column.bitmask.enabled.com.liferay.portlet.expando.model.ExpandoTable"),
+			true);
+	public static long CLASSNAMEID_COLUMN_BITMASK = 1L;
+	public static long COMPANYID_COLUMN_BITMASK = 2L;
+	public static long NAME_COLUMN_BITMASK = 4L;
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(com.liferay.portal.util.PropsUtil.get(
 				"lock.expiration.time.com.liferay.portlet.expando.model.ExpandoTable"));
 
@@ -100,6 +96,14 @@ public class ExpandoTableModelImpl extends BaseModelImpl<ExpandoTable>
 		setPrimaryKey(((Long)primaryKeyObj).longValue());
 	}
 
+	public Class<?> getModelClass() {
+		return ExpandoTable.class;
+	}
+
+	public String getModelClassName() {
+		return ExpandoTable.class.getName();
+	}
+
 	public long getTableId() {
 		return _tableId;
 	}
@@ -113,6 +117,8 @@ public class ExpandoTableModelImpl extends BaseModelImpl<ExpandoTable>
 	}
 
 	public void setCompanyId(long companyId) {
+		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
+
 		if (!_setOriginalCompanyId) {
 			_setOriginalCompanyId = true;
 
@@ -139,6 +145,8 @@ public class ExpandoTableModelImpl extends BaseModelImpl<ExpandoTable>
 	}
 
 	public void setClassNameId(long classNameId) {
+		_columnBitmask |= CLASSNAMEID_COLUMN_BITMASK;
+
 		if (!_setOriginalClassNameId) {
 			_setOriginalClassNameId = true;
 
@@ -162,6 +170,8 @@ public class ExpandoTableModelImpl extends BaseModelImpl<ExpandoTable>
 	}
 
 	public void setName(String name) {
+		_columnBitmask |= NAME_COLUMN_BITMASK;
+
 		if (_originalName == null) {
 			_originalName = _name;
 		}
@@ -173,20 +183,19 @@ public class ExpandoTableModelImpl extends BaseModelImpl<ExpandoTable>
 		return GetterUtil.getString(_originalName);
 	}
 
+	public long getColumnBitmask() {
+		return _columnBitmask;
+	}
+
 	@Override
 	public ExpandoTable toEscapedModel() {
-		if (isEscapedModel()) {
-			return (ExpandoTable)this;
+		if (_escapedModelProxy == null) {
+			_escapedModelProxy = (ExpandoTable)ProxyUtil.newProxyInstance(_classLoader,
+					_escapedModelProxyInterfaces,
+					new AutoEscapeBeanHandler(this));
 		}
-		else {
-			if (_escapedModelProxy == null) {
-				_escapedModelProxy = (ExpandoTable)Proxy.newProxyInstance(_classLoader,
-						_escapedModelProxyInterfaces,
-						new AutoEscapeBeanHandler(this));
-			}
 
-			return _escapedModelProxy;
-		}
+		return _escapedModelProxy;
 	}
 
 	@Override
@@ -260,6 +269,8 @@ public class ExpandoTableModelImpl extends BaseModelImpl<ExpandoTable>
 		expandoTableModelImpl._setOriginalClassNameId = false;
 
 		expandoTableModelImpl._originalName = expandoTableModelImpl._name;
+
+		expandoTableModelImpl._columnBitmask = 0;
 	}
 
 	@Override
@@ -342,5 +353,6 @@ public class ExpandoTableModelImpl extends BaseModelImpl<ExpandoTable>
 	private boolean _setOriginalClassNameId;
 	private String _name;
 	private String _originalName;
+	private long _columnBitmask;
 	private ExpandoTable _escapedModelProxy;
 }

@@ -25,12 +25,12 @@ public class AddUser3Test extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent("link=Control Panel")) {
+				if (selenium.isVisible("link=Control Panel")) {
 					break;
 				}
 			}
@@ -40,18 +40,22 @@ public class AddUser3Test extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Control Panel", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Control Panel",
+			RuntimeVariables.replace("Control Panel"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
+		selenium.clickAt("link=Users and Organizations",
+			RuntimeVariables.replace("Users and Organizations"));
+		selenium.waitForPageToLoad("30000");
+		selenium.clickAt("link=Add", RuntimeVariables.replace("Add"));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent("link=Users")) {
+				if (selenium.isVisible(
+							"//div[@class='lfr-component lfr-menu-list']/ul/li/a")) {
 					break;
 				}
 			}
@@ -61,40 +65,64 @@ public class AddUser3Test extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Users", RuntimeVariables.replace(""));
+		assertEquals(RuntimeVariables.replace("User"),
+			selenium.getText(
+				"//div[@class='lfr-component lfr-menu-list']/ul/li/a"));
+		selenium.click(RuntimeVariables.replace(
+				"//div[@class='lfr-component lfr-menu-list']/ul/li/a"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Add", RuntimeVariables.replace(""));
-		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.select("_125_prefixId", RuntimeVariables.replace("label=Mr."));
-		selenium.type("_125_screenName", RuntimeVariables.replace("selenium03"));
-		selenium.saveScreenShotAndSource();
-		selenium.type("_125_emailAddress",
+		selenium.select("//select[@id='_125_prefixId']",
+			RuntimeVariables.replace("label=Mr."));
+		selenium.type("//input[@id='_125_screenName']",
+			RuntimeVariables.replace("selenium03"));
+		selenium.type("//input[@id='_125_emailAddress']",
 			RuntimeVariables.replace("test03@selenium.com"));
-		selenium.saveScreenShotAndSource();
-		selenium.type("_125_firstName", RuntimeVariables.replace("selen03"));
-		selenium.saveScreenShotAndSource();
-		selenium.type("_125_middleName", RuntimeVariables.replace("lenn"));
-		selenium.saveScreenShotAndSource();
-		selenium.type("_125_lastName", RuntimeVariables.replace("nium03"));
-		selenium.saveScreenShotAndSource();
-		selenium.select("_125_prefixId", RuntimeVariables.replace("label=Ms."));
-		selenium.select("_125_birthdayMonth",
+		selenium.type("//input[@id='_125_firstName']",
+			RuntimeVariables.replace("selen03"));
+		selenium.type("//input[@id='_125_middleName']",
+			RuntimeVariables.replace("lenn"));
+		selenium.type("//input[@id='_125_lastName']",
+			RuntimeVariables.replace("nium03"));
+		selenium.select("//select[@id='_125_prefixId']",
+			RuntimeVariables.replace("label=Ms."));
+		selenium.select("//select[@id='_125_birthdayMonth']",
 			RuntimeVariables.replace("label=August"));
-		selenium.select("_125_birthdayDay", RuntimeVariables.replace("label=5"));
-		selenium.select("_125_birthdayYear",
+		selenium.select("//select[@id='_125_birthdayDay']",
+			RuntimeVariables.replace("label=5"));
+		selenium.select("//select[@id='_125_birthdayYear']",
 			RuntimeVariables.replace("label=1991"));
-		selenium.select("_125_male", RuntimeVariables.replace("label=Female"));
-		selenium.clickAt("//input[@value='Save']", RuntimeVariables.replace(""));
+		selenium.select("//select[@id='_125_male']",
+			RuntimeVariables.replace("label=Female"));
+		selenium.clickAt("//input[@value='Save']",
+			RuntimeVariables.replace("Save"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		assertEquals("selenium03", selenium.getValue("_125_screenName"));
+
+		for (int second = 0;; second++) {
+			if (second >= 90) {
+				fail("timeout");
+			}
+
+			try {
+				if (selenium.isVisible("//div[@class='portlet-msg-success']")) {
+					break;
+				}
+			}
+			catch (Exception e) {
+			}
+
+			Thread.sleep(1000);
+		}
+
+		assertEquals(RuntimeVariables.replace(
+				"Your request completed successfully."),
+			selenium.getText("//div[@class='portlet-msg-success']"));
+		assertEquals("selenium03",
+			selenium.getValue("//input[@id='_125_screenName']"));
 		assertEquals("test03@selenium.com",
-			selenium.getValue("_125_emailAddress"));
-		assertEquals("selen03", selenium.getValue("_125_firstName"));
-		assertEquals("lenn", selenium.getValue("_125_middleName"));
-		assertEquals("nium03", selenium.getValue("_125_lastName"));
+			selenium.getValue("//input[@id='_125_emailAddress']"));
+		assertEquals("selen03",
+			selenium.getValue("//input[@id='_125_firstName']"));
+		assertEquals("lenn", selenium.getValue("//input[@id='_125_middleName']"));
+		assertEquals("nium03", selenium.getValue("//input[@id='_125_lastName']"));
 	}
 }

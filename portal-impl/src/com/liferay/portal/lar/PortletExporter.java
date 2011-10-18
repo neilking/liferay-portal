@@ -17,6 +17,7 @@ package com.liferay.portal.lar;
 import com.liferay.portal.LayoutImportException;
 import com.liferay.portal.NoSuchPortletPreferencesException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.lar.ImportExportThreadLocal;
 import com.liferay.portal.kernel.lar.PortletDataContext;
 import com.liferay.portal.kernel.lar.PortletDataHandler;
 import com.liferay.portal.kernel.lar.PortletDataHandlerKeys;
@@ -115,6 +116,22 @@ public class PortletExporter {
 			Map<String, String[]> parameterMap, Date startDate, Date endDate)
 		throws Exception {
 
+		try {
+			ImportExportThreadLocal.setPortletExportInProcess(true);
+
+			return doExportPortletInfoAsFile(
+				plid, groupId, portletId, parameterMap, startDate, endDate);
+		}
+		finally {
+			ImportExportThreadLocal.setPortletExportInProcess(false);
+		}
+	}
+
+	protected File doExportPortletInfoAsFile(
+			long plid, long groupId, String portletId,
+			Map<String, String[]> parameterMap, Date startDate, Date endDate)
+		throws Exception {
+
 		boolean exportCategories = MapUtil.getBoolean(
 			parameterMap, PortletDataHandlerKeys.CATEGORIES);
 		boolean exportPermissions = MapUtil.getBoolean(
@@ -197,7 +214,7 @@ public class PortletExporter {
 				layout, portletId);
 
 		String scopeType = GetterUtil.getString(
-			jxPreferences.getValue("lfr-scope-type", null));
+			jxPreferences.getValue("lfrScopeType", null));
 		String scopeLayoutUuid = GetterUtil.getString(
 			jxPreferences.getValue("lfrScopeLayoutUuid", null));
 
@@ -329,7 +346,7 @@ public class PortletExporter {
 				assetCategoryUuidsMap.entrySet()) {
 
 			String[] assetCategoryEntryParts = StringUtil.split(
-				entry.getKey(), StringPool.POUND);
+				entry.getKey(), CharPool.POUND);
 
 			String className = assetCategoryEntryParts[0];
 			long classPK = GetterUtil.getLong(assetCategoryEntryParts[1]);
@@ -436,7 +453,7 @@ public class PortletExporter {
 
 		for (Map.Entry<String, String[]> entry : assetLinkUuidsMap.entrySet()) {
 			String[] assetLinkNameParts = StringUtil.split(
-				entry.getKey(), StringPool.POUND);
+				entry.getKey(), CharPool.POUND);
 			String[] targetAssetEntryUuids = entry.getValue();
 
 			String sourceAssetEntryUuid = assetLinkNameParts[0];
@@ -467,7 +484,7 @@ public class PortletExporter {
 
 		for (Map.Entry<String, String[]> entry : assetTagNamesMap.entrySet()) {
 			String[] assetTagNameParts = StringUtil.split(
-				entry.getKey(), StringPool.POUND);
+				entry.getKey(), CharPool.POUND);
 
 			String className = assetTagNameParts[0];
 			String classPK = assetTagNameParts[1];
@@ -536,7 +553,7 @@ public class PortletExporter {
 				commentsMap.entrySet()) {
 
 			String[] commentParts = StringUtil.split(
-				entry.getKey(), StringPool.POUND);
+				entry.getKey(), CharPool.POUND);
 
 			String className = commentParts[0];
 			String classPK = commentParts[1];
@@ -1065,7 +1082,7 @@ public class PortletExporter {
 				ratingsEntriesMap.entrySet()) {
 
 			String[] ratingsEntryParts = StringUtil.split(
-				entry.getKey(), StringPool.POUND);
+				entry.getKey(), CharPool.POUND);
 
 			String className = ratingsEntryParts[0];
 			String classPK = ratingsEntryParts[1];

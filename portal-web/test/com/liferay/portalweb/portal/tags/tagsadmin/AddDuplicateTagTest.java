@@ -25,7 +25,7 @@ public class AddDuplicateTagTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -40,22 +40,21 @@ public class AddDuplicateTagTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Control Panel", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Control Panel",
+			RuntimeVariables.replace("Control Panel"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Tags", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Tags", RuntimeVariables.replace("Tags"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("add-tag-button", RuntimeVariables.replace(""));
+		selenium.clickAt("//input[@id='_99_addTagButton']",
+			RuntimeVariables.replace("Add Tag"));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isVisible("new-tag-name")) {
+				if (selenium.isVisible("//input[@id='_99_name']")) {
 					break;
 				}
 			}
@@ -65,20 +64,18 @@ public class AddDuplicateTagTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.type("new-tag-name", RuntimeVariables.replace("selenium"));
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("//input[@value='Save']", RuntimeVariables.replace(""));
+		selenium.type("//input[@id='_99_name']",
+			RuntimeVariables.replace("selenium"));
+		selenium.clickAt("//input[@value='Save']",
+			RuntimeVariables.replace("Save"));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (RuntimeVariables.replace("That tag already exists.")
-										.equals(selenium.getText(
-								"tag-portlet-messages"))) {
+				if (selenium.isVisible("//div[@id='portletMessages']")) {
 					break;
 				}
 			}
@@ -88,9 +85,7 @@ public class AddDuplicateTagTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace("That tag already exists."),
-			selenium.getText("tag-portlet-messages"));
-		assertFalse(selenium.isElementPresent("//li[2]/span/a"));
+			selenium.getText("//div[@id='portletMessages']"));
 	}
 }

@@ -25,7 +25,7 @@ public class ViewWikiPageTagMultipleTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -40,21 +40,19 @@ public class ViewWikiPageTagMultipleTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Wiki Test Page", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Wiki Test Page",
+			RuntimeVariables.replace("Wiki Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=All Pages", RuntimeVariables.replace(""));
+		selenium.clickAt("link=All Pages", RuntimeVariables.replace("All Pages"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Wiki1 Page1 Test1", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Wiki Page1 Test",
+			RuntimeVariables.replace("Wiki Page1 Test"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=wiki tag multiple", RuntimeVariables.replace(""));
+		selenium.clickAt("link=wiki tag multiple",
+			RuntimeVariables.replace("wiki tag multiple"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		assertTrue(selenium.isElementPresent("link=Wiki1 Page1 Test1"));
-		assertTrue(selenium.isElementPresent("link=Wiki2 Page2 Test2"));
-		assertTrue(selenium.isElementPresent("link=Wiki3 Page3 Test3"));
+		assertTrue(selenium.isVisible("link=Wiki Page1 Test"));
+		assertTrue(selenium.isVisible("link=Wiki Page2 Test"));
+		assertTrue(selenium.isVisible("link=Wiki Page3 Test"));
 	}
 }

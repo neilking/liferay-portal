@@ -37,6 +37,7 @@ import com.liferay.portal.kernel.util.Validator_IW;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
+import com.liferay.portal.model.CacheField;
 import com.liferay.portal.model.ModelHintsUtil;
 import com.liferay.portal.security.permission.ResourceActionsUtil;
 import com.liferay.portal.tools.ArgumentsUtil;
@@ -46,9 +47,11 @@ import com.liferay.portal.util.PropsValues;
 import com.liferay.util.xml.XMLFormatter;
 
 import com.thoughtworks.qdox.JavaDocBuilder;
+import com.thoughtworks.qdox.model.Annotation;
 import com.thoughtworks.qdox.model.ClassLibrary;
 import com.thoughtworks.qdox.model.DocletTag;
 import com.thoughtworks.qdox.model.JavaClass;
+import com.thoughtworks.qdox.model.JavaField;
 import com.thoughtworks.qdox.model.JavaMethod;
 import com.thoughtworks.qdox.model.JavaParameter;
 import com.thoughtworks.qdox.model.Type;
@@ -286,7 +289,8 @@ public class ServiceBuilder {
 
 		className = className.substring(0, className.length() - 5);
 
-		content = SourceFormatter.stripImports(content, packagePath, className);
+		content = SourceFormatter.stripJavaImports(
+			content, packagePath, className);
 
 		File tempFile = new File("ServiceBuilder.temp");
 
@@ -851,7 +855,7 @@ public class ServiceBuilder {
 			if (pos == -1) {
 				throw new RuntimeException(
 					"Cannot find " + name + " in " +
-						ListUtil.toString(_ejbList, "name"));
+						ListUtil.toString(_ejbList, Entity.NAME_ACCESSOR));
 			}
 
 			entity = _ejbList.get(pos);
@@ -1244,6 +1248,16 @@ public class ServiceBuilder {
 		return sb.toString();
 	}
 
+	public String getVariableName(JavaField field) {
+		String fieldName = field.getName();
+
+		if ((fieldName.length() > 0) && (fieldName.charAt(0) == '_')) {
+			fieldName = fieldName.substring(1);
+		}
+
+		return fieldName;
+	}
+
 	public boolean hasEntityByGenericsName(String genericsName) {
 		if (Validator.isNull(genericsName)) {
 			return false;
@@ -1394,12 +1408,10 @@ public class ServiceBuilder {
 
 		String key = sb.toString();
 
-		if (tempMap.containsKey(key)) {
+		if (tempMap.put(key, key) != null) {
 			return true;
 		}
 		else {
-			tempMap.put(key, key);
-
 			return false;
 		}
 	}
@@ -1451,12 +1463,16 @@ public class ServiceBuilder {
 	}
 
 	public boolean isSoapMethod(JavaMethod method) {
-		String returnTypeGenericsName = getTypeGenericsName(
-			method.getReturns());
-		String returnValueName = method.getReturns().getValue();
+		Type returnType = method.getReturns();
+
+		String returnTypeGenericsName = getTypeGenericsName(returnType);
+		String returnValueName = returnType.getValue();
 
 		if (returnTypeGenericsName.contains(
 				"com.liferay.portal.kernel.repository.") ||
+			returnTypeGenericsName.contains(
+				"com.liferay.portal.kernel.search.") ||
+			returnTypeGenericsName.contains("com.liferay.portal.model.Theme") ||
 			returnTypeGenericsName.equals("java.util.List<java.lang.Object>") ||
 			returnValueName.equals("com.liferay.portal.model.Lock") ||
 			returnValueName.equals(
@@ -2071,9 +2087,13 @@ public class ServiceBuilder {
 	}
 
 	private void _createModelCache(Entity entity) throws Exception {
+		JavaClass javaClass = _getJavaClass(
+			_outputPath + "/model/impl/" + entity.getName() + "Impl.java");
+
 		Map<String, Object> context = _getContext();
 
 		context.put("entity", entity);
+		context.put("cacheFields", _getCacheFields(javaClass));
 
 		// Content
 
@@ -2166,9 +2186,13 @@ public class ServiceBuilder {
 	}
 
 	private void _createModelImpl(Entity entity) throws Exception {
+		JavaClass javaClass = _getJavaClass(
+			_outputPath + "/model/impl/" + entity.getName() + "Impl.java");
+
 		Map<String, Object> context = _getContext();
 
 		context.put("entity", entity);
+		context.put("cacheFields", _getCacheFields(javaClass));
 
 		// Content
 
@@ -3703,6 +3727,32 @@ public class ServiceBuilder {
 		return xml;
 	}
 
+	private JavaField[] _getCacheFields(JavaClass javaClass) {
+		if (javaClass == null) {
+			return new JavaField[0];
+		}
+
+		List<JavaField> javaFields = new ArrayList<JavaField>();
+
+		for (JavaField javaField : javaClass.getFields()) {
+			Annotation[] annotations = javaField.getAnnotations();
+
+			for (Annotation annotation : annotations) {
+				Type type = annotation.getType();
+
+				String className = type.getFullyQualifiedName();
+
+				if (className.equals(CacheField.class.getName())) {
+					javaFields.add(javaField);
+
+					break;
+				}
+			}
+		}
+
+		return javaFields.toArray(new JavaField[javaFields.size()]);
+	}
+
 	private String _getContent(String fileName) throws Exception {
 		Document document = _getContentDocument(fileName);
 
@@ -4349,6 +4399,8 @@ public class ServiceBuilder {
 
 		boolean uuid = GetterUtil.getBoolean(
 			entityElement.attributeValue("uuid"));
+		boolean uuidAccessor = GetterUtil.getBoolean(
+			entityElement.attributeValue("uuid-accessor"));
 		boolean localService = GetterUtil.getBoolean(
 			entityElement.attributeValue("local-service"));
 		boolean remoteService = GetterUtil.getBoolean(
@@ -4386,6 +4438,8 @@ public class ServiceBuilder {
 
 		List<Element> columnElements = entityElement.elements("column");
 
+		boolean permissionedModel = false;
+
 		if (uuid) {
 			Element columnElement = SAXReaderUtil.createElement("column");
 
@@ -4397,6 +4451,12 @@ public class ServiceBuilder {
 
 		for (Element columnElement : columnElements) {
 			String columnName = columnElement.attributeValue("name");
+
+			if (columnName.equals("resourceBlockId") &&
+				!ejbName.equals("ResourceBlock")) {
+
+				permissionedModel = true;
+			}
 
 			String columnDBName = columnElement.attributeValue("db-name");
 
@@ -4411,6 +4471,8 @@ public class ServiceBuilder {
 			String columnType = columnElement.attributeValue("type");
 			boolean primary = GetterUtil.getBoolean(
 				columnElement.attributeValue("primary"));
+			boolean accessor = GetterUtil.getBoolean(
+				columnElement.attributeValue("accessor"));
 			boolean filterPrimary = GetterUtil.getBoolean(
 				columnElement.attributeValue("filter-primary"));
 			String collectionEntity = columnElement.attributeValue("entity");
@@ -4441,9 +4503,9 @@ public class ServiceBuilder {
 				columnElement.attributeValue("json-enabled"), jsonEnabled);
 
 			EntityColumn col = new EntityColumn(
-				columnName, columnDBName, columnType, primary, filterPrimary,
-				collectionEntity, mappingKey, mappingTable, idType, idParam,
-				convertNull, lazy, localized, colJsonEnabled);
+				columnName, columnDBName, columnType, primary, accessor,
+				filterPrimary, collectionEntity, mappingKey, mappingTable,
+				idType, idParam, convertNull, lazy, localized, colJsonEnabled);
 
 			if (primary) {
 				pkList.add(col);
@@ -4566,6 +4628,20 @@ public class ServiceBuilder {
 			}
 		}
 
+		if (permissionedModel) {
+			Element finderElement = SAXReaderUtil.createElement("finder");
+
+			finderElement.addAttribute("name", "ResourceBlockId");
+			finderElement.addAttribute("return-type", "Collection");
+
+			Element finderColumnElement = finderElement.addElement(
+				"finder-column");
+
+			finderColumnElement.addAttribute("name", "resourceBlockId");
+
+			finderElements.add(0, finderElement);
+		}
+
 		String alias = TextFormatter.format(ejbName, TextFormatter.I);
 
 		if (_badAliasNames.contains(alias.toLowerCase())) {
@@ -4615,10 +4691,8 @@ public class ServiceBuilder {
 
 				EntityColumn col = Entity.getColumn(finderColName, columnList);
 
-				if (!col.isFetchFinderPath() &&
-					!finderReturn.equals("Collection")) {
-
-					col.setFetchFinderPath(true);
+				if (!col.isFinderPath()) {
+					col.setFinderPath(true);
 				}
 
 				col = (EntityColumn)col.clone();
@@ -4693,11 +4767,11 @@ public class ServiceBuilder {
 		_ejbList.add(
 			new Entity(
 				_packagePath, _portletName, _portletShortName, ejbName,
-				humanName, table, alias, uuid, localService, remoteService,
-				persistenceClass, finderClass, dataSource, sessionFactory,
-				txManager, cacheEnabled, jsonEnabled, pkList, regularColList,
-				blobList, collectionList, columnList, order, finderList,
-				referenceList, txRequiredList));
+				humanName, table, alias, uuid, uuidAccessor, localService,
+				remoteService, persistenceClass, finderClass, dataSource,
+				sessionFactory, txManager, cacheEnabled, jsonEnabled, pkList,
+				regularColList, blobList, collectionList, columnList, order,
+				finderList, referenceList, txRequiredList));
 	}
 
 	private String _processTemplate(String name) throws Exception {

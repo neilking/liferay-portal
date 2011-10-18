@@ -25,12 +25,12 @@ public class RenameWikiPageTitleTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent("link=Wiki Test Page")) {
+				if (selenium.isVisible("link=Wiki Test Page")) {
 					break;
 				}
 			}
@@ -40,39 +40,47 @@ public class RenameWikiPageTitleTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Wiki Test Page", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Wiki Test Page",
+			RuntimeVariables.replace("Wiki Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=All Pages", RuntimeVariables.replace(""));
+		selenium.clickAt("link=All Pages", RuntimeVariables.replace("All Pages"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Wiki Page Test", RuntimeVariables.replace(""));
+		assertEquals(RuntimeVariables.replace("Wiki Page Title"),
+			selenium.getText("//tr[4]/td[1]/a"));
+		selenium.clickAt("//tr[4]/td[1]/a",
+			RuntimeVariables.replace("Wiki Page Title"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		assertTrue(selenium.isPartialText("//div[2]/h1/span", "Wiki Page Test"));
-		assertFalse(selenium.isPartialText("//div[2]/h1/span",
-				"Wiki Page Test Renamed"));
+		assertEquals(RuntimeVariables.replace("Wiki Page Title"),
+			selenium.getText("//h1[@class='header-title']/span"));
+		assertEquals(RuntimeVariables.replace("Wiki Page Content"),
+			selenium.getText("//div[@class='wiki-body']/p"));
 		assertFalse(selenium.isTextPresent("(Redirected from Wiki Page Test)"));
-		selenium.clickAt("link=Details", RuntimeVariables.replace(""));
+		assertEquals(RuntimeVariables.replace("Details"),
+			selenium.getText("//div[3]/span[2]/a/span"));
+		selenium.clickAt("//div[3]/span[2]/a/span",
+			RuntimeVariables.replace("Details"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Move", RuntimeVariables.replace(""));
+		assertEquals(RuntimeVariables.replace("Move"),
+			selenium.getText("//tr[9]/td/ul/li[3]/a/span"));
+		selenium.clickAt("//tr[9]/td/ul/li[3]/a/span",
+			RuntimeVariables.replace("Move"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.type("_36_newTitle",
-			RuntimeVariables.replace("Wiki Page Test Renamed"));
-		selenium.saveScreenShotAndSource();
+		assertEquals(RuntimeVariables.replace("Wiki Page Title"),
+			selenium.getText("//h1[@class='header-title']/span"));
+		selenium.type("//input[@id='_36_newTitle']",
+			RuntimeVariables.replace("Wiki2 Page2 Title2"));
 		selenium.clickAt("//input[@value='Rename']",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Rename"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		assertTrue(selenium.isPartialText("//div[3]/h1/span",
-				"Wiki Page Test Renamed"));
 		assertEquals(RuntimeVariables.replace(
-				"(Redirected from Wiki Page Test)"),
+				"Your request completed successfully."),
+			selenium.getText("//div[@class='portlet-msg-success']"));
+		assertEquals(RuntimeVariables.replace("Wiki2 Page2 Title2"),
+			selenium.getText("//h1[@class='header-title']/span"));
+		assertEquals(RuntimeVariables.replace(
+				"(Redirected from Wiki Page Title)"),
 			selenium.getText("//div[@class='page-redirect']"));
-		assertNotEquals(RuntimeVariables.replace("Wiki Page Test"),
-			selenium.getText("//div[3]/h1/span"));
+		assertNotEquals(RuntimeVariables.replace("Wiki Page Title"),
+			selenium.getText("//h1[@class='header-title']/span"));
 	}
 }

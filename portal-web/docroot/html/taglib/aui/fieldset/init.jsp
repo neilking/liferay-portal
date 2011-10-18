@@ -25,19 +25,26 @@ CustomAttributes customAttributes = (CustomAttributes)request.getAttribute("aui:
 
 Map<String, Object> _options = new HashMap<String, Object>();
 
-_options.putAll(scopedAttributes);
-_options.putAll(dynamicAttributes);
+if ((scopedAttributes != null) && !scopedAttributes.isEmpty()) {
+	_options.putAll(scopedAttributes);
+}
+
+if ((dynamicAttributes != null) && !dynamicAttributes.isEmpty()) {
+	_options.putAll(dynamicAttributes);
+}
 
 boolean column = GetterUtil.getBoolean(String.valueOf(request.getAttribute("aui:fieldset:column")));
 java.lang.String cssClass = GetterUtil.getString((java.lang.String)request.getAttribute("aui:fieldset:cssClass"));
+java.lang.String helpMessage = GetterUtil.getString((java.lang.String)request.getAttribute("aui:fieldset:helpMessage"));
 java.lang.String label = GetterUtil.getString((java.lang.String)request.getAttribute("aui:fieldset:label"));
 
 _updateOptions(_options, "column", column);
 _updateOptions(_options, "cssClass", cssClass);
+_updateOptions(_options, "helpMessage", helpMessage);
 _updateOptions(_options, "label", label);
 %>
 
-<%@ include file="init-ext.jspf" %>
+<%@ include file="/html/taglib/aui/fieldset/init-ext.jspf" %>
 
 <%!
 private static final String _NAMESPACE = "aui:fieldset:";

@@ -25,12 +25,12 @@ public class SearchWikiPageContentTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent("link=Wiki Test Page")) {
+				if (selenium.isVisible("link=Wiki Test Page")) {
 					break;
 				}
 			}
@@ -40,25 +40,24 @@ public class SearchWikiPageContentTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Wiki Test Page", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Wiki Test Page",
+			RuntimeVariables.replace("Wiki Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.type("_36_keywords",
-			RuntimeVariables.replace("\"This is a wiki page test.\""));
-		selenium.saveScreenShotAndSource();
+		selenium.type("//input[@id='_36_keywords']",
+			RuntimeVariables.replace("Wiki Page Content"));
 		selenium.clickAt("//input[@value='Search']",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Search"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		assertTrue(selenium.isElementPresent("link=Wiki Page Test"));
-		selenium.type("_36_keywords",
-			RuntimeVariables.replace("\"This1 is1 a1 wiki1 page1 test1.\""));
-		selenium.saveScreenShotAndSource();
+		assertEquals(RuntimeVariables.replace("Wiki Page Title"),
+			selenium.getText("//td[3]/a"));
+		selenium.type("//input[@id='_36_keywords']",
+			RuntimeVariables.replace("\"Wiki1 Page1 Content1.\""));
 		selenium.clickAt("//input[@value='Search']",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Search"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		assertFalse(selenium.isElementPresent("link=Wiki Page Test"));
+		assertEquals(RuntimeVariables.replace(
+				"No pages were found that matched the keywords: \"Wiki1 Page1 Content1.\"."),
+			selenium.getText("//div[@class='portlet-msg-info']"));
+		assertFalse(selenium.isTextPresent("Wiki Page Title"));
 	}
 }

@@ -17,6 +17,7 @@ package com.liferay.portlet.asset.service.impl;
 import com.liferay.portal.kernel.cache.ThreadLocalCachable;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -115,7 +116,7 @@ public class AssetCategoryLocalServiceImpl
 
 		for (int i = 0; i < categoryProperties.length; i++) {
 			String[] categoryProperty = StringUtil.split(
-				categoryProperties[i], StringPool.COLON);
+				categoryProperties[i], CharPool.COLON);
 
 			String key = StringPool.BLANK;
 			String value = StringPool.BLANK;
@@ -160,6 +161,11 @@ public class AssetCategoryLocalServiceImpl
 	public void deleteCategory(AssetCategory category)
 		throws PortalException, SystemException {
 
+		// Entries
+
+		List<AssetEntry> entries = assetTagPersistence.getAssetEntries(
+			category.getCategoryId());
+
 		// Category
 
 		assetCategoryPersistence.remove(category);
@@ -184,6 +190,10 @@ public class AssetCategoryLocalServiceImpl
 
 		assetCategoryPropertyLocalService.deleteCategoryProperties(
 			category.getCategoryId());
+
+		// Indexer
+
+		assetEntryLocalService.reindex(entries);
 	}
 
 	public void deleteCategory(long categoryId)
@@ -206,20 +216,8 @@ public class AssetCategoryLocalServiceImpl
 		}
 	}
 
-	public String[] getCategoryNames() throws SystemException {
-		return getCategoryNames(getCategories());
-	}
-
-	public String[] getCategoryNames(long classNameId, long classPK)
-		throws SystemException {
-
-		return getCategoryNames(getCategories(classNameId, classPK));
-	}
-
-	public String[] getCategoryNames(String className, long classPK)
-		throws SystemException {
-
-		return getCategoryNames(getCategories(className, classPK));
+	public AssetCategory fetchCategory(long categoryId) throws SystemException {
+		return assetCategoryPersistence.fetchByPrimaryKey(categoryId);
 	}
 
 	public List<AssetCategory> getCategories() throws SystemException {
@@ -251,6 +249,22 @@ public class AssetCategoryLocalServiceImpl
 		throws SystemException {
 
 		return getCategoryIds(getCategories(className, classPK));
+	}
+
+	public String[] getCategoryNames() throws SystemException {
+		return getCategoryNames(getCategories());
+	}
+
+	public String[] getCategoryNames(long classNameId, long classPK)
+		throws SystemException {
+
+		return getCategoryNames(getCategories(classNameId, classPK));
+	}
+
+	public String[] getCategoryNames(String className, long classPK)
+		throws SystemException {
+
+		return getCategoryNames(getCategories(className, classPK));
 	}
 
 	public List<AssetCategory> getChildCategories(long parentCategoryId)
@@ -410,6 +424,8 @@ public class AssetCategoryLocalServiceImpl
 		AssetCategory category = assetCategoryPersistence.findByPrimaryKey(
 			categoryId);
 
+		String oldName = category.getName();
+
 		if (vocabularyId != category.getVocabularyId()) {
 			assetVocabularyPersistence.findByPrimaryKey(vocabularyId);
 
@@ -438,7 +454,7 @@ public class AssetCategoryLocalServiceImpl
 
 		for (int i = 0; i < categoryProperties.length; i++) {
 			String[] categoryProperty = StringUtil.split(
-				categoryProperties[i], StringPool.COLON);
+				categoryProperties[i], CharPool.COLON);
 
 			String key = StringPool.BLANK;
 
@@ -458,16 +474,27 @@ public class AssetCategoryLocalServiceImpl
 			}
 		}
 
+		// Indexer
+
+		if (!oldName.equals(name)) {
+			List<AssetEntry> entries = assetCategoryPersistence.getAssetEntries(
+				category.getCategoryId());
+
+			assetEntryLocalService.reindex(entries);
+		}
+
 		return category;
 	}
 
-	protected long[] getCategoryIds(List <AssetCategory>categories) {
+	protected long[] getCategoryIds(List<AssetCategory> categories) {
 		return StringUtil.split(
-			ListUtil.toString(categories, "categoryId"), 0L);
+			ListUtil.toString(categories, AssetCategory.CATEGORY_ID_ACCESSOR),
+			0L);
 	}
 
 	protected String[] getCategoryNames(List<AssetCategory> categories) {
-		return StringUtil.split(ListUtil.toString(categories, "name"));
+		return StringUtil.split(
+			ListUtil.toString(categories, AssetCategory.NAME_ACCESSOR));
 	}
 
 	protected void updateChildrenVocabularyId (
@@ -499,20 +526,10 @@ public class AssetCategoryLocalServiceImpl
 			throw new AssetCategoryNameException();
 		}
 
-		List<AssetCategory> categories = null;
+		AssetCategory category = assetCategoryPersistence.fetchByP_N_V(
+			parentCategoryId, name, vocabularyId);
 
-		if (parentCategoryId == 0) {
-			categories = assetCategoryPersistence.findByN_V(
-				name, vocabularyId);
-		}
-		else {
-			categories = assetCategoryPersistence.findByP_N(
-				parentCategoryId, name);
-		}
-
-		if ((categories.size() > 0) &&
-			(categories.get(0).getCategoryId() != categoryId)) {
-
+		if ((category != null) && (category.getCategoryId() != categoryId)) {
 			StringBundler sb = new StringBundler(4);
 
 			sb.append("There is another category named ");

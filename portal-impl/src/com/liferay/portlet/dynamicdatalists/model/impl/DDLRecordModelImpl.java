@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.CacheModel;
@@ -32,8 +33,6 @@ import com.liferay.portlet.expando.model.ExpandoBridge;
 import com.liferay.portlet.expando.util.ExpandoBridgeFactoryUtil;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Proxy;
 
 import java.sql.Types;
 
@@ -90,6 +89,13 @@ public class DDLRecordModelImpl extends BaseModelImpl<DDLRecord>
 	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
 				"value.object.finder.cache.enabled.com.liferay.portlet.dynamicdatalists.model.DDLRecord"),
 			true);
+	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.column.bitmask.enabled.com.liferay.portlet.dynamicdatalists.model.DDLRecord"),
+			true);
+	public static long GROUPID_COLUMN_BITMASK = 1L;
+	public static long RECORDSETID_COLUMN_BITMASK = 2L;
+	public static long USERID_COLUMN_BITMASK = 4L;
+	public static long UUID_COLUMN_BITMASK = 8L;
 
 	/**
 	 * Converts the soap model instance into a normal model instance.
@@ -134,14 +140,6 @@ public class DDLRecordModelImpl extends BaseModelImpl<DDLRecord>
 		return models;
 	}
 
-	public Class<?> getModelClass() {
-		return DDLRecord.class;
-	}
-
-	public String getModelClassName() {
-		return DDLRecord.class.getName();
-	}
-
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(com.liferay.portal.util.PropsUtil.get(
 				"lock.expiration.time.com.liferay.portlet.dynamicdatalists.model.DDLRecord"));
 
@@ -162,6 +160,14 @@ public class DDLRecordModelImpl extends BaseModelImpl<DDLRecord>
 
 	public void setPrimaryKeyObj(Serializable primaryKeyObj) {
 		setPrimaryKey(((Long)primaryKeyObj).longValue());
+	}
+
+	public Class<?> getModelClass() {
+		return DDLRecord.class;
+	}
+
+	public String getModelClassName() {
+		return DDLRecord.class.getName();
 	}
 
 	@JSON
@@ -201,6 +207,8 @@ public class DDLRecordModelImpl extends BaseModelImpl<DDLRecord>
 	}
 
 	public void setGroupId(long groupId) {
+		_columnBitmask |= GROUPID_COLUMN_BITMASK;
+
 		if (!_setOriginalGroupId) {
 			_setOriginalGroupId = true;
 
@@ -229,6 +237,14 @@ public class DDLRecordModelImpl extends BaseModelImpl<DDLRecord>
 	}
 
 	public void setUserId(long userId) {
+		_columnBitmask |= USERID_COLUMN_BITMASK;
+
+		if (!_setOriginalUserId) {
+			_setOriginalUserId = true;
+
+			_originalUserId = _userId;
+		}
+
 		_userId = userId;
 	}
 
@@ -238,6 +254,10 @@ public class DDLRecordModelImpl extends BaseModelImpl<DDLRecord>
 
 	public void setUserUuid(String userUuid) {
 		_userUuid = userUuid;
+	}
+
+	public long getOriginalUserId() {
+		return _originalUserId;
 	}
 
 	@JSON
@@ -319,7 +339,19 @@ public class DDLRecordModelImpl extends BaseModelImpl<DDLRecord>
 	}
 
 	public void setRecordSetId(long recordSetId) {
+		_columnBitmask |= RECORDSETID_COLUMN_BITMASK;
+
+		if (!_setOriginalRecordSetId) {
+			_setOriginalRecordSetId = true;
+
+			_originalRecordSetId = _recordSetId;
+		}
+
 		_recordSetId = recordSetId;
+	}
+
+	public long getOriginalRecordSetId() {
+		return _originalRecordSetId;
 	}
 
 	@JSON
@@ -345,20 +377,19 @@ public class DDLRecordModelImpl extends BaseModelImpl<DDLRecord>
 		_displayIndex = displayIndex;
 	}
 
+	public long getColumnBitmask() {
+		return _columnBitmask;
+	}
+
 	@Override
 	public DDLRecord toEscapedModel() {
-		if (isEscapedModel()) {
-			return (DDLRecord)this;
+		if (_escapedModelProxy == null) {
+			_escapedModelProxy = (DDLRecord)ProxyUtil.newProxyInstance(_classLoader,
+					_escapedModelProxyInterfaces,
+					new AutoEscapeBeanHandler(this));
 		}
-		else {
-			if (_escapedModelProxy == null) {
-				_escapedModelProxy = (DDLRecord)Proxy.newProxyInstance(_classLoader,
-						_escapedModelProxyInterfaces,
-						new AutoEscapeBeanHandler(this));
-			}
 
-			return _escapedModelProxy;
-		}
+		return _escapedModelProxy;
 	}
 
 	@Override
@@ -453,6 +484,16 @@ public class DDLRecordModelImpl extends BaseModelImpl<DDLRecord>
 		ddlRecordModelImpl._originalGroupId = ddlRecordModelImpl._groupId;
 
 		ddlRecordModelImpl._setOriginalGroupId = false;
+
+		ddlRecordModelImpl._originalUserId = ddlRecordModelImpl._userId;
+
+		ddlRecordModelImpl._setOriginalUserId = false;
+
+		ddlRecordModelImpl._originalRecordSetId = ddlRecordModelImpl._recordSetId;
+
+		ddlRecordModelImpl._setOriginalRecordSetId = false;
+
+		ddlRecordModelImpl._columnBitmask = 0;
 	}
 
 	@Override
@@ -647,6 +688,8 @@ public class DDLRecordModelImpl extends BaseModelImpl<DDLRecord>
 	private long _companyId;
 	private long _userId;
 	private String _userUuid;
+	private long _originalUserId;
+	private boolean _setOriginalUserId;
 	private String _userName;
 	private long _versionUserId;
 	private String _versionUserUuid;
@@ -655,8 +698,11 @@ public class DDLRecordModelImpl extends BaseModelImpl<DDLRecord>
 	private Date _modifiedDate;
 	private long _DDMStorageId;
 	private long _recordSetId;
+	private long _originalRecordSetId;
+	private boolean _setOriginalRecordSetId;
 	private String _version;
 	private int _displayIndex;
 	private transient ExpandoBridge _expandoBridge;
+	private long _columnBitmask;
 	private DDLRecord _escapedModelProxy;
 }

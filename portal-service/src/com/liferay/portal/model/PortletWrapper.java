@@ -23,7 +23,7 @@ package com.liferay.portal.model;
  * @see       Portlet
  * @generated
  */
-public class PortletWrapper implements Portlet {
+public class PortletWrapper implements Portlet, ModelWrapper<Portlet> {
 	public PortletWrapper(Portlet portlet) {
 		_portlet = portlet;
 	}
@@ -171,10 +171,6 @@ public class PortletWrapper implements Portlet {
 
 	public boolean isEscapedModel() {
 		return _portlet.isEscapedModel();
-	}
-
-	public void setEscapedModel(boolean escapedModel) {
-		_portlet.setEscapedModel(escapedModel);
 	}
 
 	public java.io.Serializable getPrimaryKeyObj() {
@@ -1113,6 +1109,35 @@ public class PortletWrapper implements Portlet {
 	*/
 	public java.util.List<com.liferay.portlet.expando.model.CustomAttributesDisplay> getCustomAttributesDisplayInstances() {
 		return _portlet.getCustomAttributesDisplayInstances();
+	}
+
+	/**
+	* Returns the name of the permission propagator class of the portlet.
+	*
+	* @return the name of the permission propagator class of the portlet
+	*/
+	public java.lang.String getPermissionPropagatorClass() {
+		return _portlet.getPermissionPropagatorClass();
+	}
+
+	/**
+	* Sets the name of the permission propagator class of the portlet.
+	*
+	* @param pollerProcessorClass the name of the permission propagator class
+	of the portlet
+	*/
+	public void setPermissionPropagatorClass(
+		java.lang.String permissionPropagatorClass) {
+		_portlet.setPermissionPropagatorClass(permissionPropagatorClass);
+	}
+
+	/**
+	* Returns the permission propagator instance of the portlet.
+	*
+	* @return the permission propagator instance of the portlet
+	*/
+	public com.liferay.portal.security.permission.PermissionPropagator getPermissionPropagatorInstance() {
+		return _portlet.getPermissionPropagatorInstance();
 	}
 
 	/**
@@ -2784,7 +2809,14 @@ public class PortletWrapper implements Portlet {
 		return _portlet.equals(obj);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedModel}
+	 */
 	public Portlet getWrappedPortlet() {
+		return _portlet;
+	}
+
+	public Portlet getWrappedModel() {
 		return _portlet;
 	}
 

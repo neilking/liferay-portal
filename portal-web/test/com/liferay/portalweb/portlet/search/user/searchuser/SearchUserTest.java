@@ -25,12 +25,12 @@ public class SearchUserTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent("link=Search Test Page")) {
+				if (selenium.isVisible("link=Search Test Page")) {
 					break;
 				}
 			}
@@ -40,18 +40,17 @@ public class SearchUserTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Search Test Page", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Search Test Page",
+			RuntimeVariables.replace("Search Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent("_3_keywords")) {
+				if (selenium.isVisible("//input[@name='_3_keywords']")) {
 					break;
 				}
 			}
@@ -61,13 +60,12 @@ public class SearchUserTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.type("_3_keywords", RuntimeVariables.replace("selenium"));
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("//input[@type='image']", RuntimeVariables.replace(""));
+		selenium.type("//input[@name='_3_keywords']",
+			RuntimeVariables.replace("selenium"));
+		selenium.clickAt("//input[@type='image']",
+			RuntimeVariables.replace("Search"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace("selen01 lenn nium01"),
-			selenium.getText("//td/a"));
+			selenium.getText("//span[@class='asset-entry-title']/a"));
 	}
 }

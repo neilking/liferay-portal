@@ -16,6 +16,7 @@ package com.liferay.portlet.documentlibrary.action;
 
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
+import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
@@ -37,7 +38,6 @@ import com.liferay.portlet.documentlibrary.model.DLFileShortcut;
 import com.liferay.portlet.documentlibrary.service.DLAppServiceUtil;
 import com.liferay.portlet.documentlibrary.util.DLUtil;
 import com.liferay.portlet.documentlibrary.util.DocumentConversionUtil;
-import com.liferay.util.servlet.ServletResponseUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -203,47 +203,33 @@ public class GetFileAction extends PortletAction {
 			}
 		}
 
-		InputStream is = fileEntry.getContentStream(version);
+		FileVersion fileVersion = fileEntry.getFileVersion(version);
 
-		boolean converted = false;
-
-		String fileName = fileEntry.getTitle();
+		InputStream is = fileVersion.getContentStream(true);
+		String fileName = fileVersion.getTitle();
+		long contentLength = fileVersion.getSize();
+		String contentType = fileVersion.getMimeType();
 
 		if (Validator.isNotNull(targetExtension)) {
 			String id = DLUtil.getTempFileId(
 				fileEntry.getFileEntryId(), version);
 
-			String sourceExtension = FileUtil.getExtension(fileName);
+			String sourceExtension = fileVersion.getExtension();
+
+			if (!fileName.endsWith(StringPool.PERIOD + sourceExtension)) {
+				fileName += StringPool.PERIOD + sourceExtension;
+			}
 
 			File convertedFile = DocumentConversionUtil.convert(
 				id, is, sourceExtension, targetExtension);
 
 			if (convertedFile != null) {
-				fileName = FileUtil.stripExtension(
-					fileEntry.getTitle()).concat(StringPool.PERIOD).concat(
-						targetExtension);
-
+				fileName = FileUtil.stripExtension(fileName).concat(
+					StringPool.PERIOD).concat(targetExtension);
 				is = new FileInputStream(convertedFile);
-
-				converted = true;
+				contentLength = convertedFile.length();
+				contentType = MimeTypesUtil.getContentType(fileName);
 			}
-		}
-
-		long contentLength = 0;
-		String contentType = fileEntry.getMimeType(version);
-
-		if (!converted) {
-			if (DLUtil.compareVersions(version, fileEntry.getVersion()) >= 0) {
-				contentLength = fileEntry.getSize();
-			}
-			else {
-				FileVersion fileVersion = fileEntry.getFileVersion(version);
-
-				contentLength = fileVersion.getSize();
-			}
-		}
-		else {
-			contentType = MimeTypesUtil.getContentType(fileName);
 		}
 
 		ServletResponseUtil.sendFile(

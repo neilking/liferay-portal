@@ -27,7 +27,7 @@ AssetEntry assetEntry = null;
 List<AssetLink> assetLinks = new ArrayList<AssetLink>();
 
 if (classPK > 0) {
-	assetEntry = AssetEntryLocalServiceUtil.getEntry(className, classPK);
+	assetEntry = AssetEntryLocalServiceUtil.fetchEntry(className, classPK);
 }
 
 String assetLinkSearchContainerPrimaryKeys = ParamUtil.getString(request, "assetLinkSearchContainerPrimaryKeys");
@@ -75,7 +75,11 @@ assetBrowserURL.setParameter("groupId", scopeGroupId.toString());
 
 	<%
 	for (AssetRendererFactory assetRendererFactory : AssetRendererFactoryRegistryUtil.getAssetRendererFactories()) {
-		if (assetRendererFactory.isSelectable()) {
+		if (assetRendererFactory.isLinkable() && assetRendererFactory.isSelectable()) {
+			if (assetEntry != null) {
+				assetBrowserURL.setParameter("refererAssetEntryId", String.valueOf(assetEntry.getEntryId()));
+			}
+
 			assetBrowserURL.setParameter("typeSelection", assetRendererFactory.getClassName());
 			assetBrowserURL.setParameter("callback", randomNamespace + "addAssetLink");
 

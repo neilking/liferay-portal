@@ -23,7 +23,7 @@ package com.liferay.portal.model;
  * @see       Country
  * @generated
  */
-public class CountryWrapper implements Country {
+public class CountryWrapper implements Country, ModelWrapper<Country> {
 	public CountryWrapper(Country country) {
 		_country = country;
 	}
@@ -163,6 +163,33 @@ public class CountryWrapper implements Country {
 	}
 
 	/**
+	* Returns the zip required of this country.
+	*
+	* @return the zip required of this country
+	*/
+	public boolean getZipRequired() {
+		return _country.getZipRequired();
+	}
+
+	/**
+	* Returns <code>true</code> if this country is zip required.
+	*
+	* @return <code>true</code> if this country is zip required; <code>false</code> otherwise
+	*/
+	public boolean isZipRequired() {
+		return _country.isZipRequired();
+	}
+
+	/**
+	* Sets whether this country is zip required.
+	*
+	* @param zipRequired the zip required of this country
+	*/
+	public void setZipRequired(boolean zipRequired) {
+		_country.setZipRequired(zipRequired);
+	}
+
+	/**
 	* Returns the active of this country.
 	*
 	* @return the active of this country
@@ -207,10 +234,6 @@ public class CountryWrapper implements Country {
 
 	public boolean isEscapedModel() {
 		return _country.isEscapedModel();
-	}
-
-	public void setEscapedModel(boolean escapedModel) {
-		_country.setEscapedModel(escapedModel);
 	}
 
 	public java.io.Serializable getPrimaryKeyObj() {
@@ -261,7 +284,14 @@ public class CountryWrapper implements Country {
 		return _country.toXmlString();
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedModel}
+	 */
 	public Country getWrappedCountry() {
+		return _country;
+	}
+
+	public Country getWrappedModel() {
 		return _country;
 	}
 

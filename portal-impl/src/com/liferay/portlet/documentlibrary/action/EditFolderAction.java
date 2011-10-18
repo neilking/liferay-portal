@@ -14,19 +14,13 @@
 
 package com.liferay.portlet.documentlibrary.action;
 
-import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Constants;
-import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.SortedArrayList;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.security.auth.PrincipalException;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.service.ServiceContextFactory;
-import com.liferay.portal.service.WorkflowDefinitionLinkLocalServiceUtil;
 import com.liferay.portal.struts.PortletAction;
 import com.liferay.portlet.assetpublisher.util.AssetPublisherUtil;
 import com.liferay.portlet.documentlibrary.DuplicateFileException;
@@ -35,15 +29,12 @@ import com.liferay.portlet.documentlibrary.FolderNameException;
 import com.liferay.portlet.documentlibrary.NoSuchFolderException;
 import com.liferay.portlet.documentlibrary.model.DLFileEntry;
 import com.liferay.portlet.documentlibrary.model.DLFolder;
+import com.liferay.portlet.documentlibrary.model.DLFolderConstants;
 import com.liferay.portlet.documentlibrary.service.DLAppServiceUtil;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 import javax.portlet.PortletConfig;
-import javax.portlet.PortletRequest;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
@@ -75,6 +66,9 @@ public class EditFolderAction extends PortletAction {
 			}
 			else if (cmd.equals(Constants.MOVE)) {
 				moveFolders(actionRequest);
+			}
+			else if (cmd.equals("updateWorkflowDefinitions")) {
+				updateWorkflowDefinitions(actionRequest);
 			}
 
 			sendRedirect(actionRequest, actionResponse);
@@ -138,33 +132,13 @@ public class EditFolderAction extends PortletAction {
 			long[] folderIds = StringUtil.split(
 				ParamUtil.getString(actionRequest, "folderIds"), 0L);
 
-			for (int i = 0; i < folderIds.length; i++) {
-				DLAppServiceUtil.deleteFolder(folderIds[i]);
+			for (long curFolderId : folderIds) {
+				DLAppServiceUtil.deleteFolder(curFolderId);
 
 				AssetPublisherUtil.removeRecentFolderId(
-					actionRequest, DLFileEntry.class.getName(), folderIds[i]);
+					actionRequest, DLFileEntry.class.getName(), curFolderId);
 			}
 		}
-	}
-
-	protected SortedArrayList<Long> getLongList(
-		PortletRequest portletRequest, String name) {
-
-		String value = portletRequest.getParameter(name);
-
-		if (value == null) {
-			return null;
-		}
-
-		long[] longArray = StringUtil.split(GetterUtil.getString(value), 0L);
-
-		SortedArrayList<Long> longList = new SortedArrayList<Long>();
-
-		for (long longValue : longArray) {
-			longList.add(longValue);
-		}
-
-		return longList;
 	}
 
 	protected void moveFolders(ActionRequest actionRequest) throws Exception {
@@ -184,9 +158,9 @@ public class EditFolderAction extends PortletAction {
 			long[] folderIds = StringUtil.split(
 				ParamUtil.getString(actionRequest, "folderIds"), 0L);
 
-			for (int i = 0; i < folderIds.length; i++) {
+			for (long curFolderId : folderIds) {
 				DLAppServiceUtil.moveFolder(
-					folderIds[i], parentFolderId, serviceContext);
+					curFolderId, parentFolderId, serviceContext);
 			}
 		}
 	}
@@ -200,23 +174,14 @@ public class EditFolderAction extends PortletAction {
 		String name = ParamUtil.getString(actionRequest, "name");
 		String description = ParamUtil.getString(actionRequest, "description");
 
-		long defaultFileEntryTypeId = ParamUtil.getLong(
-			actionRequest, "defaultFileEntryTypeId");
-		SortedArrayList<Long> fileEntryTypeIds = getLongList(
-			actionRequest, "fileEntryTypeSearchContainerPrimaryKeys");
-		boolean overrideFileEntryTypes = ParamUtil.getBoolean(
-			actionRequest, "overrideFileEntryTypes");
-
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			DLFolder.class.getName(), actionRequest);
-
-		Folder folder = null;
 
 		if (folderId <= 0) {
 
 			// Add folder
 
-			folder = DLAppServiceUtil.addFolder(
+			DLAppServiceUtil.addFolder(
 				repositoryId, parentFolderId, name, description,
 				serviceContext);
 		}
@@ -224,57 +189,20 @@ public class EditFolderAction extends PortletAction {
 
 			// Update folder
 
-			serviceContext.setAttribute(
-				"defaultFileEntryTypeId", defaultFileEntryTypeId);
-			serviceContext.setAttribute("fileEntryTypeIds", fileEntryTypeIds);
-			serviceContext.setAttribute(
-				"overrideFileEntryTypes", overrideFileEntryTypes);
-
-			folder = DLAppServiceUtil.updateFolder(
+			DLAppServiceUtil.updateFolder(
 				folderId, name, description, serviceContext);
-
-			updateWorkflowDefinitions(actionRequest, folder, serviceContext);
 		}
 	}
 
-	protected void updateWorkflowDefinitions(
-			ActionRequest actionRequest, Folder folder,
-			ServiceContext serviceContext)
+	protected void updateWorkflowDefinitions(ActionRequest actionRequest)
 		throws Exception {
 
-		if (!(folder.getModel() instanceof DLFolder)) {
-			return;
-		}
+		ServiceContext serviceContext = ServiceContextFactory.getInstance(
+			DLFileEntry.class.getName(), actionRequest);
 
-		List<ObjectValuePair<Long, String>> workflowDefinitions =
-			new ArrayList<ObjectValuePair<Long, String>>();
-
-		SortedArrayList<Long> fileEntryTypeIds =
-			(SortedArrayList<Long>)serviceContext.getAttribute(
-				"fileEntryTypeIds");
-
-		if (fileEntryTypeIds.isEmpty()) {
-			fileEntryTypeIds.add(new Long(0));
-		}
-		else {
-			workflowDefinitions.add(
-				new ObjectValuePair<Long, String>(
-					new Long(0), StringPool.BLANK));
-		}
-
-		for (long fileEntryTypeId : fileEntryTypeIds) {
-			String workflowDefinition = ParamUtil.getString(
-				actionRequest, "workflowDefinition" + fileEntryTypeId);
-
-			workflowDefinitions.add(
-				new ObjectValuePair<Long, String>(
-					fileEntryTypeId, workflowDefinition));
-		}
-
-		WorkflowDefinitionLinkLocalServiceUtil.updateWorkflowDefinitionLinks(
-			serviceContext.getUserId(), serviceContext.getCompanyId(),
-			folder.getGroupId(), DLFolder.class.getName(), folder.getFolderId(),
-			workflowDefinitions);
+		DLAppServiceUtil.updateFolder(
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, null, null,
+			serviceContext);
 	}
 
 }

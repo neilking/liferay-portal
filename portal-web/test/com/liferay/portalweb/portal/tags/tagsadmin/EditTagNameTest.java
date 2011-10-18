@@ -25,7 +25,7 @@ public class EditTagNameTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -40,21 +40,19 @@ public class EditTagNameTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Control Panel", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Control Panel",
+			RuntimeVariables.replace("Control Panel"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Tags", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Tags", RuntimeVariables.replace("Tags"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isVisible("//div[4]/ul/li/span/a")) {
+				if (selenium.isVisible("//h1[@class='header-title']/span")) {
 					break;
 				}
 			}
@@ -64,23 +62,18 @@ public class EditTagNameTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace("selenium"),
-			selenium.getText("//div[4]/ul/li/span/a"));
-		selenium.clickAt("//div[4]/ul/li/span/a", RuntimeVariables.replace(""));
-		selenium.type("tag-name", RuntimeVariables.replace("selenium ide"));
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("//div[3]/input[1]", RuntimeVariables.replace(""));
+			selenium.getText("//h1[@class='header-title']/span"));
+		selenium.clickAt("//input[@id='editTagButton']",
+			RuntimeVariables.replace("Edit"));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (RuntimeVariables.replace("selenium ide")
-										.equals(selenium.getText(
-								"//div[4]/ul/li/span/a"))) {
+				if (selenium.isVisible("//input[@id='_99_name']")) {
 					break;
 				}
 			}
@@ -90,8 +83,48 @@ public class EditTagNameTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
+		selenium.type("//input[@id='_99_name']",
+			RuntimeVariables.replace("selenium ide"));
+		selenium.clickAt("//input[@value='Save']",
+			RuntimeVariables.replace("Save"));
+
+		for (int second = 0;; second++) {
+			if (second >= 90) {
+				fail("timeout");
+			}
+
+			try {
+				if (selenium.isVisible("//div[@id='portletMessages']")) {
+					break;
+				}
+			}
+			catch (Exception e) {
+			}
+
+			Thread.sleep(1000);
+		}
+
+		assertEquals(RuntimeVariables.replace(
+				"Your request processed successfully."),
+			selenium.getText("//div[@id='portletMessages']"));
+
+		for (int second = 0;; second++) {
+			if (second >= 90) {
+				fail("timeout");
+			}
+
+			try {
+				if (selenium.isVisible("//div[2]/ul/li/div/span/a")) {
+					break;
+				}
+			}
+			catch (Exception e) {
+			}
+
+			Thread.sleep(1000);
+		}
+
 		assertEquals(RuntimeVariables.replace("selenium ide"),
-			selenium.getText("//div[4]/ul/li/span/a"));
+			selenium.getText("//div[2]/ul/li/div/span/a"));
 	}
 }

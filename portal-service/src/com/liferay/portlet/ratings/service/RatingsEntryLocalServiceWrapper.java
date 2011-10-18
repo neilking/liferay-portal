@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.ratings.service;
 
+import com.liferay.portal.service.ServiceWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link RatingsEntryLocalService}.
@@ -23,7 +25,8 @@ package com.liferay.portlet.ratings.service;
  * @see       RatingsEntryLocalService
  * @generated
  */
-public class RatingsEntryLocalServiceWrapper implements RatingsEntryLocalService {
+public class RatingsEntryLocalServiceWrapper implements RatingsEntryLocalService,
+	ServiceWrapper<RatingsEntryLocalService> {
 	public RatingsEntryLocalServiceWrapper(
 		RatingsEntryLocalService ratingsEntryLocalService) {
 		_ratingsEntryLocalService = ratingsEntryLocalService;
@@ -253,6 +256,12 @@ public class RatingsEntryLocalServiceWrapper implements RatingsEntryLocalService
 		_ratingsEntryLocalService.deleteEntry(userId, className, classPK);
 	}
 
+	public com.liferay.portlet.ratings.model.RatingsEntry fetchEntry(
+		long userId, java.lang.String className, long classPK)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _ratingsEntryLocalService.fetchEntry(userId, className, classPK);
+	}
+
 	public java.util.List<com.liferay.portlet.ratings.model.RatingsEntry> getEntries(
 		long userId, java.lang.String className,
 		java.util.List<java.lang.Long> classPKs)
@@ -295,11 +304,26 @@ public class RatingsEntryLocalServiceWrapper implements RatingsEntryLocalService
 			classPK, score, serviceContext);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public RatingsEntryLocalService getWrappedRatingsEntryLocalService() {
 		return _ratingsEntryLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedRatingsEntryLocalService(
+		RatingsEntryLocalService ratingsEntryLocalService) {
+		_ratingsEntryLocalService = ratingsEntryLocalService;
+	}
+
+	public RatingsEntryLocalService getWrappedService() {
+		return _ratingsEntryLocalService;
+	}
+
+	public void setWrappedService(
 		RatingsEntryLocalService ratingsEntryLocalService) {
 		_ratingsEntryLocalService = ratingsEntryLocalService;
 	}

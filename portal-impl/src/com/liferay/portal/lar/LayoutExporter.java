@@ -15,6 +15,7 @@
 package com.liferay.portal.lar;
 
 import com.liferay.portal.NoSuchLayoutException;
+import com.liferay.portal.kernel.lar.ImportExportThreadLocal;
 import com.liferay.portal.kernel.lar.PortletDataContext;
 import com.liferay.portal.kernel.lar.PortletDataHandler;
 import com.liferay.portal.kernel.lar.PortletDataHandlerKeys;
@@ -33,6 +34,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
@@ -70,6 +72,10 @@ import com.liferay.portlet.asset.model.AssetCategory;
 import com.liferay.portlet.asset.model.AssetVocabulary;
 import com.liferay.portlet.asset.service.AssetVocabularyLocalServiceUtil;
 import com.liferay.portlet.asset.service.persistence.AssetCategoryUtil;
+import com.liferay.portlet.journal.NoSuchArticleException;
+import com.liferay.portlet.journal.lar.JournalPortletDataHandlerImpl;
+import com.liferay.portlet.journal.model.JournalArticle;
+import com.liferay.portlet.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.portlet.sites.util.SitesUtil;
 import com.liferay.util.ContentUtil;
 
@@ -171,6 +177,23 @@ public class LayoutExporter {
 	}
 
 	public File exportLayoutsAsFile(
+			long groupId, boolean privateLayout, long[] layoutIds,
+			Map<String, String[]> parameterMap, Date startDate, Date endDate)
+		throws Exception {
+
+		try {
+			ImportExportThreadLocal.setLayoutExportInProcess(true);
+
+			return doExportLayoutsAsFile(
+				groupId, privateLayout, layoutIds, parameterMap, startDate,
+				endDate);
+		}
+		finally {
+			ImportExportThreadLocal.setLayoutExportInProcess(false);
+		}
+	}
+
+	protected File doExportLayoutsAsFile(
 			long groupId, boolean privateLayout, long[] layoutIds,
 			Map<String, String[]> parameterMap, Date startDate, Date endDate)
 		throws Exception {
@@ -342,14 +365,14 @@ public class LayoutExporter {
 				groupId, privateLayout, layoutIds);
 		}
 
+		List<Portlet> portlets = getAlwaysExportablePortlets(companyId);
+
 		if (!layouts.isEmpty()) {
 			Layout firstLayout = layouts.get(0);
 
 			if (group.isStagingGroup()) {
 				group = group.getLiveGroup();
 			}
-
-			List<Portlet> portlets = getAlwaysExportablePortlets(companyId);
 
 			for (Portlet portlet : portlets) {
 				String portletId = portlet.getRootPortletId();
@@ -358,32 +381,15 @@ public class LayoutExporter {
 					continue;
 				}
 
-				if (portlet.isScopeable() && firstLayout.hasScopeGroup()) {
-					String key = PortletPermissionUtil.getPrimaryKey(
-						firstLayout.getPlid(), portletId);
+				String key = PortletPermissionUtil.getPrimaryKey(0, portletId);
 
+				if (portletIds.get(key) == null) {
 					portletIds.put(
 						key,
 						new Object[] {
-							portletId, firstLayout.getPlid(),
-							firstLayout.getScopeGroup().getGroupId(),
-							StringPool.BLANK, firstLayout.getUuid()
-						}
-					);
-				}
-				else {
-					String key = PortletPermissionUtil.getPrimaryKey(
-						0, portletId);
-
-					if (portletIds.get(key) == null) {
-						portletIds.put(
-							key,
-							new Object[] {
-								portletId, firstLayout.getPlid(), groupId,
-								StringPool.BLANK, StringPool.BLANK
-							}
-						);
-					}
+							portletId, firstLayout.getPlid(), groupId,
+							StringPool.BLANK, StringPool.BLANK
+						});
 				}
 			}
 		}
@@ -393,8 +399,8 @@ public class LayoutExporter {
 		for (Layout layout : layouts) {
 			exportLayout(
 				portletDataContext, layoutConfigurationPortlet, layoutCache,
-				portletIds, exportPermissions, exportUserPermissions, layout,
-				layoutsElement);
+				portlets, portletIds, exportPermissions, exportUserPermissions,
+				layout, layoutsElement);
 		}
 
 		if (PropsValues.PERMISSIONS_USER_CHECK_ALGORITHM < 5) {
@@ -537,12 +543,74 @@ public class LayoutExporter {
 			document.formattedString());
 	}
 
+	protected void exportJournalArticle(
+			PortletDataContext portletDataContext, Layout layout,
+			Element layoutElement)
+		throws Exception {
+
+		UnicodeProperties typeSettingsProperties =
+			layout.getTypeSettingsProperties();
+
+		String articleId = typeSettingsProperties.getProperty(
+			"article-id", StringPool.BLANK);
+
+		long articleGroupId = layout.getGroupId();
+
+		if (Validator.isNull(articleId)) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"No article id found in typeSettings of layout " +
+						layout.getPlid());
+			}
+		}
+
+		JournalArticle article = null;
+
+		try {
+			article = JournalArticleLocalServiceUtil.getLatestArticle(
+				articleGroupId, articleId,
+				WorkflowConstants.STATUS_APPROVED);
+		}
+		catch (NoSuchArticleException nsae) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"No approved article found with group id " +
+						articleGroupId + " and article id " + articleId);
+			}
+		}
+
+		if (article == null) {
+			return;
+		}
+
+		String path = JournalPortletDataHandlerImpl.getArticlePath(
+			portletDataContext, article);
+
+		Element articleElement = layoutElement.addElement("article");
+
+		articleElement.addAttribute("path", path);
+
+		Element dlFileEntryTypesElement = layoutElement.addElement(
+			"dl-file-entry-types");
+		Element dlFoldersElement = layoutElement.addElement("dl-folders");
+		Element dlFilesElement = layoutElement.addElement("dl-file-entries");
+		Element dlFileRanksElement = layoutElement.addElement("dl-file-ranks");
+		Element igFoldersElement = layoutElement.addElement("ig-folders");
+		Element igImagesElement = layoutElement.addElement("ig-images");
+
+		JournalPortletDataHandlerImpl.exportArticle(
+			portletDataContext, layoutElement, layoutElement, layoutElement,
+			dlFileEntryTypesElement, dlFoldersElement, dlFilesElement,
+			dlFileRanksElement, igFoldersElement, igImagesElement, article,
+			false);
+	}
+
 	protected void exportLayout(
 			PortletDataContext portletDataContext,
 			Portlet layoutConfigurationPortlet, LayoutCache layoutCache,
-			Map<String, Object[]> portletIds, boolean exportPermissions,
-			boolean exportUserPermissions, Layout layout,
-			Element layoutsElement)
+			List<Portlet> portlets, Map<String, Object[]> portletIds,
+			boolean exportPermissions, boolean exportUserPermissions,
+			Layout layout, Element layoutsElement)
 		throws Exception {
 
 		String path = portletDataContext.getLayoutPath(
@@ -643,7 +711,48 @@ public class LayoutExporter {
 				exportUserPermissions);
 		}
 
-		if (layout.isTypePortlet()) {
+		if (layout.isTypeArticle()) {
+			exportJournalArticle(portletDataContext, layout, layoutElement);
+		}
+		else if (layout.isTypeLinkToLayout()) {
+			UnicodeProperties typeSettingsProperties =
+				layout.getTypeSettingsProperties();
+
+			long linkToLayoutId = GetterUtil.getLong(
+				typeSettingsProperties.getProperty(
+					"linkToLayoutId", StringPool.BLANK));
+
+			if (linkToLayoutId > 0) {
+				try {
+					Layout linkedToLayout = LayoutLocalServiceUtil.getLayout(
+						portletDataContext.getScopeGroupId(),
+						layout.isPrivateLayout(), linkToLayoutId);
+
+					exportLayout(
+						portletDataContext, layoutConfigurationPortlet,
+						layoutCache, portlets, portletIds, exportPermissions,
+						exportUserPermissions, linkedToLayout, layoutsElement);
+				}
+				catch (NoSuchLayoutException nsle) {
+				}
+			}
+		}
+		else if (layout.isTypePortlet()) {
+			for (Portlet portlet : portlets) {
+				if (portlet.isScopeable() && layout.hasScopeGroup()) {
+					String key = PortletPermissionUtil.getPrimaryKey(
+						layout.getPlid(), portlet.getPortletId());
+
+					portletIds.put(
+						key,
+						new Object[] {
+							portlet.getPortletId(), layout.getPlid(),
+							layout.getScopeGroup().getGroupId(),
+							StringPool.BLANK, layout.getUuid()
+						});
+				}
+			}
+
 			LayoutTypePortlet layoutTypePortlet =
 				(LayoutTypePortlet)layout.getLayoutType();
 
@@ -653,7 +762,7 @@ public class LayoutExporter {
 						layout, portletId);
 
 				String scopeType = GetterUtil.getString(
-					jxPreferences.getValue("lfr-scope-type", null));
+					jxPreferences.getValue("lfrScopeType", null));
 				String scopeLayoutUuid = GetterUtil.getString(
 					jxPreferences.getValue("lfrScopeLayoutUuid", null));
 
@@ -669,17 +778,12 @@ public class LayoutExporter {
 					else if (scopeType.equals("layout")) {
 						Layout scopeLayout = null;
 
-						try {
-							scopeLayout = LayoutLocalServiceUtil.
-								getLayoutByUuidAndGroupId(
-									scopeLayoutUuid,
-									portletDataContext.getGroupId());
-						}
-						catch (NoSuchLayoutException nsle) {
-							if (_log.isWarnEnabled()) {
-								_log.warn(nsle.getMessage());
-							}
+						scopeLayout = LayoutLocalServiceUtil.
+							fetchLayoutByUuidAndGroupId(
+								scopeLayoutUuid,
+								portletDataContext.getGroupId());
 
+						if (scopeLayout == null) {
 							continue;
 						}
 
@@ -707,33 +811,12 @@ public class LayoutExporter {
 				);
 			}
 		}
-		else if (layout.isTypeLinkToLayout()) {
-			UnicodeProperties typeSettingsProperties =
-				layout.getTypeSettingsProperties();
-
-			long linkToLayoutId = GetterUtil.getLong(
-				typeSettingsProperties.getProperty(
-					"linkToLayoutId", StringPool.BLANK));
-
-			if (linkToLayoutId > 0) {
-				try {
-					Layout linkedToLayout = LayoutLocalServiceUtil.getLayout(
-						portletDataContext.getScopeGroupId(),
-						layout.isPrivateLayout(), linkToLayoutId);
-
-					exportLayout(
-						portletDataContext, layoutConfigurationPortlet,
-						layoutCache, portletIds, exportPermissions,
-						exportUserPermissions, linkedToLayout, layoutsElement);
-				}
-				catch (NoSuchLayoutException nsle) {
-				}
-			}
-		}
 
 		fixTypeSettings(layout);
 
 		layoutElement.addAttribute("path", path);
+
+		portletDataContext.addExpando(layoutElement, path, layout);
 
 		portletDataContext.addZipEntry(path, layout);
 	}

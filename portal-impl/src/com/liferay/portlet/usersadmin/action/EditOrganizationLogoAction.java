@@ -17,16 +17,16 @@ package com.liferay.portlet.usersadmin.action;
 import com.liferay.portal.ImageTypeException;
 import com.liferay.portal.NoSuchOrganizationException;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.upload.UploadException;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
-import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.StreamUtil;
 import com.liferay.portal.security.auth.PrincipalException;
 import com.liferay.portal.service.LayoutSetServiceUtil;
 import com.liferay.portal.struts.PortletAction;
 import com.liferay.portal.util.PortalUtil;
-import com.liferay.util.servlet.UploadException;
 
-import java.io.File;
+import java.io.InputStream;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -85,20 +85,31 @@ public class EditOrganizationLogoAction extends PortletAction {
 	}
 
 	protected void updateLogo(ActionRequest actionRequest) throws Exception {
-		UploadPortletRequest uploadRequest = PortalUtil.getUploadPortletRequest(
-			actionRequest);
+		UploadPortletRequest uploadPortletRequest =
+			PortalUtil.getUploadPortletRequest(actionRequest);
 
-		long groupId = ParamUtil.getLong(uploadRequest, "groupId");
+		long groupId = ParamUtil.getLong(uploadPortletRequest, "groupId");
 
-		File file = uploadRequest.getFile("fileName");
-		byte[] bytes = FileUtil.getBytes(file);
+		InputStream inputStream = null;
 
-		if ((bytes == null) || (bytes.length == 0)) {
-			throw new UploadException();
+		try {
+			inputStream = uploadPortletRequest.getFileAsStream("fileName");
+
+			if (inputStream == null) {
+				throw new UploadException();
+			}
+
+			inputStream.mark(0);
+
+			LayoutSetServiceUtil.updateLogo(groupId, true, true, inputStream);
+
+			inputStream.reset();
+
+			LayoutSetServiceUtil.updateLogo(groupId, false, true, inputStream);
 		}
-
-		LayoutSetServiceUtil.updateLogo(groupId, true, true, file);
-		LayoutSetServiceUtil.updateLogo(groupId, false, true, file);
+		finally {
+			StreamUtil.cleanUp(inputStream);
+		}
 	}
 
 }

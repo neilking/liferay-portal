@@ -15,6 +15,7 @@
 package com.liferay.portal.action;
 
 import com.liferay.portal.NoSuchUserException;
+import com.liferay.portal.UserLockoutException;
 import com.liferay.portal.UserPasswordException;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Constants;
@@ -74,6 +75,17 @@ public class UpdatePasswordAction extends Action {
 		String cmd = ParamUtil.getString(request, Constants.CMD);
 
 		if (Validator.isNull(cmd)) {
+			if (ticket != null) {
+				User user = UserLocalServiceUtil.getUser(ticket.getClassPK());
+
+				try {
+					UserLocalServiceUtil.checkLockout(user);
+				}
+				catch (UserLockoutException ule) {
+					SessionErrors.add(request, ule.getClass().getName());
+				}
+			}
+
 			return mapping.findForward("portal.update_password");
 		}
 
@@ -110,14 +122,14 @@ public class UpdatePasswordAction extends Action {
 	}
 
 	protected Ticket getTicket(HttpServletRequest request) {
-		String token = ParamUtil.getString(request, "ticket");
+		String ticketKey = ParamUtil.getString(request, "ticketKey");
 
-		if (Validator.isNull(token)) {
+		if (Validator.isNull(ticketKey)) {
 			return null;
 		}
 
 		try {
-			Ticket ticket = TicketLocalServiceUtil.getTicket(token);
+			Ticket ticket = TicketLocalServiceUtil.getTicket(ticketKey);
 
 			if (!ticket.isExpired()) {
 				return ticket;

@@ -21,8 +21,8 @@ String tabs2 = ParamUtil.getString(request, "tabs2", "general");
 
 String redirect = ParamUtil.getString(request, "redirect");
 
-String emailFromName = ParamUtil.getString(request, "emailFromName", MBUtil.getEmailFromName(preferences));
-String emailFromAddress = ParamUtil.getString(request, "emailFromAddress", MBUtil.getEmailFromAddress(preferences));
+String emailFromName = ParamUtil.getString(request, "emailFromName", MBUtil.getEmailFromName(preferences, company.getCompanyId()));
+String emailFromAddress = ParamUtil.getString(request, "emailFromAddress", MBUtil.getEmailFromAddress(preferences, company.getCompanyId()));
 
 String emailMessageAddedSubjectPrefix = ParamUtil.getString(request, "emailMessageAddedSubjectPrefix", MBUtil.getEmailMessageAddedSubjectPrefix(preferences));
 String emailMessageAddedBody = ParamUtil.getString(request, "emailMessageAddedBody", MBUtil.getEmailMessageAddedBody(preferences));
@@ -516,7 +516,7 @@ else if (tabs2.equals("message-updated-email")) {
 
 						var localizedPriorityTable = A.one('#<portlet:namespace />localized-priorities-table');
 
-						if (selLanguageId) {
+						if (selLanguageId != 'null') {
 							<portlet:namespace />updateLanguageTemps(selLanguageId);
 
 							localizedPriorityTable.show();
@@ -651,7 +651,7 @@ else if (tabs2.equals("message-updated-email")) {
 
 						var ranksTemp = A.one('#<portlet:namespace />ranks_temp');
 
-						if (selLanguageId) {
+						if (selLanguageId != 'null') {
 							<portlet:namespace />updateLanguageTemps(selLanguageId);
 
 							ranksTemp.show();

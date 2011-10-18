@@ -38,7 +38,9 @@ import com.liferay.portlet.messageboards.service.MBMessageServiceUtil;
 import com.liferay.portlet.messageboards.service.MBThreadLocalServiceUtil;
 import com.liferay.portlet.messageboards.service.MBThreadServiceUtil;
 
-import java.util.ArrayList;
+import java.io.InputStream;
+
+import java.util.Collections;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -146,8 +148,9 @@ public class MoveThreadAction extends PortletAction {
 			MBMessageServiceUtil.addMessage(
 				groupId, categoryId, threadId, thread.getRootMessageId(),
 				subject, body, format,
-				new ArrayList<ObjectValuePair<String, byte[]>>(), false,
-				MBThreadConstants.PRIORITY_NOT_GIVEN, false, serviceContext);
+				Collections.<ObjectValuePair<String,InputStream>>emptyList(),
+				false, MBThreadConstants.PRIORITY_NOT_GIVEN, false,
+				serviceContext);
 		}
 
 		PortletURL portletURL =

@@ -17,8 +17,11 @@ package com.liferay.portlet.asset.service.impl;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portal.security.permission.PermissionChecker;
 import com.liferay.portal.service.ServiceContext;
@@ -26,6 +29,7 @@ import com.liferay.portlet.asset.model.AssetCategory;
 import com.liferay.portlet.asset.service.base.AssetCategoryServiceBaseImpl;
 import com.liferay.portlet.asset.service.permission.AssetCategoryPermission;
 import com.liferay.util.Autocomplete;
+import com.liferay.util.dao.orm.CustomSQLUtil;
 
 import java.util.Iterator;
 import java.util.List;
@@ -54,6 +58,26 @@ public class AssetCategoryServiceImpl extends AssetCategoryServiceBaseImpl {
 		return assetCategoryLocalService.addCategory(
 			getUserId(), parentCategoryId, titleMap, descriptionMap,
 			vocabularyId, categoryProperties, serviceContext);
+	}
+
+	public void deleteCategories(long[] categoryIds)
+		throws PortalException, SystemException {
+
+		PermissionChecker permissionChecker = getPermissionChecker();
+
+		for (long categoryId : categoryIds) {
+			AssetCategory category = assetCategoryPersistence.fetchByPrimaryKey(
+				categoryId);
+
+			if (category == null) {
+				continue;
+			}
+
+			AssetCategoryPermission.check(
+				permissionChecker, categoryId, ActionKeys.DELETE);
+
+			assetCategoryLocalService.deleteCategory(category);
+		}
 	}
 
 	public void deleteCategory(long categoryId)
@@ -97,6 +121,44 @@ public class AssetCategoryServiceImpl extends AssetCategoryServiceBaseImpl {
 				parentCategoryId, start, end, obc));
 	}
 
+	public JSONObject getJSONVocabularyCategories(
+			long groupId, String name, long vocabularyId, int start, int end,
+			OrderByComparator obc)
+		throws PortalException, SystemException {
+
+		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
+
+		int page = end / (end - start);
+
+		jsonObject.put("page", page);
+
+		List<AssetCategory> categories;
+		int total = 0;
+
+		if (Validator.isNotNull(name)) {
+			name = (CustomSQLUtil.keywords(name))[0];
+
+			categories = getVocabularyCategories(
+				groupId, name, vocabularyId, start, end, obc);
+			total = getVocabularyCategoriesCount(groupId, name, vocabularyId);
+		}
+		else {
+			categories = getVocabularyCategories(vocabularyId, start, end, obc);
+			total = getVocabularyCategoriesCount(groupId, vocabularyId);
+		}
+
+		String categoriesJSON = JSONFactoryUtil.looseSerialize(categories);
+
+		JSONArray categoriesJSONArray =
+			JSONFactoryUtil.createJSONArray(categoriesJSON);
+
+		jsonObject.put("categories", categoriesJSONArray);
+
+		jsonObject.put("total", total);
+
+		return jsonObject;
+	}
+
 	public List<AssetCategory> getVocabularyCategories(
 			long vocabularyId, int start, int end, OrderByComparator obc)
 		throws PortalException, SystemException {
@@ -116,6 +178,29 @@ public class AssetCategoryServiceImpl extends AssetCategoryServiceBaseImpl {
 				parentCategoryId, vocabularyId, start, end, obc));
 	}
 
+	public List<AssetCategory> getVocabularyCategories(
+			long groupId, String name, long vocabularyId, int start, int end,
+			OrderByComparator obc)
+		throws SystemException {
+
+		return assetCategoryFinder.filterFindByG_N_V(
+			groupId, name, vocabularyId, start, end, obc);
+	}
+
+	public int getVocabularyCategoriesCount(long groupId, long vocabularyId)
+		throws SystemException {
+
+		return assetCategoryPersistence.filterCountByG_V(groupId, vocabularyId);
+	}
+
+	public int getVocabularyCategoriesCount(
+			long groupId, String name, long vocabularyId)
+		throws SystemException {
+
+		return assetCategoryFinder.filterCountByG_N_V(
+			groupId, name, vocabularyId);
+	}
+
 	public List<AssetCategory> getVocabularyRootCategories(
 			long vocabularyId, int start, int end, OrderByComparator obc)
 		throws PortalException, SystemException {
@@ -123,6 +208,18 @@ public class AssetCategoryServiceImpl extends AssetCategoryServiceBaseImpl {
 		return filterCategories(
 			assetCategoryLocalService.getVocabularyRootCategories(
 				vocabularyId, start, end, obc));
+	}
+
+	public AssetCategory moveCategory(
+			long categoryId, long parentCategoryId, long vocabularyId,
+			ServiceContext serviceContext)
+		throws PortalException, SystemException {
+
+		AssetCategoryPermission.check(
+			getPermissionChecker(), categoryId, ActionKeys.UPDATE);
+
+		return assetCategoryLocalService.moveCategory(
+			categoryId, parentCategoryId, vocabularyId, serviceContext);
 	}
 
 	public JSONArray search(
@@ -136,18 +233,6 @@ public class AssetCategoryServiceImpl extends AssetCategoryServiceBaseImpl {
 		categories = filterCategories(categories);
 
 		return Autocomplete.listToJson(categories, "name", "name");
-	}
-
-	public AssetCategory moveCategory(
-			long categoryId, long parentCategoryId, long vocabularyId,
-			ServiceContext serviceContext)
-		throws PortalException, SystemException {
-
-		AssetCategoryPermission.check(
-			getPermissionChecker(), categoryId, ActionKeys.UPDATE);
-
-		return assetCategoryLocalService.moveCategory(
-			categoryId, parentCategoryId, vocabularyId, serviceContext);
 	}
 
 	public AssetCategory updateCategory(

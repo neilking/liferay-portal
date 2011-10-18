@@ -16,6 +16,7 @@ package com.liferay.portlet.journal.action;
 
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -26,7 +27,6 @@ import com.liferay.portal.struts.PortletAction;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.WebKeys;
-import com.liferay.portlet.ActionRequestImpl;
 import com.liferay.portlet.PortletURLImpl;
 import com.liferay.portlet.journal.DuplicateStructureElementException;
 import com.liferay.portlet.journal.DuplicateStructureIdException;
@@ -39,6 +39,9 @@ import com.liferay.portlet.journal.StructureXsdException;
 import com.liferay.portlet.journal.model.JournalStructure;
 import com.liferay.portlet.journal.service.JournalStructureServiceUtil;
 import com.liferay.portlet.journal.util.JournalUtil;
+
+import java.util.Locale;
+import java.util.Map;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -108,7 +111,7 @@ public class EditStructureAction extends PortletAction {
 					 e instanceof StructureNameException ||
 					 e instanceof StructureXsdException) {
 
-				SessionErrors.add(actionRequest, e.getClass().getName());
+				SessionErrors.add(actionRequest, e.getClass().getName(), e);
 
 				if (e instanceof RequiredStructureException) {
 					String redirect = PortalUtil.escapeRedirect(
@@ -189,7 +192,7 @@ public class EditStructureAction extends PortletAction {
 			actionRequest, "originalRedirect");
 
 		PortletURLImpl portletURL = new PortletURLImpl(
-			(ActionRequestImpl)actionRequest, portletConfig.getPortletName(),
+			actionRequest, portletConfig.getPortletName(),
 			themeDisplay.getPlid(), PortletRequest.RENDER_PHASE);
 
 		portletURL.setWindowState(actionRequest.getWindowState());
@@ -219,8 +222,10 @@ public class EditStructureAction extends PortletAction {
 
 		String parentStructureId = ParamUtil.getString(
 			actionRequest, "parentStructureId");
-		String name = ParamUtil.getString(actionRequest, "name");
-		String description = ParamUtil.getString(actionRequest, "description");
+		Map<Locale, String> nameMap = LocalizationUtil.getLocalizationMap(
+			actionRequest, "name");
+		Map<Locale, String> descriptionMap =
+			LocalizationUtil.getLocalizationMap(actionRequest, "description");
 		String xsd = ParamUtil.getString(actionRequest, "xsd");
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
@@ -233,16 +238,16 @@ public class EditStructureAction extends PortletAction {
 			// Add structure
 
 			structure = JournalStructureServiceUtil.addStructure(
-				groupId, structureId, autoStructureId, parentStructureId, name,
-				description, xsd, serviceContext);
+				groupId, structureId, autoStructureId, parentStructureId,
+				nameMap, descriptionMap, xsd, serviceContext);
 		}
 		else {
 
 			// Update structure
 
 			structure = JournalStructureServiceUtil.updateStructure(
-				groupId, structureId, parentStructureId, name, description,
-				xsd, serviceContext);
+				groupId, structureId, parentStructureId, nameMap,
+				descriptionMap, xsd, serviceContext);
 		}
 
 		// Recent structures

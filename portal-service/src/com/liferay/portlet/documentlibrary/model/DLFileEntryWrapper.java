@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.documentlibrary.model;
 
+import com.liferay.portal.model.ModelWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link DLFileEntry}.
@@ -23,7 +25,8 @@ package com.liferay.portlet.documentlibrary.model;
  * @see       DLFileEntry
  * @generated
  */
-public class DLFileEntryWrapper implements DLFileEntry {
+public class DLFileEntryWrapper implements DLFileEntry,
+	ModelWrapper<DLFileEntry> {
 	public DLFileEntryWrapper(DLFileEntry dlFileEntry) {
 		_dlFileEntry = dlFileEntry;
 	}
@@ -490,6 +493,78 @@ public class DLFileEntryWrapper implements DLFileEntry {
 		_dlFileEntry.setReadCount(readCount);
 	}
 
+	/**
+	* Returns the small image ID of this document library file entry.
+	*
+	* @return the small image ID of this document library file entry
+	*/
+	public long getSmallImageId() {
+		return _dlFileEntry.getSmallImageId();
+	}
+
+	/**
+	* Sets the small image ID of this document library file entry.
+	*
+	* @param smallImageId the small image ID of this document library file entry
+	*/
+	public void setSmallImageId(long smallImageId) {
+		_dlFileEntry.setSmallImageId(smallImageId);
+	}
+
+	/**
+	* Returns the large image ID of this document library file entry.
+	*
+	* @return the large image ID of this document library file entry
+	*/
+	public long getLargeImageId() {
+		return _dlFileEntry.getLargeImageId();
+	}
+
+	/**
+	* Sets the large image ID of this document library file entry.
+	*
+	* @param largeImageId the large image ID of this document library file entry
+	*/
+	public void setLargeImageId(long largeImageId) {
+		_dlFileEntry.setLargeImageId(largeImageId);
+	}
+
+	/**
+	* Returns the custom1 image ID of this document library file entry.
+	*
+	* @return the custom1 image ID of this document library file entry
+	*/
+	public long getCustom1ImageId() {
+		return _dlFileEntry.getCustom1ImageId();
+	}
+
+	/**
+	* Sets the custom1 image ID of this document library file entry.
+	*
+	* @param custom1ImageId the custom1 image ID of this document library file entry
+	*/
+	public void setCustom1ImageId(long custom1ImageId) {
+		_dlFileEntry.setCustom1ImageId(custom1ImageId);
+	}
+
+	/**
+	* Returns the custom2 image ID of this document library file entry.
+	*
+	* @return the custom2 image ID of this document library file entry
+	*/
+	public long getCustom2ImageId() {
+		return _dlFileEntry.getCustom2ImageId();
+	}
+
+	/**
+	* Sets the custom2 image ID of this document library file entry.
+	*
+	* @param custom2ImageId the custom2 image ID of this document library file entry
+	*/
+	public void setCustom2ImageId(long custom2ImageId) {
+		_dlFileEntry.setCustom2ImageId(custom2ImageId);
+	}
+
 	public boolean isNew() {
 		return _dlFileEntry.isNew();
 	}
@@ -508,10 +583,6 @@ public class DLFileEntryWrapper implements DLFileEntry {
 
 	public boolean isEscapedModel() {
 		return _dlFileEntry.isEscapedModel();
-	}
-
-	public void setEscapedModel(boolean escapedModel) {
-		_dlFileEntry.setEscapedModel(escapedModel);
 	}
 
 	public java.io.Serializable getPrimaryKeyObj() {
@@ -588,6 +659,13 @@ public class DLFileEntryWrapper implements DLFileEntry {
 		return _dlFileEntry.getExtraSettingsProperties();
 	}
 
+	public java.util.Map<java.lang.String, com.liferay.portlet.dynamicdatamapping.storage.Fields> getFieldsMap(
+		long fileVersionId)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return _dlFileEntry.getFieldsMap(fileVersionId);
+	}
+
 	public com.liferay.portlet.documentlibrary.model.DLFileVersion getFileVersion()
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
@@ -614,10 +692,11 @@ public class DLFileEntryWrapper implements DLFileEntry {
 		return _dlFileEntry.getIcon();
 	}
 
-	public com.liferay.portlet.documentlibrary.model.DLFileVersion getLatestFileVersion()
+	public com.liferay.portlet.documentlibrary.model.DLFileVersion getLatestFileVersion(
+		boolean trusted)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
-		return _dlFileEntry.getLatestFileVersion();
+		return _dlFileEntry.getLatestFileVersion(trusted);
 	}
 
 	public com.liferay.portal.model.Lock getLock() {
@@ -641,7 +720,19 @@ public class DLFileEntryWrapper implements DLFileEntry {
 		_dlFileEntry.setExtraSettingsProperties(extraSettingsProperties);
 	}
 
+	public void setFileVersion(
+		com.liferay.portlet.documentlibrary.model.DLFileVersion dlFileVersion) {
+		_dlFileEntry.setFileVersion(dlFileVersion);
+	}
+
+	/**
+	 * @deprecated Renamed to {@link #getWrappedModel}
+	 */
 	public DLFileEntry getWrappedDLFileEntry() {
+		return _dlFileEntry;
+	}
+
+	public DLFileEntry getWrappedModel() {
 		return _dlFileEntry;
 	}
 

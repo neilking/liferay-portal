@@ -18,8 +18,8 @@ import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
+import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.IOException;
@@ -78,7 +78,7 @@ public class DB2DB extends BaseDB {
 
 			String sql = buildSQL(template);
 
-			String[] alterSqls = StringUtil.split(sql, StringPool.SEMICOLON);
+			String[] alterSqls = StringUtil.split(sql, CharPool.SEMICOLON);
 
 			for (String alterSql : alterSqls) {
 				if (!alterSql.startsWith("-- ")) {
@@ -116,7 +116,7 @@ public class DB2DB extends BaseDB {
 		sb.append(";\n");
 		sb.append("create database ");
 		sb.append(databaseName);
-		sb.append(";\n");
+		sb.append(" pagesize 8192;\n");
 		sb.append("connect to ");
 		sb.append(databaseName);
 		sb.append(";\n");
@@ -170,7 +170,7 @@ public class DB2DB extends BaseDB {
 				line = "-- " + line;
 			}
 			else if (line.indexOf(DROP_INDEX) != -1) {
-				String[] tokens = StringUtil.split(line, " ");
+				String[] tokens = StringUtil.split(line, ' ');
 
 				line = StringUtil.replace(
 					"drop index @index@;", "@index@", tokens[2]);

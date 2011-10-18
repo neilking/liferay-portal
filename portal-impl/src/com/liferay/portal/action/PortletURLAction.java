@@ -17,13 +17,13 @@ package com.liferay.portal.action;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletModeFactory;
 import com.liferay.portal.kernel.portlet.WindowStateFactory;
+import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.WebKeys;
 import com.liferay.portlet.PortletURLImpl;
-import com.liferay.util.servlet.ServletResponseUtil;
 
 import java.util.Map;
 
@@ -85,7 +85,8 @@ public class PortletURLAction extends Action {
 		String resourceId = ParamUtil.getString(request, "resourceId");
 		String returnToFullPageURL = ParamUtil.getString(
 			request, "returnToFullPageURL");
-		boolean secure = ParamUtil.getBoolean(request, "secure");
+		boolean secure = ParamUtil.getBoolean(
+			request, "secure", request.isSecure());
 		String windowState = ParamUtil.getString(request, "windowState");
 
 		PortletURLImpl portletURL = new PortletURLImpl(

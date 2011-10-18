@@ -241,6 +241,19 @@ public class PortalUtil {
 		return getPortal().getBasicAuthUserId(request, companyId);
 	}
 
+	public static String getCanonicalAlternateURL(
+			HttpServletRequest request, String url, Locale locale)
+		throws PortalException, SystemException{
+
+		return getPortal().getCanonicalAlternateURL(request, url, locale);
+	}
+
+	public static String getCanonicalURL(HttpServletRequest request)
+		throws PortalException, SystemException{
+
+		return getPortal().getCanonicalURL(request);
+	}
+
 	/**
 	 * @deprecated {@link #getCDNHost(boolean)}
 	 */
@@ -252,12 +265,12 @@ public class PortalUtil {
 		return getPortal().getCDNHost(secure);
 	}
 
-	public static String getCDNHostHttp() {
-		return getPortal().getCDNHostHttp();
+	public static String getCDNHostHttp(long companyId) {
+		return getPortal().getCDNHostHttp(companyId);
 	}
 
-	public static String getCDNHostHttps() {
-		return getPortal().getCDNHostHttps();
+	public static String getCDNHostHttps(long companyId) {
+		return getPortal().getCDNHostHttps(companyId);
 	}
 
 	public static String getClassName(long classNameId) {
@@ -398,6 +411,22 @@ public class PortalUtil {
 
 	public static long getDefaultCompanyId() {
 		return getPortal().getDefaultCompanyId();
+	}
+
+	public static String getEmailFromAddress(
+			PortletPreferences preferences, long companyId, String defaultValue)
+		throws SystemException {
+
+		return getPortal().getEmailFromAddress(
+			preferences, companyId, defaultValue);
+	}
+
+	public static String getEmailFromName(
+			PortletPreferences preferences, long companyId, String defaultValue)
+		throws SystemException {
+
+		return getPortal().getEmailFromName(
+			preferences, companyId, defaultValue);
 	}
 
 	public static Map<String, Serializable> getExpandoBridgeAttributes(
@@ -808,6 +837,12 @@ public class PortalUtil {
 		return getPortal().getPortalURL(serverName, serverPort, secure);
 	}
 
+	public static String getPortalURL(Layout layout, ThemeDisplay themeDisplay)
+		throws PortalException, SystemException {
+
+		return getPortal().getPortalURL(layout, themeDisplay);
+	}
+
 	public static String getPortalURL(ThemeDisplay themeDisplay)
 		throws PortalException, SystemException {
 
@@ -820,6 +855,12 @@ public class PortalUtil {
 
 	public static Set<String> getPortletAddDefaultResourceCheckWhitelist() {
 		return getPortal().getPortletAddDefaultResourceCheckWhitelist();
+	}
+
+	public static Set<String>
+		getPortletAddDefaultResourceCheckWhitelistActions() {
+
+		return getPortal().getPortletAddDefaultResourceCheckWhitelistActions();
 	}
 
 	/**
@@ -1379,6 +1420,21 @@ public class PortalUtil {
 			columnPos, columnCount, path, writeOutput);
 	}
 
+	public static void resetCDNHosts() {
+		getPortal().resetCDNHosts();
+	}
+
+	public static Set<String> resetPortletAddDefaultResourceCheckWhitelist() {
+		return getPortal().resetPortletAddDefaultResourceCheckWhitelist();
+	}
+
+	public static Set<String>
+		resetPortletAddDefaultResourceCheckWhitelistActions() {
+
+		return getPortal().
+			resetPortletAddDefaultResourceCheckWhitelistActions();
+	}
+
 	/**
 	 * @deprecated {@link DB#runSQL(String)}
 	 */
@@ -1469,6 +1525,10 @@ public class PortalUtil {
 		getPortal().storePreferences(portletPreferences);
 	}
 
+	public static String[] stripURLAnchor(String url, String separator) {
+		return getPortal().stripURLAnchor(url, separator);
+	}
+
 	public static String transformCustomSQL(String sql) {
 		return getPortal().transformCustomSQL(sql);
 	}
@@ -1479,6 +1539,12 @@ public class PortalUtil {
 
 		return getPortal().updatePortletMode(
 			portletId, user, layout, portletMode, request);
+	}
+
+	public static String updateRedirect(
+		String redirect, String oldPath, String newPath) {
+
+		return getPortal().updateRedirect(redirect, oldPath, newPath);
 	}
 
 	public static WindowState updateWindowState(

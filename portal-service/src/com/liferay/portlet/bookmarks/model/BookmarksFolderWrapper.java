@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.bookmarks.model;
 
+import com.liferay.portal.model.ModelWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link BookmarksFolder}.
@@ -23,7 +25,8 @@ package com.liferay.portlet.bookmarks.model;
  * @see       BookmarksFolder
  * @generated
  */
-public class BookmarksFolderWrapper implements BookmarksFolder {
+public class BookmarksFolderWrapper implements BookmarksFolder,
+	ModelWrapper<BookmarksFolder> {
 	public BookmarksFolderWrapper(BookmarksFolder bookmarksFolder) {
 		_bookmarksFolder = bookmarksFolder;
 	}
@@ -219,6 +222,24 @@ public class BookmarksFolderWrapper implements BookmarksFolder {
 	}
 
 	/**
+	* Returns the resource block ID of this bookmarks folder.
+	*
+	* @return the resource block ID of this bookmarks folder
+	*/
+	public long getResourceBlockId() {
+		return _bookmarksFolder.getResourceBlockId();
+	}
+
+	/**
+	* Sets the resource block ID of this bookmarks folder.
+	*
+	* @param resourceBlockId the resource block ID of this bookmarks folder
+	*/
+	public void setResourceBlockId(long resourceBlockId) {
+		_bookmarksFolder.setResourceBlockId(resourceBlockId);
+	}
+
+	/**
 	* Returns the parent folder ID of this bookmarks folder.
 	*
 	* @return the parent folder ID of this bookmarks folder
@@ -292,10 +313,6 @@ public class BookmarksFolderWrapper implements BookmarksFolder {
 		return _bookmarksFolder.isEscapedModel();
 	}
 
-	public void setEscapedModel(boolean escapedModel) {
-		_bookmarksFolder.setEscapedModel(escapedModel);
-	}
-
 	public java.io.Serializable getPrimaryKeyObj() {
 		return _bookmarksFolder.getPrimaryKeyObj();
 	}
@@ -366,7 +383,14 @@ public class BookmarksFolderWrapper implements BookmarksFolder {
 		return _bookmarksFolder.isRoot();
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedModel}
+	 */
 	public BookmarksFolder getWrappedBookmarksFolder() {
+		return _bookmarksFolder;
+	}
+
+	public BookmarksFolder getWrappedModel() {
 		return _bookmarksFolder;
 	}
 

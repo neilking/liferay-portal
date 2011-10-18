@@ -33,26 +33,15 @@ UnicodeProperties liveGroupTypeSettings = (UnicodeProperties)request.getAttribut
 			<liferay-ui:message key="<%= se.getMessage() %>" />
 		</liferay-ui:error>
 
-		<div class="portlet-msg-info">
-			<liferay-ui:message key="staging-type-help-1" />
-
-			<ul>
-				<li>
-					<liferay-ui:message key="staging-type-help-2" />
-				</li>
-				<li>
-					<liferay-ui:message key="staging-type-help-3" />
-				</li>
-			</ul>
+		<div class="staging-types" id="<portlet:namespace />stagingTypes">
+			<aui:field-wrapper label="staging-type">
+				<aui:input checked="<%= !liveGroup.isStaged() %>" id="none" label="none" name="stagingType" type="radio" value="<%= StagingConstants.TYPE_NOT_STAGED %>" />
+				<aui:input checked="<%= liveGroup.isStaged() && !liveGroup.isStagedRemotely() %>" helpMessage="staging-type-local" id="local" label="local-live" name="stagingType" type="radio" value="<%= StagingConstants.TYPE_LOCAL_STAGING %>" />
+				<aui:input checked="<%= liveGroup.isStaged() && liveGroup.isStagedRemotely() %>" helpMessage="staging-type-remote" id="remote" label="remote-live" name="stagingType" type="radio" value="<%= StagingConstants.TYPE_REMOTE_STAGING %>" />
+			</aui:field-wrapper>
 		</div>
 
-		<aui:select label="staging-type" name="stagingType">
-			<aui:option selected="<%= !liveGroup.isStaged() %>" value="<%= StagingConstants.TYPE_NOT_STAGED %>"><liferay-ui:message key="none" /></aui:option>
-			<aui:option selected="<%= liveGroup.isStaged() && !liveGroup.isStagedRemotely() %>" value="<%= StagingConstants.TYPE_LOCAL_STAGING %>"><liferay-ui:message key="local-live" /></aui:option>
-			<aui:option selected="<%= liveGroup.isStaged() && liveGroup.isStagedRemotely() %>" value="<%= StagingConstants.TYPE_REMOTE_STAGING %>"><liferay-ui:message key="remote-live" /></aui:option>
-		</aui:select>
-
-		<div class='<%= (liveGroup.isStaged() && liveGroup.isStagedRemotely() ? StringPool.BLANK : "aui-helper-hidden") %>' id="<portlet:namespace />remoteStagingOptions">
+		<div class="<%= (liveGroup.isStaged() && liveGroup.isStagedRemotely() ? StringPool.BLANK : "aui-helper-hidden") %> staging-section" id="<portlet:namespace />remoteStagingOptions">
 			<br />
 
 			<liferay-ui:error exception="<%= RemoteExportException.class %>">
@@ -104,22 +93,18 @@ UnicodeProperties liveGroupTypeSettings = (UnicodeProperties)request.getAttribut
 			</aui:fieldset>
 		</div>
 
-		<div class='<%= (liveGroup.isStaged() ? StringPool.BLANK : "aui-helper-hidden") %>' id="<portlet:namespace />stagedPortlets">
+		<div class="<%= (liveGroup.isStaged() ? StringPool.BLANK : "aui-helper-hidden") %> staging-section" id="<portlet:namespace />stagedPortlets">
 			<br />
 
-			<aui:fieldset label="versioning-and-branching">
-				<aui:input inlineLabel="right" label="enabled-on-public-pages" name="branchingPublic" type="checkbox" value='<%= GetterUtil.getBoolean(liveGroupTypeSettings.getProperty("branchingPublic")) %>' />
+			<aui:fieldset helpMessage="page-versioning-help" label="page-versioning">
+				<aui:input label="enabled-on-public-pages" name="branchingPublic" type="checkbox" value='<%= GetterUtil.getBoolean(liveGroupTypeSettings.getProperty("branchingPublic")) %>' />
 
-				<aui:input inlineLabel="right" label="enabled-on-private-pages" name="branchingPrivate" type="checkbox" value='<%= GetterUtil.getBoolean(liveGroupTypeSettings.getProperty("branchingPrivate")) %>' />
+				<aui:input label="enabled-on-private-pages" name="branchingPrivate" type="checkbox" value='<%= GetterUtil.getBoolean(liveGroupTypeSettings.getProperty("branchingPrivate")) %>' />
 			</aui:fieldset>
 
-			<aui:fieldset label="staged-portlets">
+			<aui:fieldset helpMessage="staged-portlets-help" label="staged-portlets">
 				<div class="portlet-msg-alert">
 					<liferay-ui:message key="staged-portlets-alert" />
-				</div>
-
-				<div class="portlet-msg-info">
-					<liferay-ui:message key="staged-portlets-help" />
 				</div>
 
 				<div class="portlet-msg-info">
@@ -171,99 +156,22 @@ UnicodeProperties liveGroupTypeSettings = (UnicodeProperties)request.getAttribut
 			</aui:fieldset>
 		</div>
 
-		<aui:script>
-			Liferay.provide(
-				Liferay.Util,
-				'toggleSelectBoxReverse',
-				function(selectBoxId, value, toggleBoxId) {
-					var A = AUI();
+		<aui:script use="aui-base">
+			var remoteStagingOptions = A.one('#<portlet:namespace />remoteStagingOptions');
+			var stagedPortlets = A.one('#<portlet:namespace />stagedPortlets');
 
-					var selectBox = A.one('#' + selectBoxId);
-					var toggleBox = A.one('#' + toggleBoxId);
+			var stagingTypes = A.all('#<portlet:namespace />stagingTypes input');
 
-					if (selectBox && toggleBox) {
-						var toggle = function() {
-							var action = 'hide';
+			stagingTypes.on(
+				'change',
+				function(event) {
+					var value = event.currentTarget.val();
 
-							if (selectBox.val() != value) {
-								action = 'show';
-							}
+					stagedPortlets.toggle(value != '<%= StagingConstants.TYPE_NOT_STAGED %>');
 
-							toggleBox[action]();
-						};
-
-						toggle();
-
-						selectBox.on('change', toggle);
-					}
-				},
-				['aui-base']
+					remoteStagingOptions.toggle(value == '<%= StagingConstants.TYPE_REMOTE_STAGING %>');
+				}
 			);
-
-			Liferay.provide(
-				Liferay.Util,
-				'toggleSelectBoxCustom',
-				function(selectBoxId, toggleBoxId) {
-					var A = AUI();
-
-					var selectBox = A.one('#' + selectBoxId);
-					var toggleBox0 = A.one('#' + toggleBoxId + '0');
-					var toggleBox1 = A.one('#' + toggleBoxId + '1');
-					var toggleBox2 = A.one('#' + toggleBoxId + '2');
-					var toggleBox3 = A.one('#' + toggleBoxId + '3');
-					var toggleBox4 = A.one('#' + toggleBoxId + '4');
-
-					if (selectBox) {
-						var toggle = function() {
-							if (selectBox.val() == '1') {
-								toggleBox0['hide']();
-								toggleBox1['hide']();
-								toggleBox2['hide']();
-								toggleBox3['hide']();
-								toggleBox4['hide']();
-							}
-							else if (selectBox.val() == '2') {
-								toggleBox0['show']();
-								toggleBox1['show']();
-								toggleBox2['hide']();
-								toggleBox3['hide']();
-								toggleBox4['hide']();
-							}
-							else if (selectBox.val() == '3') {
-								toggleBox0['show']();
-								toggleBox1['show']();
-								toggleBox2['show']();
-								toggleBox3['hide']();
-								toggleBox4['hide']();
-							}
-							else if (selectBox.val() == '4') {
-								toggleBox0['show']();
-								toggleBox1['show']();
-								toggleBox2['show']();
-								toggleBox3['show']();
-								toggleBox4['hide']();
-							}
-							else if (selectBox.val() == '5') {
-								toggleBox0['show']();
-								toggleBox1['show']();
-								toggleBox2['show']();
-								toggleBox3['show']();
-								toggleBox4['show']();
-							}
-						};
-
-						toggle();
-
-						selectBox.on('change', toggle);
-					}
-				},
-				['aui-base']
-			);
-
-			Liferay.Util.toggleSelectBoxReverse('<portlet:namespace />stagingType','<%= StagingConstants.TYPE_NOT_STAGED %>','<portlet:namespace />stagedPortlets');
-			Liferay.Util.toggleSelectBoxReverse('<portlet:namespace />stagingType','<%= StagingConstants.TYPE_NOT_STAGED %>','<portlet:namespace />stagingOptions');
-			Liferay.Util.toggleSelectBoxReverse('<portlet:namespace />stagingType','<%= StagingConstants.TYPE_NOT_STAGED %>','<portlet:namespace />advancedOptions');
-			Liferay.Util.toggleSelectBox('<portlet:namespace />stagingType','<%= StagingConstants.TYPE_REMOTE_STAGING %>','<portlet:namespace />remoteStagingOptions');
 		</aui:script>
 	</c:when>
 	<c:otherwise>

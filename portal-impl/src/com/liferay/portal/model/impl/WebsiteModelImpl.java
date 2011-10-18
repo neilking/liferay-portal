@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.CacheModel;
@@ -32,8 +33,6 @@ import com.liferay.portlet.expando.model.ExpandoBridge;
 import com.liferay.portlet.expando.util.ExpandoBridgeFactoryUtil;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Proxy;
 
 import java.sql.Types;
 
@@ -89,6 +88,14 @@ public class WebsiteModelImpl extends BaseModelImpl<Website>
 	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
 				"value.object.finder.cache.enabled.com.liferay.portal.model.Website"),
 			true);
+	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.column.bitmask.enabled.com.liferay.portal.model.Website"),
+			true);
+	public static long CLASSNAMEID_COLUMN_BITMASK = 1L;
+	public static long CLASSPK_COLUMN_BITMASK = 2L;
+	public static long COMPANYID_COLUMN_BITMASK = 4L;
+	public static long PRIMARY_COLUMN_BITMASK = 8L;
+	public static long USERID_COLUMN_BITMASK = 16L;
 
 	/**
 	 * Converts the soap model instance into a normal model instance.
@@ -130,14 +137,6 @@ public class WebsiteModelImpl extends BaseModelImpl<Website>
 		return models;
 	}
 
-	public Class<?> getModelClass() {
-		return Website.class;
-	}
-
-	public String getModelClassName() {
-		return Website.class.getName();
-	}
-
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(com.liferay.portal.util.PropsUtil.get(
 				"lock.expiration.time.com.liferay.portal.model.Website"));
 
@@ -160,6 +159,14 @@ public class WebsiteModelImpl extends BaseModelImpl<Website>
 		setPrimaryKey(((Long)primaryKeyObj).longValue());
 	}
 
+	public Class<?> getModelClass() {
+		return Website.class;
+	}
+
+	public String getModelClassName() {
+		return Website.class.getName();
+	}
+
 	@JSON
 	public long getWebsiteId() {
 		return _websiteId;
@@ -175,7 +182,19 @@ public class WebsiteModelImpl extends BaseModelImpl<Website>
 	}
 
 	public void setCompanyId(long companyId) {
+		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
+
+		if (!_setOriginalCompanyId) {
+			_setOriginalCompanyId = true;
+
+			_originalCompanyId = _companyId;
+		}
+
 		_companyId = companyId;
+	}
+
+	public long getOriginalCompanyId() {
+		return _originalCompanyId;
 	}
 
 	@JSON
@@ -184,6 +203,14 @@ public class WebsiteModelImpl extends BaseModelImpl<Website>
 	}
 
 	public void setUserId(long userId) {
+		_columnBitmask |= USERID_COLUMN_BITMASK;
+
+		if (!_setOriginalUserId) {
+			_setOriginalUserId = true;
+
+			_originalUserId = _userId;
+		}
+
 		_userId = userId;
 	}
 
@@ -193,6 +220,10 @@ public class WebsiteModelImpl extends BaseModelImpl<Website>
 
 	public void setUserUuid(String userUuid) {
 		_userUuid = userUuid;
+	}
+
+	public long getOriginalUserId() {
+		return _originalUserId;
 	}
 
 	@JSON
@@ -241,7 +272,19 @@ public class WebsiteModelImpl extends BaseModelImpl<Website>
 	}
 
 	public void setClassNameId(long classNameId) {
+		_columnBitmask |= CLASSNAMEID_COLUMN_BITMASK;
+
+		if (!_setOriginalClassNameId) {
+			_setOriginalClassNameId = true;
+
+			_originalClassNameId = _classNameId;
+		}
+
 		_classNameId = classNameId;
+	}
+
+	public long getOriginalClassNameId() {
+		return _originalClassNameId;
 	}
 
 	@JSON
@@ -250,7 +293,19 @@ public class WebsiteModelImpl extends BaseModelImpl<Website>
 	}
 
 	public void setClassPK(long classPK) {
+		_columnBitmask |= CLASSPK_COLUMN_BITMASK;
+
+		if (!_setOriginalClassPK) {
+			_setOriginalClassPK = true;
+
+			_originalClassPK = _classPK;
+		}
+
 		_classPK = classPK;
+	}
+
+	public long getOriginalClassPK() {
+		return _originalClassPK;
 	}
 
 	@JSON
@@ -286,23 +341,34 @@ public class WebsiteModelImpl extends BaseModelImpl<Website>
 	}
 
 	public void setPrimary(boolean primary) {
+		_columnBitmask |= PRIMARY_COLUMN_BITMASK;
+
+		if (!_setOriginalPrimary) {
+			_setOriginalPrimary = true;
+
+			_originalPrimary = _primary;
+		}
+
 		_primary = primary;
+	}
+
+	public boolean getOriginalPrimary() {
+		return _originalPrimary;
+	}
+
+	public long getColumnBitmask() {
+		return _columnBitmask;
 	}
 
 	@Override
 	public Website toEscapedModel() {
-		if (isEscapedModel()) {
-			return (Website)this;
+		if (_escapedModelProxy == null) {
+			_escapedModelProxy = (Website)ProxyUtil.newProxyInstance(_classLoader,
+					_escapedModelProxyInterfaces,
+					new AutoEscapeBeanHandler(this));
 		}
-		else {
-			if (_escapedModelProxy == null) {
-				_escapedModelProxy = (Website)Proxy.newProxyInstance(_classLoader,
-						_escapedModelProxyInterfaces,
-						new AutoEscapeBeanHandler(this));
-			}
 
-			return _escapedModelProxy;
-		}
+		return _escapedModelProxy;
 	}
 
 	@Override
@@ -385,6 +451,29 @@ public class WebsiteModelImpl extends BaseModelImpl<Website>
 
 	@Override
 	public void resetOriginalValues() {
+		WebsiteModelImpl websiteModelImpl = this;
+
+		websiteModelImpl._originalCompanyId = websiteModelImpl._companyId;
+
+		websiteModelImpl._setOriginalCompanyId = false;
+
+		websiteModelImpl._originalUserId = websiteModelImpl._userId;
+
+		websiteModelImpl._setOriginalUserId = false;
+
+		websiteModelImpl._originalClassNameId = websiteModelImpl._classNameId;
+
+		websiteModelImpl._setOriginalClassNameId = false;
+
+		websiteModelImpl._originalClassPK = websiteModelImpl._classPK;
+
+		websiteModelImpl._setOriginalClassPK = false;
+
+		websiteModelImpl._originalPrimary = websiteModelImpl._primary;
+
+		websiteModelImpl._setOriginalPrimary = false;
+
+		websiteModelImpl._columnBitmask = 0;
 	}
 
 	@Override
@@ -536,16 +625,27 @@ public class WebsiteModelImpl extends BaseModelImpl<Website>
 		};
 	private long _websiteId;
 	private long _companyId;
+	private long _originalCompanyId;
+	private boolean _setOriginalCompanyId;
 	private long _userId;
 	private String _userUuid;
+	private long _originalUserId;
+	private boolean _setOriginalUserId;
 	private String _userName;
 	private Date _createDate;
 	private Date _modifiedDate;
 	private long _classNameId;
+	private long _originalClassNameId;
+	private boolean _setOriginalClassNameId;
 	private long _classPK;
+	private long _originalClassPK;
+	private boolean _setOriginalClassPK;
 	private String _url;
 	private int _typeId;
 	private boolean _primary;
+	private boolean _originalPrimary;
+	private boolean _setOriginalPrimary;
 	private transient ExpandoBridge _expandoBridge;
+	private long _columnBitmask;
 	private Website _escapedModelProxy;
 }

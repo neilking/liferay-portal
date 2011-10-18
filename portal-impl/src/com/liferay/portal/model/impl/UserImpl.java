@@ -186,7 +186,7 @@ public class UserImpl extends UserBaseImpl {
 
 			sb.append(portalURL);
 			sb.append(mainPath);
-			sb.append("/my_places/view?groupId=");
+			sb.append("/my_sites/view?groupId=");
 			sb.append(group.getGroupId());
 			sb.append("&privateLayout=0");
 
@@ -258,22 +258,22 @@ public class UserImpl extends UserBaseImpl {
 		return getContact().getMale();
 	}
 
-	public List<Group> getMyPlaces() throws PortalException, SystemException {
-		return getMyPlaces(null, QueryUtil.ALL_POS);
+	public List<Group> getMySites() throws PortalException, SystemException {
+		return getMySites(null, QueryUtil.ALL_POS);
 	}
 
-	public List<Group> getMyPlaces(int max)
+	public List<Group> getMySites(int max)
 		throws PortalException, SystemException {
 
-		return getMyPlaces(null, max);
+		return getMySites(null, max);
 	}
 
-	public List<Group> getMyPlaces(String[] classNames, int max)
+	public List<Group> getMySites(String[] classNames, int max)
 		throws PortalException, SystemException {
 
 		ThreadLocalCache<List<Group>> threadLocalCache =
 			ThreadLocalCacheManager.getThreadLocalCache(
-				Lifecycle.REQUEST, _GET_MY_PLACES_CACHE_NAME);
+				Lifecycle.REQUEST, UserImpl.class.getName());
 
 		String key = StringUtil.toHexString(max);
 
@@ -323,8 +323,13 @@ public class UserImpl extends UserBaseImpl {
 	public PasswordPolicy getPasswordPolicy()
 		throws PortalException, SystemException {
 
-		return PasswordPolicyLocalServiceUtil.getPasswordPolicyByUserId(
-			getUserId());
+		if (_passwordPolicy == null) {
+			_passwordPolicy =
+				PasswordPolicyLocalServiceUtil.getPasswordPolicyByUserId(
+					getUserId());
+		}
+
+		return _passwordPolicy;
 	}
 
 	public String getPasswordUnencrypted() {
@@ -541,12 +546,12 @@ public class UserImpl extends UserBaseImpl {
 		return company.hasCompanyMx(emailAddress);
 	}
 
-	public boolean hasMyPlaces() throws PortalException, SystemException {
+	public boolean hasMySites() throws PortalException, SystemException {
 		if (isDefaultUser()) {
 			return false;
 		}
 
-		List<Group> groups = getMyPlaces(PropsValues.MY_PLACES_MAX_ELEMENTS);
+		List<Group> groups = getMySites(PropsValues.MY_SITES_MAX_ELEMENTS);
 
 		if (groups.size() > 0) {
 			return true;
@@ -685,10 +690,9 @@ public class UserImpl extends UserBaseImpl {
 			getCompanyId(), Contact.class.getName(), getContactId());
 	}
 
-	private static final String _GET_MY_PLACES_CACHE_NAME = "GET_MY_PLACES";
-
 	private Locale _locale;
 	private boolean _passwordModified;
+	private PasswordPolicy _passwordPolicy;
 	private String _passwordUnencrypted;
 	private Map<Long, AtomicReference<Double>> _socialContributionEquities =
 		new HashMap<Long, AtomicReference<Double>>();

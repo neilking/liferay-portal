@@ -24,7 +24,8 @@ package com.liferay.portal.service;
  * @generated
  */
 public class LayoutSetPrototypeLocalServiceWrapper
-	implements LayoutSetPrototypeLocalService {
+	implements LayoutSetPrototypeLocalService,
+		ServiceWrapper<LayoutSetPrototypeLocalService> {
 	public LayoutSetPrototypeLocalServiceWrapper(
 		LayoutSetPrototypeLocalService layoutSetPrototypeLocalService) {
 		_layoutSetPrototypeLocalService = layoutSetPrototypeLocalService;
@@ -255,11 +256,13 @@ public class LayoutSetPrototypeLocalServiceWrapper
 		long userId, long companyId,
 		java.util.Map<java.util.Locale, java.lang.String> nameMap,
 		java.lang.String description, boolean active,
+		boolean allowModifications, boolean allowLayoutAddition,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		return _layoutSetPrototypeLocalService.addLayoutSetPrototype(userId,
-			companyId, nameMap, description, active, serviceContext);
+			companyId, nameMap, description, active, allowModifications,
+			allowLayoutAddition, serviceContext);
 	}
 
 	public com.liferay.portal.model.LayoutSetPrototype getLayoutSetPrototypeByUuid(
@@ -286,11 +289,13 @@ public class LayoutSetPrototypeLocalServiceWrapper
 		long layoutSetPrototypeId,
 		java.util.Map<java.util.Locale, java.lang.String> nameMap,
 		java.lang.String description, boolean active,
+		boolean allowModifications, boolean allowLayoutAddition,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		return _layoutSetPrototypeLocalService.updateLayoutSetPrototype(layoutSetPrototypeId,
-			nameMap, description, active, serviceContext);
+			nameMap, description, active, allowModifications,
+			allowLayoutAddition, serviceContext);
 	}
 
 	public com.liferay.portal.model.LayoutSetPrototype updateLayoutSetPrototype(
@@ -301,11 +306,26 @@ public class LayoutSetPrototypeLocalServiceWrapper
 			settings);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public LayoutSetPrototypeLocalService getWrappedLayoutSetPrototypeLocalService() {
 		return _layoutSetPrototypeLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedLayoutSetPrototypeLocalService(
+		LayoutSetPrototypeLocalService layoutSetPrototypeLocalService) {
+		_layoutSetPrototypeLocalService = layoutSetPrototypeLocalService;
+	}
+
+	public LayoutSetPrototypeLocalService getWrappedService() {
+		return _layoutSetPrototypeLocalService;
+	}
+
+	public void setWrappedService(
 		LayoutSetPrototypeLocalService layoutSetPrototypeLocalService) {
 		_layoutSetPrototypeLocalService = layoutSetPrototypeLocalService;
 	}

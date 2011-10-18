@@ -17,6 +17,7 @@ package com.liferay.portlet.asset.model.impl;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.CacheModel;
@@ -30,8 +31,6 @@ import com.liferay.portlet.expando.model.ExpandoBridge;
 import com.liferay.portlet.expando.util.ExpandoBridgeFactoryUtil;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Proxy;
 
 import java.sql.Types;
 
@@ -82,15 +81,12 @@ public class AssetLinkModelImpl extends BaseModelImpl<AssetLink>
 	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
 				"value.object.finder.cache.enabled.com.liferay.portlet.asset.model.AssetLink"),
 			true);
-
-	public Class<?> getModelClass() {
-		return AssetLink.class;
-	}
-
-	public String getModelClassName() {
-		return AssetLink.class.getName();
-	}
-
+	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.column.bitmask.enabled.com.liferay.portlet.asset.model.AssetLink"),
+			true);
+	public static long ENTRYID1_COLUMN_BITMASK = 1L;
+	public static long ENTRYID2_COLUMN_BITMASK = 2L;
+	public static long TYPE_COLUMN_BITMASK = 4L;
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(com.liferay.portal.util.PropsUtil.get(
 				"lock.expiration.time.com.liferay.portlet.asset.model.AssetLink"));
 
@@ -111,6 +107,14 @@ public class AssetLinkModelImpl extends BaseModelImpl<AssetLink>
 
 	public void setPrimaryKeyObj(Serializable primaryKeyObj) {
 		setPrimaryKey(((Long)primaryKeyObj).longValue());
+	}
+
+	public Class<?> getModelClass() {
+		return AssetLink.class;
+	}
+
+	public String getModelClassName() {
+		return AssetLink.class.getName();
 	}
 
 	public long getLinkId() {
@@ -171,6 +175,8 @@ public class AssetLinkModelImpl extends BaseModelImpl<AssetLink>
 	}
 
 	public void setEntryId1(long entryId1) {
+		_columnBitmask |= ENTRYID1_COLUMN_BITMASK;
+
 		if (!_setOriginalEntryId1) {
 			_setOriginalEntryId1 = true;
 
@@ -189,6 +195,8 @@ public class AssetLinkModelImpl extends BaseModelImpl<AssetLink>
 	}
 
 	public void setEntryId2(long entryId2) {
+		_columnBitmask |= ENTRYID2_COLUMN_BITMASK;
+
 		if (!_setOriginalEntryId2) {
 			_setOriginalEntryId2 = true;
 
@@ -207,6 +215,8 @@ public class AssetLinkModelImpl extends BaseModelImpl<AssetLink>
 	}
 
 	public void setType(int type) {
+		_columnBitmask |= TYPE_COLUMN_BITMASK;
+
 		if (!_setOriginalType) {
 			_setOriginalType = true;
 
@@ -228,20 +238,19 @@ public class AssetLinkModelImpl extends BaseModelImpl<AssetLink>
 		_weight = weight;
 	}
 
+	public long getColumnBitmask() {
+		return _columnBitmask;
+	}
+
 	@Override
 	public AssetLink toEscapedModel() {
-		if (isEscapedModel()) {
-			return (AssetLink)this;
+		if (_escapedModelProxy == null) {
+			_escapedModelProxy = (AssetLink)ProxyUtil.newProxyInstance(_classLoader,
+					_escapedModelProxyInterfaces,
+					new AutoEscapeBeanHandler(this));
 		}
-		else {
-			if (_escapedModelProxy == null) {
-				_escapedModelProxy = (AssetLink)Proxy.newProxyInstance(_classLoader,
-						_escapedModelProxyInterfaces,
-						new AutoEscapeBeanHandler(this));
-			}
 
-			return _escapedModelProxy;
-		}
+		return _escapedModelProxy;
 	}
 
 	@Override
@@ -343,6 +352,8 @@ public class AssetLinkModelImpl extends BaseModelImpl<AssetLink>
 		assetLinkModelImpl._originalType = assetLinkModelImpl._type;
 
 		assetLinkModelImpl._setOriginalType = false;
+
+		assetLinkModelImpl._columnBitmask = 0;
 	}
 
 	@Override
@@ -480,5 +491,6 @@ public class AssetLinkModelImpl extends BaseModelImpl<AssetLink>
 	private boolean _setOriginalType;
 	private int _weight;
 	private transient ExpandoBridge _expandoBridge;
+	private long _columnBitmask;
 	private AssetLink _escapedModelProxy;
 }

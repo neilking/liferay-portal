@@ -25,7 +25,7 @@ public class RateBlogsEntryCommentAPTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -40,14 +40,12 @@ public class RateBlogsEntryCommentAPTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		selenium.clickAt("link=Asset Publisher Test Page",
 			RuntimeVariables.replace("Asset Publisher Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -64,14 +62,15 @@ public class RateBlogsEntryCommentAPTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		assertTrue(selenium.isPartialText(
 				"//div[@class='aui-rating-label-element']", "0 Votes"));
-		selenium.clickAt("//div[3]/div/div[1]/div/div/div/div/a[1]",
+		assertEquals(RuntimeVariables.replace("Rate this as good."),
+			selenium.getText("//div[@id='zyfa_ratingThumbContent']/a[1]"));
+		selenium.clickAt("//div[@id='zyfa_ratingThumbContent']/a[1]",
 			RuntimeVariables.replace("Rate this as good."));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -88,16 +87,17 @@ public class RateBlogsEntryCommentAPTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace("+1 (1 Vote)"),
 			selenium.getText("//div[@class='aui-rating-label-element']"));
 		assertTrue(selenium.isElementPresent(
 				"//a[@class='aui-rating-element aui-rating-element-off aui-rating-thumb-up aui-rating-element-on']"));
-		selenium.clickAt("//div[3]/div/div[1]/div/div/div/div/a[2]",
+		assertEquals(RuntimeVariables.replace("Rate this as bad."),
+			selenium.getText("//div[@id='zyfa_ratingThumbContent']/a[2]"));
+		selenium.clickAt("//div[@id='zyfa_ratingThumbContent']/a[2]",
 			RuntimeVariables.replace("Rate this as bad."));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -114,12 +114,11 @@ public class RateBlogsEntryCommentAPTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace("-1 (1 Vote)"),
 			selenium.getText("//div[@class='aui-rating-label-element']"));
 		assertTrue(selenium.isElementPresent(
 				"//a[@class='aui-rating-element aui-rating-element-off aui-rating-thumb-down aui-rating-element-on']"));
-		selenium.clickAt("//div[3]/div/div[1]/div/div/div/div/a[2]",
+		selenium.clickAt("//div[@id='zyfa_ratingThumbContent']/a[2]",
 			RuntimeVariables.replace("Rate this as bad."));
 		assertFalse(selenium.isElementPresent(
 				"//a[@class='aui-rating-element aui-rating-element-off aui-rating-thumb-up aui-rating-element-on']"));

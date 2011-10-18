@@ -40,7 +40,7 @@ String passwordField = preferences.getValue("passwordField", StringPool.BLANK);
 String hiddenVariables = preferences.getValue("hiddenVariables", StringPool.BLANK);
 boolean resizeAutomatically = GetterUtil.getBoolean(preferences.getValue("resizeAutomatically", StringPool.TRUE));
 String heightMaximized = GetterUtil.getString(preferences.getValue("heightMaximized", "600"));
-String heightNormal = GetterUtil.getString(preferences.getValue("heightNormal", "300"));
+String heightNormal = GetterUtil.getString(preferences.getValue("heightNormal", "600"));
 String width = GetterUtil.getString(preferences.getValue("width", "100%"));
 
 String alt = preferences.getValue("alt", StringPool.BLANK);
@@ -50,6 +50,7 @@ String frameborder = preferences.getValue("frameborder", "0");
 String hspace = preferences.getValue("hspace", "0");
 String longdesc = preferences.getValue("longdesc", StringPool.BLANK);
 String scrolling = preferences.getValue("scrolling", "auto");
+String title = preferences.getValue("title", StringPool.BLANK);
 String vspace = preferences.getValue("vspace", "0");
 
 List<String> iframeVariables = new ArrayList<String>();

@@ -16,6 +16,7 @@ package com.liferay.util.bridges.scripting;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.portlet.PortletResponseUtil;
 import com.liferay.portal.kernel.scripting.ScriptingException;
 import com.liferay.portal.kernel.scripting.ScriptingUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
@@ -30,7 +31,6 @@ import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portal.security.permission.PermissionChecker;
 import com.liferay.portal.service.permission.PortalPermissionUtil;
 import com.liferay.portal.theme.ThemeDisplay;
-import com.liferay.util.servlet.PortletResponseUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -226,16 +226,11 @@ public class ScriptingPortlet extends GenericPortlet {
 				}
 			}
 
-			try {
-				if (is != null) {
-					String script = new String(FileUtil.getBytes(is));
+			if (is != null) {
+				String script = new String(FileUtil.getBytes(is));
 
-					sb.append(script);
-					sb.append(StringPool.NEW_LINE);
-				}
-			}
-			finally {
-				is.close();
+				sb.append(script);
+				sb.append(StringPool.NEW_LINE);
 			}
 		}
 

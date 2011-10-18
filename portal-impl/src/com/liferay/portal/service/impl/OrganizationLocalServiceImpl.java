@@ -68,6 +68,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * The implementation of the organization local service.
+ *
  * @author Brian Wing Shun Chan
  * @author Jorge Ferrer
  * @author Julio Camarero
@@ -205,10 +207,18 @@ public class OrganizationLocalServiceImpl
 
 		// Indexer
 
-		Indexer indexer = IndexerRegistryUtil.getIndexer(Organization.class);
+		if (serviceContext.isIndexingEnabled()) {
+			Indexer indexer = IndexerRegistryUtil.getIndexer(
+				Organization.class);
 
-		indexer.reindex(
-			new String[] {String.valueOf(organization.getCompanyId())});
+			if (parentOrganizationId > 0) {
+				indexer.reindex(
+					new String[] {String.valueOf(organization.getCompanyId())});
+			}
+			else {
+				indexer.reindex(organization);
+			}
+		}
 
 		return organization;
 	}
@@ -381,6 +391,12 @@ public class OrganizationLocalServiceImpl
 
 		Group group = organization.getGroup();
 
+		if (group.isSite()) {
+			group.setSite(false);
+
+			groupPersistence.update(group, false);
+		}
+
 		groupLocalService.deleteGroup(group);
 
 		// Resources
@@ -440,12 +456,13 @@ public class OrganizationLocalServiceImpl
 	}
 
 	/**
-	 * Returns the primary key of the organization with the name.
+	 * Returns the organization with the name.
 	 *
 	 * @param  companyId the primary key of the organization's company
 	 * @param  name the organization's name
-	 * @return the primary key of the organization with the name, or
-	 *         <code>0</code> if the organization could not be found
+	 * @return the organization with the name
+	 * @throws PortalException if the organization with the name could not be
+	 *         found
 	 * @throws SystemException if a system exception occurred
 	 */
 	public Organization getOrganization(long companyId, String name)
@@ -790,8 +807,8 @@ public class OrganizationLocalServiceImpl
 	 *
 	 * @param  groupId the primary key of the group
 	 * @param  organizationId the primary key of the organization
-	 * @return <code>true</code> if the organization is associated with the
-	 *         group; <code>false</code> otherwise
+	 * @return <code>true</code> if the organization belongs to the group;
+	 *         <code>false</code> otherwise
 	 * @throws SystemException if a system exception occurred
 	 */
 	public boolean hasGroupOrganization(long groupId, long organizationId)
@@ -806,8 +823,8 @@ public class OrganizationLocalServiceImpl
 	 *
 	 * @param  passwordPolicyId the primary key of the password policy
 	 * @param  organizationId the primary key of the organization
-	 * @return <code>true</code> if the password policy is assigned to the
-	 *         organization; <code>false</code> otherwise
+	 * @return <code>true</code> if the password policy has been assigned to
+	 *         the organization; <code>false</code> otherwise
 	 * @throws SystemException if a system exception occurred
 	 */
 	public boolean hasPasswordPolicyOrganization(
@@ -953,6 +970,16 @@ public class OrganizationLocalServiceImpl
 		throws SystemException {
 
 		organizationPersistence.rebuildTree(companyId, force);
+	}
+
+	public List<Organization> search(
+			long companyId, LinkedHashMap<String, Object> params, int start,
+			int end)
+		throws SystemException {
+
+		return organizationFinder.findByCompanyId(
+			companyId, params, start, end,
+			new OrganizationNameComparator(true));
 	}
 
 	/**
@@ -1526,7 +1553,7 @@ public class OrganizationLocalServiceImpl
 
 		assetEntryLocalService.updateEntry(
 			userId, companyGroup.getGroupId(), Organization.class.getName(),
-			organization.getOrganizationId(), null, assetCategoryIds,
+			organization.getOrganizationId(), null, 0, assetCategoryIds,
 			assetTagNames, false, null, null, null, null, null,
 			organization.getName(), StringPool.BLANK, null, null, null, 0, 0,
 			null, false);
@@ -1579,6 +1606,7 @@ public class OrganizationLocalServiceImpl
 		Organization organization = organizationPersistence.findByPrimaryKey(
 			organizationId);
 
+		long oldParentOrganizationId = organization.getParentOrganizationId();
 		String oldName = organization.getName();
 
 		organization.setParentOrganizationId(parentOrganizationId);
@@ -1626,8 +1654,13 @@ public class OrganizationLocalServiceImpl
 
 		Indexer indexer = IndexerRegistryUtil.getIndexer(Organization.class);
 
-		indexer.reindex(
-			new String[] {String.valueOf(organization.getCompanyId())});
+		if (oldParentOrganizationId != parentOrganizationId) {
+			indexer.reindex(
+				new String[] {String.valueOf(organization.getCompanyId())});
+		}
+		else {
+			indexer.reindex(organization);
+		}
 
 		return organization;
 	}

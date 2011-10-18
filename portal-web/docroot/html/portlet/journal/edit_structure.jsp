@@ -55,7 +55,7 @@ if (Validator.isNotNull(parentStructureId)) {
 	try {
 		parentStructure = JournalStructureLocalServiceUtil.getStructure(groupId, parentStructureId);
 
-		parentStructureName = parentStructure.getName();
+		parentStructureName = parentStructure.getName(locale);
 	}
 	catch (NoSuchStructureException nsse) {
 	}
@@ -103,7 +103,7 @@ int tabIndex = 1;
 	<liferay-ui:header
 		backURL="<%= redirect %>"
 		localizeTitle="<%= (structure == null) %>"
-		title='<%= (structure == null) ? "new-structure" : structure.getName() %>'
+		title='<%= (structure == null) ? "new-structure" : structure.getName(locale) %>'
 	/>
 
 	<liferay-ui:error exception="<%= DuplicateStructureElementException.class %>" message="please-enter-unique-structure-field-names-(including-field-names-inherited-from-the-parent-structure)" />
@@ -231,9 +231,11 @@ int tabIndex = 1;
 	<aui:button-row>
 		<aui:button type="submit" />
 
-		<aui:button disabled="<%= structure == null %>" onClick='<%= renderResponse.getNamespace() + "saveAndContinueStructure();" %>' value="save-and-continue" />
+		<aui:button onClick='<%= renderResponse.getNamespace() + "saveAndContinueStructure();" %>' value="save-and-continue" />
 
-		<aui:button disabled="<%= structure == null %>" onClick='<%= renderResponse.getNamespace() + "saveAndEditDefaultValues();" %>' value="save-and-edit-default-values" />
+		<c:if test="<%= structure != null %>">
+			<aui:button onClick='<%= renderResponse.getNamespace() + "saveAndEditDefaultValues();" %>' value="save-and-edit-default-values" />
+		</c:if>
 
 		<aui:button href="<%= redirect %>" type="cancel" />
 	</aui:button-row>

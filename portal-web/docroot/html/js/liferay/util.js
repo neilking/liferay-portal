@@ -38,6 +38,10 @@
 
 	var REGEX_HTML_UNESCAPE = new RegExp(htmlEscapedValues.join('|'), 'gi');
 
+	var SRC_HIDE_LINK = {
+		src: 'hideLink'
+	};
+
 	var Window = {
 		ALIGN_CENTER: {
 			points: ['tc', 'tc']
@@ -220,6 +224,10 @@
 					0
 				);
 			}
+		},
+
+		clamp: function(value, min, max) {
+			return Math.min(Math.max(value, min), max);
 		},
 
 		disableEsc: function() {
@@ -542,6 +550,10 @@
 			}
 		),
 
+		toNumber: function(value) {
+			return parseInt(value, 10) || 0;
+		},
+
 		uncamelize: function(value, separator) {
 			separator = separator || ' ';
 
@@ -581,6 +593,8 @@
 			}
 
 			form.submit();
+
+			form.attr('target', '');
 		},
 
 		_escapeHTML: function(match) {
@@ -654,18 +668,26 @@
 		Util,
 		'afterIframeLoaded',
 		function(event) {
-			var iframePlugin = event.currentTarget;
-
-			var iframeBody = iframePlugin.node.get('contentWindow.document.body');
+			var iframeBody = A.one(event.doc.body);
 
 			iframeBody.addClass('aui-dialog-iframe-popup');
 
 			var closeButton = iframeBody.one('.aui-button-input-cancel');
+			var hideLink = iframeBody.one('.lfr-hide-dialog');
+
+			var dialog = event.dialog;
 
 			if (closeButton) {
-				var dialog = iframePlugin.get('host');
-
 				closeButton.on('click', dialog.close, dialog);
+			}
+
+			if (hideLink) {
+				hideLink.on(
+					'click',
+					function(){
+						dialog.set('visible', false, SRC_HIDE_LINK);
+					}
+				);
 			}
 
 			var rolesSearchContainer = iframeBody.one('#rolesSearchContainerSearchContainer');
@@ -701,7 +723,7 @@
 	Liferay.provide(
 		Util,
 		'checkAll',
-		function(form, name, allBox) {
+		function(form, name, allBox, selectClassName) {
 			var selector;
 
 			if (isArray(name)) {
@@ -714,6 +736,10 @@
 			form = A.one(form);
 
 			form.all(selector).set('checked', A.one(allBox).get('checked'));
+
+			if (selectClassName) {
+				form.all(selectClassName).toggleClass('selected', A.one(allBox).get('checked'));
+			}
 		},
 		['aui-base']
 	);
@@ -726,7 +752,7 @@
 			var totalOn = 0;
 			var inputs = A.one(form).all('input[type=checkbox]');
 
-			allBox = A.one(allBox);
+			allBox = A.one(allBox) || A.one(form).one('input[name=' + allBox + ']');
 
 			if (!isArray(name)) {
 				name = [name];
@@ -957,7 +983,13 @@
 			if (link) {
 				var url = link.attr('href');
 
-				submitForm(document.hrefFm, url);
+				var newWindow = (link.attr('target') == '_blank');
+
+				if (newWindow) {
+					A.one(document.hrefFm).attr('target', '_blank');
+				}
+
+				submitForm(document.hrefFm, url, !newWindow);
 
 				Util._submitLocked = null;
 			}
@@ -986,10 +1018,6 @@
 				var textarea = options.textarea;
 				var uri = options.uri;
 				var width = options.width || 680;
-
-				options.dialog = {
-					stack: false
-				};
 
 				var editorButton = A.one(button);
 
@@ -1063,6 +1091,8 @@
 			ddmURL.setParameter('scopeStorageType', config.storageType);
 			ddmURL.setParameter('scopeStructureName', config.structureName);
 			ddmURL.setParameter('scopeStructureType', config.structureType);
+			ddmURL.setParameter('scopeTemplateMode', config.templateMode);
+			ddmURL.setParameter('scopeTemplateType', config.templateType);
 
 			if (config.showManageTemplates) {
 				ddmURL.setParameter('showManageTemplates', config.showManageTemplates);
@@ -1073,11 +1103,16 @@
 			}
 
 			ddmURL.setParameter('structureId', config.structureId);
-			ddmURL.setParameter('struts_action', '/dynamic_data_mapping/view');
 
 			if (config.struts_action) {
 				ddmURL.setParameter('struts_action', config.struts_action);
 			}
+			else {
+				ddmURL.setParameter('struts_action', '/dynamic_data_mapping/view');
+			}
+
+			ddmURL.setParameter('templateHeaderTitle', config.templateHeaderTitle);
+			ddmURL.setParameter('templateId', config.templateId);
 
 			ddmURL.setPortletId(166);
 			ddmURL.setWindowState('pop_up');
@@ -1106,31 +1141,34 @@
 		'portletTitleEdit',
 		function(options) {
 			var obj = options.obj;
-			var title = obj.one('.portlet-title-text');
 
-			if (title && !title.hasClass('not-editable')) {
-				title.setData('portletTitleEditOptions', options);
+			if (obj && !obj.hasClass('portlet-borderless')) {
+				var title = obj.one('.portlet-title-text');
 
-				title.on(
-					'click',
-					function(event) {
-						var editable = Util._getEditableInstance(title);
+				if (title && !title.hasClass('not-editable')) {
+					title.setData('portletTitleEditOptions', options);
 
-						var rendered = editable.get('rendered');
+					title.on(
+						'click',
+						function(event) {
+							var editable = Util._getEditableInstance(title);
 
-						if (rendered) {
-							editable.fire('stopEditing');
+							var rendered = editable.get('rendered');
+
+							if (rendered) {
+								editable.fire('stopEditing');
+							}
+
+							editable.set('node', event.currentTarget);
+
+							if (rendered) {
+								editable.syncUI();
+							}
+
+							editable._startEditing(event);
 						}
-
-						editable.set('node', event.currentTarget);
-
-						if (rendered) {
-							editable.syncUI();
-						}
-
-						editable._startEditing(event);
-					}
-				);
+					);
+				}
 			}
 		},
 		['aui-editable']
@@ -1437,11 +1475,14 @@
 	Liferay.provide(
 		Util,
 		'toggleControls',
-		function() {
-			var trigger = A.one('.toggle-controls');
+		function(node) {
+			var docBody = A.getBody();
+
+			node = node || docBody;
+
+			var trigger = node.one('.toggle-controls');
 
 			if (trigger) {
-				var docBody = A.getBody();
 				var hiddenClass = 'controls-hidden';
 				var visibleClass = 'controls-visible';
 				var currentClass = visibleClass;
@@ -1538,7 +1579,19 @@
 		Util,
 		'updateCheckboxValue',
 		function(checkbox) {
-			A.one(checkbox).previous().val(checkbox.checked);
+			checkbox = A.one(checkbox);
+
+			if (checkbox) {
+				var checked = checkbox.attr('checked');
+
+				var value = 'false';
+
+				if (checked) {
+					value = checkbox.val();
+				}
+
+				checkbox.previous().val(value);
+			}
 		},
 		['aui-base']
 	);

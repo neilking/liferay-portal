@@ -17,6 +17,7 @@ package com.liferay.portal.model.impl;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.CacheModel;
@@ -29,8 +30,6 @@ import com.liferay.portlet.expando.model.ExpandoBridge;
 import com.liferay.portlet.expando.util.ExpandoBridgeFactoryUtil;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Proxy;
 
 import java.sql.Types;
 
@@ -73,9 +72,10 @@ public class LayoutSetModelImpl extends BaseModelImpl<LayoutSet>
 			{ "css", Types.VARCHAR },
 			{ "pageCount", Types.INTEGER },
 			{ "settings_", Types.VARCHAR },
-			{ "layoutSetPrototypeId", Types.BIGINT }
+			{ "layoutSetPrototypeUuid", Types.VARCHAR },
+			{ "layoutSetPrototypeLinkEnabled", Types.BOOLEAN }
 		};
-	public static final String TABLE_SQL_CREATE = "create table LayoutSet (layoutSetId LONG not null primary key,groupId LONG,companyId LONG,privateLayout BOOLEAN,logo BOOLEAN,logoId LONG,themeId VARCHAR(75) null,colorSchemeId VARCHAR(75) null,wapThemeId VARCHAR(75) null,wapColorSchemeId VARCHAR(75) null,css STRING null,pageCount INTEGER,settings_ STRING null,layoutSetPrototypeId LONG)";
+	public static final String TABLE_SQL_CREATE = "create table LayoutSet (layoutSetId LONG not null primary key,groupId LONG,companyId LONG,privateLayout BOOLEAN,logo BOOLEAN,logoId LONG,themeId VARCHAR(75) null,colorSchemeId VARCHAR(75) null,wapThemeId VARCHAR(75) null,wapColorSchemeId VARCHAR(75) null,css STRING null,pageCount INTEGER,settings_ STRING null,layoutSetPrototypeUuid VARCHAR(75) null,layoutSetPrototypeLinkEnabled BOOLEAN)";
 	public static final String TABLE_SQL_DROP = "drop table LayoutSet";
 	public static final String DATA_SOURCE = "liferayDataSource";
 	public static final String SESSION_FACTORY = "liferaySessionFactory";
@@ -86,6 +86,12 @@ public class LayoutSetModelImpl extends BaseModelImpl<LayoutSet>
 	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
 				"value.object.finder.cache.enabled.com.liferay.portal.model.LayoutSet"),
 			true);
+	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.column.bitmask.enabled.com.liferay.portal.model.LayoutSet"),
+			true);
+	public static long GROUPID_COLUMN_BITMASK = 1L;
+	public static long LAYOUTSETPROTOTYPEUUID_COLUMN_BITMASK = 2L;
+	public static long PRIVATELAYOUT_COLUMN_BITMASK = 4L;
 
 	/**
 	 * Converts the soap model instance into a normal model instance.
@@ -109,7 +115,8 @@ public class LayoutSetModelImpl extends BaseModelImpl<LayoutSet>
 		model.setCss(soapModel.getCss());
 		model.setPageCount(soapModel.getPageCount());
 		model.setSettings(soapModel.getSettings());
-		model.setLayoutSetPrototypeId(soapModel.getLayoutSetPrototypeId());
+		model.setLayoutSetPrototypeUuid(soapModel.getLayoutSetPrototypeUuid());
+		model.setLayoutSetPrototypeLinkEnabled(soapModel.getLayoutSetPrototypeLinkEnabled());
 
 		return model;
 	}
@@ -128,14 +135,6 @@ public class LayoutSetModelImpl extends BaseModelImpl<LayoutSet>
 		}
 
 		return models;
-	}
-
-	public Class<?> getModelClass() {
-		return LayoutSet.class;
-	}
-
-	public String getModelClassName() {
-		return LayoutSet.class.getName();
 	}
 
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(com.liferay.portal.util.PropsUtil.get(
@@ -160,6 +159,14 @@ public class LayoutSetModelImpl extends BaseModelImpl<LayoutSet>
 		setPrimaryKey(((Long)primaryKeyObj).longValue());
 	}
 
+	public Class<?> getModelClass() {
+		return LayoutSet.class;
+	}
+
+	public String getModelClassName() {
+		return LayoutSet.class.getName();
+	}
+
 	@JSON
 	public long getLayoutSetId() {
 		return _layoutSetId;
@@ -175,6 +182,8 @@ public class LayoutSetModelImpl extends BaseModelImpl<LayoutSet>
 	}
 
 	public void setGroupId(long groupId) {
+		_columnBitmask |= GROUPID_COLUMN_BITMASK;
+
 		if (!_setOriginalGroupId) {
 			_setOriginalGroupId = true;
 
@@ -207,6 +216,8 @@ public class LayoutSetModelImpl extends BaseModelImpl<LayoutSet>
 	}
 
 	public void setPrivateLayout(boolean privateLayout) {
+		_columnBitmask |= PRIVATELAYOUT_COLUMN_BITMASK;
+
 		if (!_setOriginalPrivateLayout) {
 			_setOriginalPrivateLayout = true;
 
@@ -336,28 +347,56 @@ public class LayoutSetModelImpl extends BaseModelImpl<LayoutSet>
 	}
 
 	@JSON
-	public long getLayoutSetPrototypeId() {
-		return _layoutSetPrototypeId;
+	public String getLayoutSetPrototypeUuid() {
+		if (_layoutSetPrototypeUuid == null) {
+			return StringPool.BLANK;
+		}
+		else {
+			return _layoutSetPrototypeUuid;
+		}
 	}
 
-	public void setLayoutSetPrototypeId(long layoutSetPrototypeId) {
-		_layoutSetPrototypeId = layoutSetPrototypeId;
+	public void setLayoutSetPrototypeUuid(String layoutSetPrototypeUuid) {
+		_columnBitmask |= LAYOUTSETPROTOTYPEUUID_COLUMN_BITMASK;
+
+		if (_originalLayoutSetPrototypeUuid == null) {
+			_originalLayoutSetPrototypeUuid = _layoutSetPrototypeUuid;
+		}
+
+		_layoutSetPrototypeUuid = layoutSetPrototypeUuid;
+	}
+
+	public String getOriginalLayoutSetPrototypeUuid() {
+		return GetterUtil.getString(_originalLayoutSetPrototypeUuid);
+	}
+
+	@JSON
+	public boolean getLayoutSetPrototypeLinkEnabled() {
+		return _layoutSetPrototypeLinkEnabled;
+	}
+
+	public boolean isLayoutSetPrototypeLinkEnabled() {
+		return _layoutSetPrototypeLinkEnabled;
+	}
+
+	public void setLayoutSetPrototypeLinkEnabled(
+		boolean layoutSetPrototypeLinkEnabled) {
+		_layoutSetPrototypeLinkEnabled = layoutSetPrototypeLinkEnabled;
+	}
+
+	public long getColumnBitmask() {
+		return _columnBitmask;
 	}
 
 	@Override
 	public LayoutSet toEscapedModel() {
-		if (isEscapedModel()) {
-			return (LayoutSet)this;
+		if (_escapedModelProxy == null) {
+			_escapedModelProxy = (LayoutSet)ProxyUtil.newProxyInstance(_classLoader,
+					_escapedModelProxyInterfaces,
+					new AutoEscapeBeanHandler(this));
 		}
-		else {
-			if (_escapedModelProxy == null) {
-				_escapedModelProxy = (LayoutSet)Proxy.newProxyInstance(_classLoader,
-						_escapedModelProxyInterfaces,
-						new AutoEscapeBeanHandler(this));
-			}
 
-			return _escapedModelProxy;
-		}
+		return _escapedModelProxy;
 	}
 
 	@Override
@@ -392,7 +431,8 @@ public class LayoutSetModelImpl extends BaseModelImpl<LayoutSet>
 		layoutSetImpl.setCss(getCss());
 		layoutSetImpl.setPageCount(getPageCount());
 		layoutSetImpl.setSettings(getSettings());
-		layoutSetImpl.setLayoutSetPrototypeId(getLayoutSetPrototypeId());
+		layoutSetImpl.setLayoutSetPrototypeUuid(getLayoutSetPrototypeUuid());
+		layoutSetImpl.setLayoutSetPrototypeLinkEnabled(getLayoutSetPrototypeLinkEnabled());
 
 		layoutSetImpl.resetOriginalValues();
 
@@ -454,6 +494,10 @@ public class LayoutSetModelImpl extends BaseModelImpl<LayoutSet>
 		layoutSetModelImpl._originalPrivateLayout = layoutSetModelImpl._privateLayout;
 
 		layoutSetModelImpl._setOriginalPrivateLayout = false;
+
+		layoutSetModelImpl._originalLayoutSetPrototypeUuid = layoutSetModelImpl._layoutSetPrototypeUuid;
+
+		layoutSetModelImpl._columnBitmask = 0;
 	}
 
 	@Override
@@ -522,14 +566,23 @@ public class LayoutSetModelImpl extends BaseModelImpl<LayoutSet>
 			layoutSetCacheModel.settings = null;
 		}
 
-		layoutSetCacheModel.layoutSetPrototypeId = getLayoutSetPrototypeId();
+		layoutSetCacheModel.layoutSetPrototypeUuid = getLayoutSetPrototypeUuid();
+
+		String layoutSetPrototypeUuid = layoutSetCacheModel.layoutSetPrototypeUuid;
+
+		if ((layoutSetPrototypeUuid != null) &&
+				(layoutSetPrototypeUuid.length() == 0)) {
+			layoutSetCacheModel.layoutSetPrototypeUuid = null;
+		}
+
+		layoutSetCacheModel.layoutSetPrototypeLinkEnabled = getLayoutSetPrototypeLinkEnabled();
 
 		return layoutSetCacheModel;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(29);
+		StringBundler sb = new StringBundler(31);
 
 		sb.append("{layoutSetId=");
 		sb.append(getLayoutSetId());
@@ -557,15 +610,17 @@ public class LayoutSetModelImpl extends BaseModelImpl<LayoutSet>
 		sb.append(getPageCount());
 		sb.append(", settings=");
 		sb.append(getSettings());
-		sb.append(", layoutSetPrototypeId=");
-		sb.append(getLayoutSetPrototypeId());
+		sb.append(", layoutSetPrototypeUuid=");
+		sb.append(getLayoutSetPrototypeUuid());
+		sb.append(", layoutSetPrototypeLinkEnabled=");
+		sb.append(getLayoutSetPrototypeLinkEnabled());
 		sb.append("}");
 
 		return sb.toString();
 	}
 
 	public String toXmlString() {
-		StringBundler sb = new StringBundler(46);
+		StringBundler sb = new StringBundler(49);
 
 		sb.append("<model><model-name>");
 		sb.append("com.liferay.portal.model.LayoutSet");
@@ -624,8 +679,12 @@ public class LayoutSetModelImpl extends BaseModelImpl<LayoutSet>
 		sb.append(getSettings());
 		sb.append("]]></column-value></column>");
 		sb.append(
-			"<column><column-name>layoutSetPrototypeId</column-name><column-value><![CDATA[");
-		sb.append(getLayoutSetPrototypeId());
+			"<column><column-name>layoutSetPrototypeUuid</column-name><column-value><![CDATA[");
+		sb.append(getLayoutSetPrototypeUuid());
+		sb.append("]]></column-value></column>");
+		sb.append(
+			"<column><column-name>layoutSetPrototypeLinkEnabled</column-name><column-value><![CDATA[");
+		sb.append(getLayoutSetPrototypeLinkEnabled());
 		sb.append("]]></column-value></column>");
 
 		sb.append("</model>");
@@ -654,7 +713,10 @@ public class LayoutSetModelImpl extends BaseModelImpl<LayoutSet>
 	private String _css;
 	private int _pageCount;
 	private String _settings;
-	private long _layoutSetPrototypeId;
+	private String _layoutSetPrototypeUuid;
+	private String _originalLayoutSetPrototypeUuid;
+	private boolean _layoutSetPrototypeLinkEnabled;
 	private transient ExpandoBridge _expandoBridge;
+	private long _columnBitmask;
 	private LayoutSet _escapedModelProxy;
 }

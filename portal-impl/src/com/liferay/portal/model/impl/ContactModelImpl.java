@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.CacheModel;
@@ -31,8 +32,6 @@ import com.liferay.portlet.expando.model.ExpandoBridge;
 import com.liferay.portlet.expando.util.ExpandoBridgeFactoryUtil;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Proxy;
 
 import java.sql.Types;
 
@@ -105,6 +104,10 @@ public class ContactModelImpl extends BaseModelImpl<Contact>
 	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
 				"value.object.finder.cache.enabled.com.liferay.portal.model.Contact"),
 			true);
+	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.column.bitmask.enabled.com.liferay.portal.model.Contact"),
+			true);
+	public static long COMPANYID_COLUMN_BITMASK = 1L;
 
 	/**
 	 * Converts the soap model instance into a normal model instance.
@@ -165,14 +168,6 @@ public class ContactModelImpl extends BaseModelImpl<Contact>
 		return models;
 	}
 
-	public Class<?> getModelClass() {
-		return Contact.class;
-	}
-
-	public String getModelClassName() {
-		return Contact.class.getName();
-	}
-
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(com.liferay.portal.util.PropsUtil.get(
 				"lock.expiration.time.com.liferay.portal.model.Contact"));
 
@@ -195,6 +190,14 @@ public class ContactModelImpl extends BaseModelImpl<Contact>
 		setPrimaryKey(((Long)primaryKeyObj).longValue());
 	}
 
+	public Class<?> getModelClass() {
+		return Contact.class;
+	}
+
+	public String getModelClassName() {
+		return Contact.class.getName();
+	}
+
 	@JSON
 	public long getContactId() {
 		return _contactId;
@@ -210,7 +213,19 @@ public class ContactModelImpl extends BaseModelImpl<Contact>
 	}
 
 	public void setCompanyId(long companyId) {
+		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
+
+		if (!_setOriginalCompanyId) {
+			_setOriginalCompanyId = true;
+
+			_originalCompanyId = _companyId;
+		}
+
 		_companyId = companyId;
+	}
+
+	public long getOriginalCompanyId() {
+		return _originalCompanyId;
 	}
 
 	@JSON
@@ -572,20 +587,19 @@ public class ContactModelImpl extends BaseModelImpl<Contact>
 		_hoursOfOperation = hoursOfOperation;
 	}
 
+	public long getColumnBitmask() {
+		return _columnBitmask;
+	}
+
 	@Override
 	public Contact toEscapedModel() {
-		if (isEscapedModel()) {
-			return (Contact)this;
+		if (_escapedModelProxy == null) {
+			_escapedModelProxy = (Contact)ProxyUtil.newProxyInstance(_classLoader,
+					_escapedModelProxyInterfaces,
+					new AutoEscapeBeanHandler(this));
 		}
-		else {
-			if (_escapedModelProxy == null) {
-				_escapedModelProxy = (Contact)Proxy.newProxyInstance(_classLoader,
-						_escapedModelProxyInterfaces,
-						new AutoEscapeBeanHandler(this));
-			}
 
-			return _escapedModelProxy;
-		}
+		return _escapedModelProxy;
 	}
 
 	@Override
@@ -689,6 +703,13 @@ public class ContactModelImpl extends BaseModelImpl<Contact>
 
 	@Override
 	public void resetOriginalValues() {
+		ContactModelImpl contactModelImpl = this;
+
+		contactModelImpl._originalCompanyId = contactModelImpl._companyId;
+
+		contactModelImpl._setOriginalCompanyId = false;
+
+		contactModelImpl._columnBitmask = 0;
 	}
 
 	@Override
@@ -1101,6 +1122,8 @@ public class ContactModelImpl extends BaseModelImpl<Contact>
 		};
 	private long _contactId;
 	private long _companyId;
+	private long _originalCompanyId;
+	private boolean _setOriginalCompanyId;
 	private long _userId;
 	private String _userUuid;
 	private String _userName;
@@ -1131,5 +1154,6 @@ public class ContactModelImpl extends BaseModelImpl<Contact>
 	private String _jobClass;
 	private String _hoursOfOperation;
 	private transient ExpandoBridge _expandoBridge;
+	private long _columnBitmask;
 	private Contact _escapedModelProxy;
 }

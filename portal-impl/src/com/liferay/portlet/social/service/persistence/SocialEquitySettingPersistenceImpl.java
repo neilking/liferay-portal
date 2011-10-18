@@ -33,7 +33,6 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.CacheModel;
 import com.liferay.portal.model.ModelListener;
 import com.liferay.portal.service.persistence.BatchSessionUtil;
@@ -73,12 +72,14 @@ public class SocialEquitySettingPersistenceImpl extends BasePersistenceImpl<Soci
 	 * Never modify or reference this class directly. Always use {@link SocialEquitySettingUtil} to access the social equity setting persistence. Modify <code>service.xml</code> and rerun ServiceBuilder to regenerate this class.
 	 */
 	public static final String FINDER_CLASS_NAME_ENTITY = SocialEquitySettingImpl.class.getName();
-	public static final String FINDER_CLASS_NAME_LIST = FINDER_CLASS_NAME_ENTITY +
-		".List";
-	public static final FinderPath FINDER_PATH_FIND_BY_G_C_A = new FinderPath(SocialEquitySettingModelImpl.ENTITY_CACHE_ENABLED,
+	public static final String FINDER_CLASS_NAME_LIST_WITH_PAGINATION = FINDER_CLASS_NAME_ENTITY +
+		".List1";
+	public static final String FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION = FINDER_CLASS_NAME_ENTITY +
+		".List2";
+	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_G_C_A = new FinderPath(SocialEquitySettingModelImpl.ENTITY_CACHE_ENABLED,
 			SocialEquitySettingModelImpl.FINDER_CACHE_ENABLED,
-			SocialEquitySettingImpl.class, FINDER_CLASS_NAME_LIST,
-			"findByG_C_A",
+			SocialEquitySettingImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C_A",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				String.class.getName(),
@@ -86,9 +87,20 @@ public class SocialEquitySettingPersistenceImpl extends BasePersistenceImpl<Soci
 			"java.lang.Integer", "java.lang.Integer",
 				"com.liferay.portal.kernel.util.OrderByComparator"
 			});
+	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_G_C_A = new FinderPath(SocialEquitySettingModelImpl.ENTITY_CACHE_ENABLED,
+			SocialEquitySettingModelImpl.FINDER_CACHE_ENABLED,
+			SocialEquitySettingImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_C_A",
+			new String[] {
+				Long.class.getName(), Long.class.getName(),
+				String.class.getName()
+			},
+			SocialEquitySettingModelImpl.GROUPID_COLUMN_BITMASK |
+			SocialEquitySettingModelImpl.CLASSNAMEID_COLUMN_BITMASK |
+			SocialEquitySettingModelImpl.ACTIONID_COLUMN_BITMASK);
 	public static final FinderPath FINDER_PATH_COUNT_BY_G_C_A = new FinderPath(SocialEquitySettingModelImpl.ENTITY_CACHE_ENABLED,
 			SocialEquitySettingModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST, "countByG_C_A",
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C_A",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				String.class.getName()
@@ -100,21 +112,29 @@ public class SocialEquitySettingPersistenceImpl extends BasePersistenceImpl<Soci
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				String.class.getName(), Integer.class.getName()
-			});
+			},
+			SocialEquitySettingModelImpl.GROUPID_COLUMN_BITMASK |
+			SocialEquitySettingModelImpl.CLASSNAMEID_COLUMN_BITMASK |
+			SocialEquitySettingModelImpl.ACTIONID_COLUMN_BITMASK |
+			SocialEquitySettingModelImpl.TYPE_COLUMN_BITMASK);
 	public static final FinderPath FINDER_PATH_COUNT_BY_G_C_A_T = new FinderPath(SocialEquitySettingModelImpl.ENTITY_CACHE_ENABLED,
 			SocialEquitySettingModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST, "countByG_C_A_T",
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C_A_T",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				String.class.getName(), Integer.class.getName()
 			});
-	public static final FinderPath FINDER_PATH_FIND_ALL = new FinderPath(SocialEquitySettingModelImpl.ENTITY_CACHE_ENABLED,
+	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_ALL = new FinderPath(SocialEquitySettingModelImpl.ENTITY_CACHE_ENABLED,
 			SocialEquitySettingModelImpl.FINDER_CACHE_ENABLED,
-			SocialEquitySettingImpl.class, FINDER_CLASS_NAME_LIST, "findAll",
-			new String[0]);
+			SocialEquitySettingImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0]);
+	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL = new FinderPath(SocialEquitySettingModelImpl.ENTITY_CACHE_ENABLED,
+			SocialEquitySettingModelImpl.FINDER_CACHE_ENABLED,
+			SocialEquitySettingImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
 	public static final FinderPath FINDER_PATH_COUNT_ALL = new FinderPath(SocialEquitySettingModelImpl.ENTITY_CACHE_ENABLED,
 			SocialEquitySettingModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST, "countAll", new String[0]);
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll", new String[0]);
 
 	/**
 	 * Caches the social equity setting in the entity cache if it is enabled.
@@ -148,8 +168,11 @@ public class SocialEquitySettingPersistenceImpl extends BasePersistenceImpl<Soci
 			if (EntityCacheUtil.getResult(
 						SocialEquitySettingModelImpl.ENTITY_CACHE_ENABLED,
 						SocialEquitySettingImpl.class,
-						socialEquitySetting.getPrimaryKey(), this) == null) {
+						socialEquitySetting.getPrimaryKey()) == null) {
 				cacheResult(socialEquitySetting);
+			}
+			else {
+				socialEquitySetting.resetOriginalValues();
 			}
 		}
 	}
@@ -168,8 +191,10 @@ public class SocialEquitySettingPersistenceImpl extends BasePersistenceImpl<Soci
 		}
 
 		EntityCacheUtil.clearCache(SocialEquitySettingImpl.class.getName());
+
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 	}
 
 	/**
@@ -183,6 +208,9 @@ public class SocialEquitySettingPersistenceImpl extends BasePersistenceImpl<Soci
 	public void clearCache(SocialEquitySetting socialEquitySetting) {
 		EntityCacheUtil.removeResult(SocialEquitySettingModelImpl.ENTITY_CACHE_ENABLED,
 			SocialEquitySettingImpl.class, socialEquitySetting.getPrimaryKey());
+
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 
 		FinderCacheUtil.removeResult(FINDER_PATH_FETCH_BY_G_C_A_T,
 			new Object[] {
@@ -296,7 +324,8 @@ public class SocialEquitySettingPersistenceImpl extends BasePersistenceImpl<Soci
 			closeSession(session);
 		}
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 
 		SocialEquitySettingModelImpl socialEquitySettingModelImpl = (SocialEquitySettingModelImpl)socialEquitySetting;
 
@@ -341,37 +370,44 @@ public class SocialEquitySettingPersistenceImpl extends BasePersistenceImpl<Soci
 			closeSession(session);
 		}
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+
+		if (isNew || !SocialEquitySettingModelImpl.COLUMN_BITMASK_ENABLED) {
+			FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		}
+
+		else {
+			if ((socialEquitySettingModelImpl.getColumnBitmask() &
+					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_G_C_A.getColumnBitmask()) != 0) {
+				Object[] args = new Object[] {
+						Long.valueOf(socialEquitySettingModelImpl.getOriginalGroupId()),
+						Long.valueOf(socialEquitySettingModelImpl.getOriginalClassNameId()),
+						
+						socialEquitySettingModelImpl.getOriginalActionId()
+					};
+
+				FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_G_C_A, args);
+				FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_G_C_A,
+					args);
+
+				args = new Object[] {
+						Long.valueOf(socialEquitySettingModelImpl.getGroupId()),
+						Long.valueOf(socialEquitySettingModelImpl.getClassNameId()),
+						
+						socialEquitySettingModelImpl.getActionId()
+					};
+
+				FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_G_C_A, args);
+				FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_G_C_A,
+					args);
+			}
+		}
 
 		EntityCacheUtil.putResult(SocialEquitySettingModelImpl.ENTITY_CACHE_ENABLED,
 			SocialEquitySettingImpl.class, socialEquitySetting.getPrimaryKey(),
 			socialEquitySetting);
 
-		if (!isNew &&
-				((socialEquitySetting.getGroupId() != socialEquitySettingModelImpl.getOriginalGroupId()) ||
-				(socialEquitySetting.getClassNameId() != socialEquitySettingModelImpl.getOriginalClassNameId()) ||
-				!Validator.equals(socialEquitySetting.getActionId(),
-					socialEquitySettingModelImpl.getOriginalActionId()) ||
-				(socialEquitySetting.getType() != socialEquitySettingModelImpl.getOriginalType()))) {
-			FinderCacheUtil.removeResult(FINDER_PATH_FETCH_BY_G_C_A_T,
-				new Object[] {
-					Long.valueOf(
-						socialEquitySettingModelImpl.getOriginalGroupId()),
-					Long.valueOf(
-						socialEquitySettingModelImpl.getOriginalClassNameId()),
-					
-				socialEquitySettingModelImpl.getOriginalActionId(),
-					Integer.valueOf(
-						socialEquitySettingModelImpl.getOriginalType())
-				});
-		}
-
-		if (isNew ||
-				((socialEquitySetting.getGroupId() != socialEquitySettingModelImpl.getOriginalGroupId()) ||
-				(socialEquitySetting.getClassNameId() != socialEquitySettingModelImpl.getOriginalClassNameId()) ||
-				!Validator.equals(socialEquitySetting.getActionId(),
-					socialEquitySettingModelImpl.getOriginalActionId()) ||
-				(socialEquitySetting.getType() != socialEquitySettingModelImpl.getOriginalType()))) {
+		if (isNew) {
 			FinderCacheUtil.putResult(FINDER_PATH_FETCH_BY_G_C_A_T,
 				new Object[] {
 					Long.valueOf(socialEquitySetting.getGroupId()),
@@ -380,6 +416,30 @@ public class SocialEquitySettingPersistenceImpl extends BasePersistenceImpl<Soci
 				socialEquitySetting.getActionId(),
 					Integer.valueOf(socialEquitySetting.getType())
 				}, socialEquitySetting);
+		}
+		else {
+			if ((socialEquitySettingModelImpl.getColumnBitmask() &
+					FINDER_PATH_FETCH_BY_G_C_A_T.getColumnBitmask()) != 0) {
+				Object[] args = new Object[] {
+						Long.valueOf(socialEquitySettingModelImpl.getOriginalGroupId()),
+						Long.valueOf(socialEquitySettingModelImpl.getOriginalClassNameId()),
+						
+						socialEquitySettingModelImpl.getOriginalActionId(),
+						Integer.valueOf(socialEquitySettingModelImpl.getOriginalType())
+					};
+
+				FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_G_C_A_T, args);
+				FinderCacheUtil.removeResult(FINDER_PATH_FETCH_BY_G_C_A_T, args);
+
+				FinderCacheUtil.putResult(FINDER_PATH_FETCH_BY_G_C_A_T,
+					new Object[] {
+						Long.valueOf(socialEquitySetting.getGroupId()),
+						Long.valueOf(socialEquitySetting.getClassNameId()),
+						
+					socialEquitySetting.getActionId(),
+						Integer.valueOf(socialEquitySetting.getType())
+					}, socialEquitySetting);
+			}
 		}
 
 		return socialEquitySetting;
@@ -471,7 +531,7 @@ public class SocialEquitySettingPersistenceImpl extends BasePersistenceImpl<Soci
 	public SocialEquitySetting fetchByPrimaryKey(long equitySettingId)
 		throws SystemException {
 		SocialEquitySetting socialEquitySetting = (SocialEquitySetting)EntityCacheUtil.getResult(SocialEquitySettingModelImpl.ENTITY_CACHE_ENABLED,
-				SocialEquitySettingImpl.class, equitySettingId, this);
+				SocialEquitySettingImpl.class, equitySettingId);
 
 		if (socialEquitySetting == _nullSocialEquitySetting) {
 			return null;
@@ -565,14 +625,24 @@ public class SocialEquitySettingPersistenceImpl extends BasePersistenceImpl<Soci
 	public List<SocialEquitySetting> findByG_C_A(long groupId,
 		long classNameId, String actionId, int start, int end,
 		OrderByComparator orderByComparator) throws SystemException {
-		Object[] finderArgs = new Object[] {
-				groupId, classNameId, actionId,
-				
-				String.valueOf(start), String.valueOf(end),
-				String.valueOf(orderByComparator)
-			};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		List<SocialEquitySetting> list = (List<SocialEquitySetting>)FinderCacheUtil.getResult(FINDER_PATH_FIND_BY_G_C_A,
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+				(orderByComparator == null)) {
+			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_G_C_A;
+			finderArgs = new Object[] { groupId, classNameId, actionId };
+		}
+		else {
+			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_G_C_A;
+			finderArgs = new Object[] {
+					groupId, classNameId, actionId,
+					
+					start, end, orderByComparator
+				};
+		}
+
+		List<SocialEquitySetting> list = (List<SocialEquitySetting>)FinderCacheUtil.getResult(finderPath,
 				finderArgs, this);
 
 		if (list == null) {
@@ -636,14 +706,12 @@ public class SocialEquitySettingPersistenceImpl extends BasePersistenceImpl<Soci
 			}
 			finally {
 				if (list == null) {
-					FinderCacheUtil.removeResult(FINDER_PATH_FIND_BY_G_C_A,
-						finderArgs);
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
 				}
 				else {
 					cacheResult(list);
 
-					FinderCacheUtil.putResult(FINDER_PATH_FIND_BY_G_C_A,
-						finderArgs, list);
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
 				}
 
 				closeSession(session);
@@ -823,17 +891,17 @@ public class SocialEquitySettingPersistenceImpl extends BasePersistenceImpl<Soci
 		}
 
 		if (orderByComparator != null) {
-			String[] orderByFields = orderByComparator.getOrderByFields();
+			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
 
-			if (orderByFields.length > 0) {
+			if (orderByConditionFields.length > 0) {
 				query.append(WHERE_AND);
 			}
 
-			for (int i = 0; i < orderByFields.length; i++) {
+			for (int i = 0; i < orderByConditionFields.length; i++) {
 				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				query.append(orderByConditionFields[i]);
 
-				if ((i + 1) < orderByFields.length) {
+				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
 						query.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
@@ -852,6 +920,8 @@ public class SocialEquitySettingPersistenceImpl extends BasePersistenceImpl<Soci
 			}
 
 			query.append(ORDER_BY_CLAUSE);
+
+			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
 				query.append(_ORDER_BY_ENTITY_ALIAS);
@@ -894,7 +964,7 @@ public class SocialEquitySettingPersistenceImpl extends BasePersistenceImpl<Soci
 		}
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByValues(socialEquitySetting);
+			Object[] values = orderByComparator.getOrderByConditionValues(socialEquitySetting);
 
 			for (Object value : values) {
 				qPos.add(value);
@@ -1130,12 +1200,20 @@ public class SocialEquitySettingPersistenceImpl extends BasePersistenceImpl<Soci
 	 */
 	public List<SocialEquitySetting> findAll(int start, int end,
 		OrderByComparator orderByComparator) throws SystemException {
-		Object[] finderArgs = new Object[] {
-				String.valueOf(start), String.valueOf(end),
-				String.valueOf(orderByComparator)
-			};
+		FinderPath finderPath = null;
+		Object[] finderArgs = new Object[] { start, end, orderByComparator };
 
-		List<SocialEquitySetting> list = (List<SocialEquitySetting>)FinderCacheUtil.getResult(FINDER_PATH_FIND_ALL,
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+				(orderByComparator == null)) {
+			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_ALL;
+			finderArgs = FINDER_ARGS_EMPTY;
+		}
+		else {
+			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL;
+			finderArgs = new Object[] { start, end, orderByComparator };
+		}
+
+		List<SocialEquitySetting> list = (List<SocialEquitySetting>)FinderCacheUtil.getResult(finderPath,
 				finderArgs, this);
 
 		if (list == null) {
@@ -1180,14 +1258,12 @@ public class SocialEquitySettingPersistenceImpl extends BasePersistenceImpl<Soci
 			}
 			finally {
 				if (list == null) {
-					FinderCacheUtil.removeResult(FINDER_PATH_FIND_ALL,
-						finderArgs);
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
 				}
 				else {
 					cacheResult(list);
 
-					FinderCacheUtil.putResult(FINDER_PATH_FIND_ALL, finderArgs,
-						list);
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
 				}
 
 				closeSession(session);
@@ -1406,10 +1482,8 @@ public class SocialEquitySettingPersistenceImpl extends BasePersistenceImpl<Soci
 	 * @throws SystemException if a system exception occurred
 	 */
 	public int countAll() throws SystemException {
-		Object[] finderArgs = new Object[0];
-
 		Long count = (Long)FinderCacheUtil.getResult(FINDER_PATH_COUNT_ALL,
-				finderArgs, this);
+				FINDER_ARGS_EMPTY, this);
 
 		if (count == null) {
 			Session session = null;
@@ -1429,8 +1503,8 @@ public class SocialEquitySettingPersistenceImpl extends BasePersistenceImpl<Soci
 					count = Long.valueOf(0);
 				}
 
-				FinderCacheUtil.putResult(FINDER_PATH_COUNT_ALL, finderArgs,
-					count);
+				FinderCacheUtil.putResult(FINDER_PATH_COUNT_ALL,
+					FINDER_ARGS_EMPTY, count);
 
 				closeSession(session);
 			}
@@ -1467,11 +1541,19 @@ public class SocialEquitySettingPersistenceImpl extends BasePersistenceImpl<Soci
 	public void destroy() {
 		EntityCacheUtil.removeCache(SocialEquitySettingImpl.class.getName());
 		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST);
+		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 	}
 
 	@BeanReference(type = SocialActivityPersistence.class)
 	protected SocialActivityPersistence socialActivityPersistence;
+	@BeanReference(type = SocialActivityAchievementPersistence.class)
+	protected SocialActivityAchievementPersistence socialActivityAchievementPersistence;
+	@BeanReference(type = SocialActivityCounterPersistence.class)
+	protected SocialActivityCounterPersistence socialActivityCounterPersistence;
+	@BeanReference(type = SocialActivityLimitPersistence.class)
+	protected SocialActivityLimitPersistence socialActivityLimitPersistence;
+	@BeanReference(type = SocialActivitySettingPersistence.class)
+	protected SocialActivitySettingPersistence socialActivitySettingPersistence;
 	@BeanReference(type = SocialEquityAssetEntryPersistence.class)
 	protected SocialEquityAssetEntryPersistence socialEquityAssetEntryPersistence;
 	@BeanReference(type = SocialEquityGroupSettingPersistence.class)
@@ -1515,10 +1597,12 @@ public class SocialEquitySettingPersistenceImpl extends BasePersistenceImpl<Soci
 	private static final boolean _HIBERNATE_CACHE_USE_SECOND_LEVEL_CACHE = com.liferay.portal.util.PropsValues.HIBERNATE_CACHE_USE_SECOND_LEVEL_CACHE;
 	private static Log _log = LogFactoryUtil.getLog(SocialEquitySettingPersistenceImpl.class);
 	private static SocialEquitySetting _nullSocialEquitySetting = new SocialEquitySettingImpl() {
+			@Override
 			public Object clone() {
 				return this;
 			}
 
+			@Override
 			public CacheModel<SocialEquitySetting> toCacheModel() {
 				return _nullSocialEquitySettingCacheModel;
 			}

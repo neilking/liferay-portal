@@ -26,7 +26,7 @@ public class SearchDocumentLibraryTest extends BaseTestCase {
 		selenium.clickAt("_145_addApplication", RuntimeVariables.replace(""));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -41,21 +41,18 @@ public class SearchDocumentLibraryTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		selenium.type("layout_configuration_content",
 			RuntimeVariables.replace(""));
-		selenium.saveScreenShotAndSource();
 		selenium.typeKeys("layout_configuration_content",
 			RuntimeVariables.replace("d"));
-		selenium.saveScreenShotAndSource();
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isVisible("//div[@title='Document Library']")) {
+				if (selenium.isVisible("//div[@title='Documents and Media']")) {
 					break;
 				}
 			}
@@ -65,7 +62,6 @@ public class SearchDocumentLibraryTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		assertTrue(selenium.isVisible("//div[@title='Document Library']"));
+		assertTrue(selenium.isVisible("//div[@title='Documents and Media']"));
 	}
 }

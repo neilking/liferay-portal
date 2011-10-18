@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.CacheModel;
@@ -33,8 +34,6 @@ import com.liferay.portlet.expando.model.ExpandoBridge;
 import com.liferay.portlet.expando.util.ExpandoBridgeFactoryUtil;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Proxy;
 
 import java.sql.Types;
 
@@ -102,6 +101,15 @@ public class CalEventModelImpl extends BaseModelImpl<CalEvent>
 	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
 				"value.object.finder.cache.enabled.com.liferay.portlet.calendar.model.CalEvent"),
 			true);
+	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.column.bitmask.enabled.com.liferay.portlet.calendar.model.CalEvent"),
+			true);
+	public static long COMPANYID_COLUMN_BITMASK = 1L;
+	public static long GROUPID_COLUMN_BITMASK = 2L;
+	public static long REMINDBY_COLUMN_BITMASK = 4L;
+	public static long REPEATING_COLUMN_BITMASK = 8L;
+	public static long TYPE_COLUMN_BITMASK = 16L;
+	public static long UUID_COLUMN_BITMASK = 32L;
 
 	/**
 	 * Converts the soap model instance into a normal model instance.
@@ -155,14 +163,6 @@ public class CalEventModelImpl extends BaseModelImpl<CalEvent>
 		return models;
 	}
 
-	public Class<?> getModelClass() {
-		return CalEvent.class;
-	}
-
-	public String getModelClassName() {
-		return CalEvent.class.getName();
-	}
-
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(com.liferay.portal.util.PropsUtil.get(
 				"lock.expiration.time.com.liferay.portlet.calendar.model.CalEvent"));
 
@@ -183,6 +183,14 @@ public class CalEventModelImpl extends BaseModelImpl<CalEvent>
 
 	public void setPrimaryKeyObj(Serializable primaryKeyObj) {
 		setPrimaryKey(((Long)primaryKeyObj).longValue());
+	}
+
+	public Class<?> getModelClass() {
+		return CalEvent.class;
+	}
+
+	public String getModelClassName() {
+		return CalEvent.class.getName();
 	}
 
 	@JSON
@@ -222,6 +230,8 @@ public class CalEventModelImpl extends BaseModelImpl<CalEvent>
 	}
 
 	public void setGroupId(long groupId) {
+		_columnBitmask |= GROUPID_COLUMN_BITMASK;
+
 		if (!_setOriginalGroupId) {
 			_setOriginalGroupId = true;
 
@@ -241,7 +251,19 @@ public class CalEventModelImpl extends BaseModelImpl<CalEvent>
 	}
 
 	public void setCompanyId(long companyId) {
+		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
+
+		if (!_setOriginalCompanyId) {
+			_setOriginalCompanyId = true;
+
+			_originalCompanyId = _companyId;
+		}
+
 		_companyId = companyId;
+	}
+
+	public long getOriginalCompanyId() {
+		return _originalCompanyId;
 	}
 
 	@JSON
@@ -408,7 +430,17 @@ public class CalEventModelImpl extends BaseModelImpl<CalEvent>
 	}
 
 	public void setType(String type) {
+		_columnBitmask |= TYPE_COLUMN_BITMASK;
+
+		if (_originalType == null) {
+			_originalType = _type;
+		}
+
 		_type = type;
+	}
+
+	public String getOriginalType() {
+		return GetterUtil.getString(_originalType);
 	}
 
 	@JSON
@@ -421,7 +453,19 @@ public class CalEventModelImpl extends BaseModelImpl<CalEvent>
 	}
 
 	public void setRepeating(boolean repeating) {
+		_columnBitmask |= REPEATING_COLUMN_BITMASK;
+
+		if (!_setOriginalRepeating) {
+			_setOriginalRepeating = true;
+
+			_originalRepeating = _repeating;
+		}
+
 		_repeating = repeating;
+	}
+
+	public boolean getOriginalRepeating() {
+		return _originalRepeating;
 	}
 
 	@JSON
@@ -444,7 +488,19 @@ public class CalEventModelImpl extends BaseModelImpl<CalEvent>
 	}
 
 	public void setRemindBy(int remindBy) {
+		_columnBitmask |= REMINDBY_COLUMN_BITMASK;
+
+		if (!_setOriginalRemindBy) {
+			_setOriginalRemindBy = true;
+
+			_originalRemindBy = _remindBy;
+		}
+
 		_remindBy = remindBy;
+	}
+
+	public int getOriginalRemindBy() {
+		return _originalRemindBy;
 	}
 
 	@JSON
@@ -465,20 +521,19 @@ public class CalEventModelImpl extends BaseModelImpl<CalEvent>
 		_secondReminder = secondReminder;
 	}
 
+	public long getColumnBitmask() {
+		return _columnBitmask;
+	}
+
 	@Override
 	public CalEvent toEscapedModel() {
-		if (isEscapedModel()) {
-			return (CalEvent)this;
+		if (_escapedModelProxy == null) {
+			_escapedModelProxy = (CalEvent)ProxyUtil.newProxyInstance(_classLoader,
+					_escapedModelProxyInterfaces,
+					new AutoEscapeBeanHandler(this));
 		}
-		else {
-			if (_escapedModelProxy == null) {
-				_escapedModelProxy = (CalEvent)Proxy.newProxyInstance(_classLoader,
-						_escapedModelProxyInterfaces,
-						new AutoEscapeBeanHandler(this));
-			}
 
-			return _escapedModelProxy;
-		}
+		return _escapedModelProxy;
 	}
 
 	@Override
@@ -587,6 +642,22 @@ public class CalEventModelImpl extends BaseModelImpl<CalEvent>
 		calEventModelImpl._originalGroupId = calEventModelImpl._groupId;
 
 		calEventModelImpl._setOriginalGroupId = false;
+
+		calEventModelImpl._originalCompanyId = calEventModelImpl._companyId;
+
+		calEventModelImpl._setOriginalCompanyId = false;
+
+		calEventModelImpl._originalType = calEventModelImpl._type;
+
+		calEventModelImpl._originalRepeating = calEventModelImpl._repeating;
+
+		calEventModelImpl._setOriginalRepeating = false;
+
+		calEventModelImpl._originalRemindBy = calEventModelImpl._remindBy;
+
+		calEventModelImpl._setOriginalRemindBy = false;
+
+		calEventModelImpl._columnBitmask = 0;
 	}
 
 	@Override
@@ -883,6 +954,8 @@ public class CalEventModelImpl extends BaseModelImpl<CalEvent>
 	private long _originalGroupId;
 	private boolean _setOriginalGroupId;
 	private long _companyId;
+	private long _originalCompanyId;
+	private boolean _setOriginalCompanyId;
 	private long _userId;
 	private String _userUuid;
 	private String _userName;
@@ -898,11 +971,17 @@ public class CalEventModelImpl extends BaseModelImpl<CalEvent>
 	private boolean _allDay;
 	private boolean _timeZoneSensitive;
 	private String _type;
+	private String _originalType;
 	private boolean _repeating;
+	private boolean _originalRepeating;
+	private boolean _setOriginalRepeating;
 	private String _recurrence;
 	private int _remindBy;
+	private int _originalRemindBy;
+	private boolean _setOriginalRemindBy;
 	private int _firstReminder;
 	private int _secondReminder;
 	private transient ExpandoBridge _expandoBridge;
+	private long _columnBitmask;
 	private CalEvent _escapedModelProxy;
 }

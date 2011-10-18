@@ -16,6 +16,8 @@ package com.liferay.portal.service.impl;
 
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.model.Address;
 import com.liferay.portal.model.EmailAddress;
@@ -41,6 +43,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
+ * The implementation of the organization remote service.
+ *
  * @author Brian Wing Shun Chan
  * @author Jorge Ferrer
  * @author Julio Camarero
@@ -111,30 +115,54 @@ public class OrganizationServiceImpl extends OrganizationServiceBaseImpl {
 			ServiceContext serviceContext)
 		throws PortalException, SystemException {
 
-		Organization organization = addOrganization(
-			parentOrganizationId, name, type, recursable, regionId, countryId,
-			statusId, comments, site, serviceContext);
+		boolean indexingEnabled = serviceContext.isIndexingEnabled();
 
-		UsersAdminUtil.updateAddresses(
-			Organization.class.getName(), organization.getOrganizationId(),
-			addresses);
+		serviceContext.setIndexingEnabled(false);
 
-		UsersAdminUtil.updateEmailAddresses(
-			Organization.class.getName(), organization.getOrganizationId(),
-			emailAddresses);
+		try {
+			Organization organization = addOrganization(
+				parentOrganizationId, name, type, recursable, regionId,
+				countryId, statusId, comments, site, serviceContext);
 
-		UsersAdminUtil.updateOrgLabors(organization.getOrganizationId(),
-			orgLabors);
+			UsersAdminUtil.updateAddresses(
+				Organization.class.getName(), organization.getOrganizationId(),
+				addresses);
 
-		UsersAdminUtil.updatePhones(
-			Organization.class.getName(), organization.getOrganizationId(),
-			phones);
+			UsersAdminUtil.updateEmailAddresses(
+				Organization.class.getName(), organization.getOrganizationId(),
+				emailAddresses);
 
-		UsersAdminUtil.updateWebsites(
-			Organization.class.getName(), organization.getOrganizationId(),
-			websites);
+			UsersAdminUtil.updateOrgLabors(organization.getOrganizationId(),
+				orgLabors);
 
-		return organization;
+			UsersAdminUtil.updatePhones(
+				Organization.class.getName(), organization.getOrganizationId(),
+				phones);
+
+			UsersAdminUtil.updateWebsites(
+				Organization.class.getName(), organization.getOrganizationId(),
+				websites);
+
+			if (indexingEnabled) {
+				Indexer indexer = IndexerRegistryUtil.getIndexer(
+					Organization.class);
+
+				if (parentOrganizationId > 0) {
+					indexer.reindex(
+						new String[] {
+							String.valueOf(organization.getCompanyId())
+						});
+				}
+				else {
+					indexer.reindex(organization);
+				}
+			}
+
+			return organization;
+		}
+		finally {
+			serviceContext.setIndexingEnabled(indexingEnabled);
+		}
 	}
 
 	/**
@@ -503,6 +531,7 @@ public class OrganizationServiceImpl extends OrganizationServiceBaseImpl {
 	/**
 	 * Updates the organization with additional parameters.
 	 *
+	 * @param  organizationId the primary key of the organization
 	 * @param  parentOrganizationId the primary key of the organization's parent
 	 *         organization
 	 * @param  name the organization's name

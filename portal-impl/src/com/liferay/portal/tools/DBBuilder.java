@@ -68,13 +68,6 @@ public class DBBuilder {
 			_buildSQLFile(sqlDir, "portal-tables");
 			_buildSQLFile(sqlDir, "indexes");
 			_buildSQLFile(sqlDir, "sequences");
-			_buildSQLFile(sqlDir, "update-4.2.0-4.3.0");
-			_buildSQLFile(sqlDir, "update-4.3.0-4.3.1");
-			_buildSQLFile(sqlDir, "update-4.3.1-4.3.2");
-			_buildSQLFile(sqlDir, "update-4.3.2-4.3.3");
-			_buildSQLFile(sqlDir, "update-4.3.3-4.3.4");
-			_buildSQLFile(sqlDir, "update-4.3.6-4.4.0");
-			_buildSQLFile(sqlDir, "update-4.4.0-5.0.0");
 			_buildSQLFile(sqlDir, "update-5.0.1-5.1.0");
 			_buildSQLFile(sqlDir, "update-5.1.1-5.1.2");
 			_buildSQLFile(sqlDir, "update-5.1.2-5.2.0");
@@ -90,6 +83,7 @@ public class DBBuilder {
 			_buildSQLFile(sqlDir, "update-6.0.4-6.0.5");
 			_buildSQLFile(sqlDir, "update-6.0.5-6.0.6");
 			_buildSQLFile(sqlDir, "update-6.0.6-6.1.0");
+			_buildSQLFile(sqlDir, "update-6.0.12-6.1.0");
 
 			_buildCreateFile(sqlDir);
 		}

@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.journal.service;
 
+import com.liferay.portal.service.ServiceWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link JournalArticleLocalService}.
@@ -24,7 +26,8 @@ package com.liferay.portlet.journal.service;
  * @generated
  */
 public class JournalArticleLocalServiceWrapper
-	implements JournalArticleLocalService {
+	implements JournalArticleLocalService,
+		ServiceWrapper<JournalArticleLocalService> {
 	public JournalArticleLocalServiceWrapper(
 		JournalArticleLocalService journalArticleLocalService) {
 		_journalArticleLocalService = journalArticleLocalService;
@@ -279,7 +282,8 @@ public class JournalArticleLocalServiceWrapper
 		int reviewDateMonth, int reviewDateDay, int reviewDateYear,
 		int reviewDateHour, int reviewDateMinute, boolean neverReview,
 		boolean indexable, boolean smallImage, java.lang.String smallImageURL,
-		java.io.File smallFile, java.util.Map<java.lang.String, byte[]> images,
+		java.io.File smallImageFile,
+		java.util.Map<java.lang.String, byte[]> images,
 		java.lang.String articleURL,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException,
@@ -292,7 +296,7 @@ public class JournalArticleLocalServiceWrapper
 			expirationDateYear, expirationDateHour, expirationDateMinute,
 			neverExpire, reviewDateMonth, reviewDateDay, reviewDateYear,
 			reviewDateHour, reviewDateMinute, neverReview, indexable,
-			smallImage, smallImageURL, smallFile, images, articleURL,
+			smallImage, smallImageURL, smallImageFile, images, articleURL,
 			serviceContext);
 	}
 
@@ -703,6 +707,14 @@ public class JournalArticleLocalServiceWrapper
 			status);
 	}
 
+	public com.liferay.portlet.journal.model.JournalArticle getLatestArticle(
+		long groupId, java.lang.String className, long classPK)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return _journalArticleLocalService.getLatestArticle(groupId, className,
+			classPK);
+	}
+
 	public com.liferay.portlet.journal.model.JournalArticle getLatestArticleByUrlTitle(
 		long groupId, java.lang.String urlTitle, int status)
 		throws com.liferay.portal.kernel.exception.PortalException,
@@ -947,7 +959,8 @@ public class JournalArticleLocalServiceWrapper
 		int reviewDateMonth, int reviewDateDay, int reviewDateYear,
 		int reviewDateHour, int reviewDateMinute, boolean neverReview,
 		boolean indexable, boolean smallImage, java.lang.String smallImageURL,
-		java.io.File smallFile, java.util.Map<java.lang.String, byte[]> images,
+		java.io.File smallImageFile,
+		java.util.Map<java.lang.String, byte[]> images,
 		java.lang.String articleURL,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException,
@@ -960,7 +973,7 @@ public class JournalArticleLocalServiceWrapper
 			expirationDateYear, expirationDateHour, expirationDateMinute,
 			neverExpire, reviewDateMonth, reviewDateDay, reviewDateYear,
 			reviewDateHour, reviewDateMinute, neverReview, indexable,
-			smallImage, smallImageURL, smallFile, images, articleURL,
+			smallImage, smallImageURL, smallImageFile, images, articleURL,
 			serviceContext);
 	}
 
@@ -1039,11 +1052,26 @@ public class JournalArticleLocalServiceWrapper
 			oldTemplateId, newTemplateId);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public JournalArticleLocalService getWrappedJournalArticleLocalService() {
 		return _journalArticleLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedJournalArticleLocalService(
+		JournalArticleLocalService journalArticleLocalService) {
+		_journalArticleLocalService = journalArticleLocalService;
+	}
+
+	public JournalArticleLocalService getWrappedService() {
+		return _journalArticleLocalService;
+	}
+
+	public void setWrappedService(
 		JournalArticleLocalService journalArticleLocalService) {
 		_journalArticleLocalService = journalArticleLocalService;
 	}

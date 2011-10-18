@@ -19,6 +19,20 @@
 <%
 String ppid = ParamUtil.getString(request, "p_p_id");
 
+String controlPanelCategory = themeDisplay.getControlPanelCategory();
+
+if (controlPanelCategory.equals(PortletCategoryKeys.CONTENT) && Validator.isNull(ppid)) {
+	List<Portlet> portlets = PortalUtil.getControlPanelPortlets(PortletCategoryKeys.CONTENT, themeDisplay);
+
+	for (Portlet portlet : portlets) {
+		if (PortletPermissionUtil.contains(permissionChecker, scopeGroupId, 0, portlet.getPortletId(), ActionKeys.ACCESS_IN_CONTROL_PANEL, true)) {
+			ppid = portlet.getPortletId();
+
+			break;
+		}
+	}
+}
+
 if (ppid.equals(PortletKeys.PORTLET_CONFIGURATION)) {
 	String portletResource = ParamUtil.getString(request, PortalUtil.getPortletNamespace(ppid) + "portletResource");
 
@@ -32,14 +46,6 @@ if (ppid.equals(PortletKeys.PORTLET_CONFIGURATION)) {
 		if (!strutsAction.startsWith("/portlet_configuration/")) {
 			ppid = portletResource;
 		}
-	}
-}
-
-if (ppid.equals(PortletKeys.EXPANDO)) {
-	String modelResource = ParamUtil.getString(request, PortalUtil.getPortletNamespace(ppid) + "modelResource");
-
-	if (modelResource.equals(User.class.getName()) || modelResource.equals(Organization.class.getName())) {
-		ppid = PortletKeys.USERS_ADMIN;
 	}
 }
 

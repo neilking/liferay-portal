@@ -23,7 +23,8 @@ package com.liferay.portal.model;
  * @see       UserNotificationEvent
  * @generated
  */
-public class UserNotificationEventWrapper implements UserNotificationEvent {
+public class UserNotificationEventWrapper implements UserNotificationEvent,
+	ModelWrapper<UserNotificationEvent> {
 	public UserNotificationEventWrapper(
 		UserNotificationEvent userNotificationEvent) {
 		_userNotificationEvent = userNotificationEvent;
@@ -219,6 +220,33 @@ public class UserNotificationEventWrapper implements UserNotificationEvent {
 		_userNotificationEvent.setPayload(payload);
 	}
 
+	/**
+	* Returns the archived of this user notification event.
+	*
+	* @return the archived of this user notification event
+	*/
+	public boolean getArchived() {
+		return _userNotificationEvent.getArchived();
+	}
+
+	/**
+	* Returns <code>true</code> if this user notification event is archived.
+	*
+	* @return <code>true</code> if this user notification event is archived; <code>false</code> otherwise
+	*/
+	public boolean isArchived() {
+		return _userNotificationEvent.isArchived();
+	}
+
+	/**
+	* Sets whether this user notification event is archived.
+	*
+	* @param archived the archived of this user notification event
+	*/
+	public void setArchived(boolean archived) {
+		_userNotificationEvent.setArchived(archived);
+	}
+
 	public boolean isNew() {
 		return _userNotificationEvent.isNew();
 	}
@@ -237,10 +265,6 @@ public class UserNotificationEventWrapper implements UserNotificationEvent {
 
 	public boolean isEscapedModel() {
 		return _userNotificationEvent.isEscapedModel();
-	}
-
-	public void setEscapedModel(boolean escapedModel) {
-		_userNotificationEvent.setEscapedModel(escapedModel);
 	}
 
 	public java.io.Serializable getPrimaryKeyObj() {
@@ -297,7 +321,14 @@ public class UserNotificationEventWrapper implements UserNotificationEvent {
 		_userNotificationEvent.persist();
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedModel}
+	 */
 	public UserNotificationEvent getWrappedUserNotificationEvent() {
+		return _userNotificationEvent;
+	}
+
+	public UserNotificationEvent getWrappedModel() {
 		return _userNotificationEvent;
 	}
 

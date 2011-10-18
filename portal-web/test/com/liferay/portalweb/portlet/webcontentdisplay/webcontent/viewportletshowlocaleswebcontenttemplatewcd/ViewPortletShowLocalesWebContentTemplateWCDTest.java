@@ -27,7 +27,7 @@ public class ViewPortletShowLocalesWebContentTemplateWCDTest
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -42,19 +42,18 @@ public class ViewPortletShowLocalesWebContentTemplateWCDTest
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		selenium.clickAt("link=Web Content Display Test Page",
 			RuntimeVariables.replace("Web Content Display Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isVisible("//img[@alt='English (United States)']")) {
+				if (selenium.isVisible(
+							"//img[@title='English (United States)']")) {
 					break;
 				}
 			}
@@ -64,65 +63,23 @@ public class ViewPortletShowLocalesWebContentTemplateWCDTest
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("//img[@alt='English (United States)']",
-			RuntimeVariables.replace(""));
+		selenium.clickAt("//img[@title='English (United States)']",
+			RuntimeVariables.replace("English (United States)"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-
-		for (int second = 0;; second++) {
-			if (second >= 60) {
-				fail("timeout");
-			}
-
-			try {
-				if (RuntimeVariables.replace("Web Content Page Name")
-										.equals(selenium.getText("//td[1]"))) {
-					break;
-				}
-			}
-			catch (Exception e) {
-			}
-
-			Thread.sleep(1000);
-		}
-
-		selenium.saveScreenShotAndSource();
-		assertEquals(RuntimeVariables.replace("Web Content Page Name"),
-			selenium.getText("//td[1]"));
-		assertEquals(RuntimeVariables.replace("Web Content Page Description"),
-			selenium.getText("//td[2]"));
-		assertEquals(RuntimeVariables.replace(""),
-			selenium.getText("//img[@alt='\u4e2d\u6587 (\u4e2d\u56fd)']"));
-		selenium.clickAt("//img[@alt='\u4e2d\u6587 (\u4e2d\u56fd)']",
-			RuntimeVariables.replace(""));
+		assertEquals(RuntimeVariables.replace("Hello World Page Name"),
+			selenium.getText("//td[@class='page-name']"));
+		assertEquals(RuntimeVariables.replace("Hello World Page Description"),
+			selenium.getText("//td[@class='page-description']"));
+		assertTrue(selenium.isElementPresent(
+				"//img[@title='\u4e2d\u6587 (\u4e2d\u56fd)']"));
+		selenium.clickAt("//img[@title='\u4e2d\u6587 (\u4e2d\u56fd)']",
+			RuntimeVariables.replace("\u4e2d\u6587 (\u4e2d\u56fd)"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-
-		for (int second = 0;; second++) {
-			if (second >= 60) {
-				fail("timeout");
-			}
-
-			try {
-				if (RuntimeVariables.replace(
-							"\u4e16\u754c\u60a8\u597d Page Name")
-										.equals(selenium.getText("//td[1]"))) {
-					break;
-				}
-			}
-			catch (Exception e) {
-			}
-
-			Thread.sleep(1000);
-		}
-
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace(
 				"\u4e16\u754c\u60a8\u597d Page Name"),
-			selenium.getText("//td[1]"));
+			selenium.getText("//td[@class='page-name']"));
 		assertEquals(RuntimeVariables.replace(
 				"\u4e16\u754c\u60a8\u597d Page Description"),
-			selenium.getText("//td[2]"));
+			selenium.getText("//td[@class='page-description']"));
 	}
 }

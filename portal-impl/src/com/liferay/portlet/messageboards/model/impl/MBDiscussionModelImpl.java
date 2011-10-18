@@ -16,6 +16,7 @@ package com.liferay.portlet.messageboards.model.impl;
 
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.CacheModel;
@@ -29,8 +30,6 @@ import com.liferay.portlet.messageboards.model.MBDiscussion;
 import com.liferay.portlet.messageboards.model.MBDiscussionModel;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Proxy;
 
 import java.sql.Types;
 
@@ -72,15 +71,12 @@ public class MBDiscussionModelImpl extends BaseModelImpl<MBDiscussion>
 	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
 				"value.object.finder.cache.enabled.com.liferay.portlet.messageboards.model.MBDiscussion"),
 			true);
-
-	public Class<?> getModelClass() {
-		return MBDiscussion.class;
-	}
-
-	public String getModelClassName() {
-		return MBDiscussion.class.getName();
-	}
-
+	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.column.bitmask.enabled.com.liferay.portlet.messageboards.model.MBDiscussion"),
+			true);
+	public static long CLASSNAMEID_COLUMN_BITMASK = 1L;
+	public static long CLASSPK_COLUMN_BITMASK = 2L;
+	public static long THREADID_COLUMN_BITMASK = 4L;
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(com.liferay.portal.util.PropsUtil.get(
 				"lock.expiration.time.com.liferay.portlet.messageboards.model.MBDiscussion"));
 
@@ -101,6 +97,14 @@ public class MBDiscussionModelImpl extends BaseModelImpl<MBDiscussion>
 
 	public void setPrimaryKeyObj(Serializable primaryKeyObj) {
 		setPrimaryKey(((Long)primaryKeyObj).longValue());
+	}
+
+	public Class<?> getModelClass() {
+		return MBDiscussion.class;
+	}
+
+	public String getModelClassName() {
+		return MBDiscussion.class.getName();
 	}
 
 	public long getDiscussionId() {
@@ -124,6 +128,8 @@ public class MBDiscussionModelImpl extends BaseModelImpl<MBDiscussion>
 	}
 
 	public void setClassNameId(long classNameId) {
+		_columnBitmask |= CLASSNAMEID_COLUMN_BITMASK;
+
 		if (!_setOriginalClassNameId) {
 			_setOriginalClassNameId = true;
 
@@ -142,6 +148,8 @@ public class MBDiscussionModelImpl extends BaseModelImpl<MBDiscussion>
 	}
 
 	public void setClassPK(long classPK) {
+		_columnBitmask |= CLASSPK_COLUMN_BITMASK;
+
 		if (!_setOriginalClassPK) {
 			_setOriginalClassPK = true;
 
@@ -160,6 +168,8 @@ public class MBDiscussionModelImpl extends BaseModelImpl<MBDiscussion>
 	}
 
 	public void setThreadId(long threadId) {
+		_columnBitmask |= THREADID_COLUMN_BITMASK;
+
 		if (!_setOriginalThreadId) {
 			_setOriginalThreadId = true;
 
@@ -173,20 +183,19 @@ public class MBDiscussionModelImpl extends BaseModelImpl<MBDiscussion>
 		return _originalThreadId;
 	}
 
+	public long getColumnBitmask() {
+		return _columnBitmask;
+	}
+
 	@Override
 	public MBDiscussion toEscapedModel() {
-		if (isEscapedModel()) {
-			return (MBDiscussion)this;
+		if (_escapedModelProxy == null) {
+			_escapedModelProxy = (MBDiscussion)ProxyUtil.newProxyInstance(_classLoader,
+					_escapedModelProxyInterfaces,
+					new AutoEscapeBeanHandler(this));
 		}
-		else {
-			if (_escapedModelProxy == null) {
-				_escapedModelProxy = (MBDiscussion)Proxy.newProxyInstance(_classLoader,
-						_escapedModelProxyInterfaces,
-						new AutoEscapeBeanHandler(this));
-			}
 
-			return _escapedModelProxy;
-		}
+		return _escapedModelProxy;
 	}
 
 	@Override
@@ -277,6 +286,8 @@ public class MBDiscussionModelImpl extends BaseModelImpl<MBDiscussion>
 		mbDiscussionModelImpl._originalThreadId = mbDiscussionModelImpl._threadId;
 
 		mbDiscussionModelImpl._setOriginalThreadId = false;
+
+		mbDiscussionModelImpl._columnBitmask = 0;
 	}
 
 	@Override
@@ -355,5 +366,6 @@ public class MBDiscussionModelImpl extends BaseModelImpl<MBDiscussion>
 	private long _originalThreadId;
 	private boolean _setOriginalThreadId;
 	private transient ExpandoBridge _expandoBridge;
+	private long _columnBitmask;
 	private MBDiscussion _escapedModelProxy;
 }

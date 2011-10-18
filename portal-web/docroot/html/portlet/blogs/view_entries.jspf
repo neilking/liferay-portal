@@ -16,7 +16,7 @@
 
 <%
 boolean showAddEntryButton = BlogsPermission.contains(permissionChecker, scopeGroupId, ActionKeys.ADD_ENTRY);
-boolean showPermissionsButton = GroupPermissionUtil.contains(permissionChecker, scopeGroupId, ActionKeys.PERMISSIONS);
+boolean showPermissionsButton = BlogsPermission.contains(permissionChecker, scopeGroupId, ActionKeys.PERMISSIONS);
 boolean showSubscribeButton = BlogsPermission.contains(permissionChecker, scopeGroupId, ActionKeys.SUBSCRIBE);
 showSearch = showSearch && !results.isEmpty();
 %>
@@ -54,9 +54,9 @@ showSearch = showSearch && !results.isEmpty();
 	</div>
 </c:if>
 
-<c:if test="<%= Validator.isNotNull(categoryName) %>">
+<c:if test="<%= Validator.isNotNull(categoryTitle) %>">
 	<h1 class="entry-title">
-		<%= LanguageUtil.format(pageContext, "entries-with-x-x", new String[] {vocabularyName, categoryName}) %>
+		<%= LanguageUtil.format(pageContext, "entries-with-x-x", new String[] {vocabularyTitle, categoryTitle}) %>
 	</h1>
 
 	<%
@@ -117,16 +117,16 @@ rssURL.setCacheability(ResourceURL.FULL);
 
 rssURL.setParameter("struts_action", "/blogs/rss");
 
-if ((rssDelta != SearchContainer.DEFAULT_DELTA) || !rssFormatType.equals(RSSUtil.DEFAULT_TYPE) || (rssFormatVersion != RSSUtil.DEFAULT_VERSION) || !rssDisplayStyle.equals(RSSUtil.DISPLAY_STYLE_FULL_CONTENT)) {
+if ((rssDelta != SearchContainer.DEFAULT_DELTA) || !rssFormatType.equals(RSSUtil.TYPE_DEFAULT) || (rssFormatVersion != RSSUtil.VERSION_DEFAULT) || !rssDisplayStyle.equals(RSSUtil.DISPLAY_STYLE_FULL_CONTENT)) {
 	if (rssDelta != SearchContainer.DEFAULT_DELTA) {
 		rssURL.setParameter("max", String.valueOf(rssDelta));
 	}
 
-	if (!rssFormatType.equals(RSSUtil.DEFAULT_TYPE)) {
+	if (!rssFormatType.equals(RSSUtil.TYPE_DEFAULT)) {
 		rssURL.setParameter("type", rssFormatType);
 	}
 
-	if (rssFormatVersion != RSSUtil.DEFAULT_VERSION) {
+	if (rssFormatVersion != RSSUtil.VERSION_DEFAULT) {
 		rssURL.setParameter("version", String.valueOf(rssFormatVersion));
 	}
 

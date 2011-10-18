@@ -14,7 +14,6 @@
 
 package com.liferay.portal.model.impl;
 
-import com.liferay.portal.NoSuchLayoutException;
 import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -34,6 +33,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.CustomizedPages;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.model.Layout;
+import com.liferay.portal.model.LayoutPrototype;
 import com.liferay.portal.model.LayoutSet;
 import com.liferay.portal.model.LayoutSetPrototype;
 import com.liferay.portal.model.LayoutTemplate;
@@ -50,12 +50,14 @@ import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portal.security.permission.PermissionChecker;
 import com.liferay.portal.security.permission.PermissionThreadLocal;
 import com.liferay.portal.service.LayoutLocalServiceUtil;
+import com.liferay.portal.service.LayoutPrototypeLocalServiceUtil;
 import com.liferay.portal.service.LayoutSetPrototypeLocalServiceUtil;
 import com.liferay.portal.service.LayoutTemplateLocalServiceUtil;
 import com.liferay.portal.service.PluginSettingLocalServiceUtil;
 import com.liferay.portal.service.PortletLocalServiceUtil;
 import com.liferay.portal.service.PortletPreferencesLocalServiceUtil;
 import com.liferay.portal.service.ResourceLocalServiceUtil;
+import com.liferay.portal.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.service.permission.PortletPermissionUtil;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.PortletKeys;
@@ -92,30 +94,37 @@ public class LayoutTypePortletImpl
 	}
 
 	public static Layout getTemplateLayout(Layout layout) {
+		if (Validator.isNull(layout.getUuid())) {
+			return null;
+		}
+
 		try {
-			LayoutSet layoutSet = layout.getLayoutSet();
+			Group group = null;
 
-			UnicodeProperties settingsProperties =
-				layoutSet.getSettingsProperties();
+			if (Validator.isNotNull(layout.getLayoutPrototypeUuid())) {
+				LayoutPrototype layoutPrototype =
+					LayoutPrototypeLocalServiceUtil.getLayoutPrototypeByUuid(
+						layout.getLayoutPrototypeUuid());
 
-			String layoutSetPrototypeUuid = settingsProperties.getProperty(
-				"layoutSetPrototypeUuid");
+				group = layoutPrototype.getGroup();
+			}
+			else {
+				LayoutSet layoutSet = layout.getLayoutSet();
 
-			if (Validator.isNull(layoutSetPrototypeUuid)) {
-				return null;
+				if (Validator.isNull(layoutSet.getLayoutSetPrototypeUuid())) {
+					return null;
+				}
+
+				LayoutSetPrototype layoutSetPrototype =
+					LayoutSetPrototypeLocalServiceUtil.
+						getLayoutSetPrototypeByUuid(
+							layoutSet.getLayoutSetPrototypeUuid());
+
+				group = layoutSetPrototype.getGroup();
 			}
 
-			LayoutSetPrototype layoutSetPrototype =
-				LayoutSetPrototypeLocalServiceUtil.getLayoutSetPrototypeByUuid(
-					layoutSetPrototypeUuid);
-
-			Group group = layoutSetPrototype.getGroup();
-
-			return LayoutLocalServiceUtil.getLayoutByUuidAndGroupId(
-				layout.getUuid(), group.getGroupId());
-		}
-		catch (NoSuchLayoutException nsle) {
-			_log.error(nsle, nsle);
+			return LayoutLocalServiceUtil.fetchLayoutByUuidAndGroupId(
+				layout.getTemplateLayoutUuid(), group.getGroupId());
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -124,21 +133,13 @@ public class LayoutTypePortletImpl
 		return null;
 	}
 
-	private boolean _customizedView;
-
-	private Format _dateFormat = FastDateFormatFactoryUtil.getSimpleDateFormat(
-		PropsValues.INDEX_DATE_FORMAT_PATTERN);
-
-	private boolean _enablePortletLayoutListener = true;
-
-	private PortalPreferences _portalPreferences;
-
-	private Layout _templateLayout;
-
-	private boolean _updatePermission;
-
 	public LayoutTypePortletImpl(Layout layout) {
 		super(layout);
+
+		if (_nestedPortletsNamespace == null) {
+			_nestedPortletsNamespace = PortalUtil.getPortletNamespace(
+				PortletKeys.NESTED_PORTLETS);
+		}
 
 		_templateLayout = getTemplateLayout(layout);
 	}
@@ -219,9 +220,11 @@ public class LayoutTypePortletImpl
 				layout.getCompanyId(), portletId);
 
 			if (portlet == null) {
-				_log.error(
-					"Portlet " + portletId +
-						" cannot be added because it is not registered");
+				if (_log.isWarnEnabled()) {
+					_log.warn(
+						"Portlet " + portletId +
+							" cannot be added because it is not registered");
+				}
 
 				return null;
 			}
@@ -281,7 +284,7 @@ public class LayoutTypePortletImpl
 			}
 
 			if ((columnValue == null) &&
-				(columnId.startsWith(_NESTED_PORTLETS_NAMESPACE))) {
+				(columnId.startsWith(_nestedPortletsNamespace))) {
 
 				addNestedColumn(columnId);
 			}
@@ -598,6 +601,21 @@ public class LayoutTypePortletImpl
 	public String getStateMin() {
 		return getTypeSettingsProperties().getProperty(
 			LayoutTypePortletConstants.STATE_MIN);
+	}
+
+	public Layout getTemplateLayout() {
+		return _templateLayout;
+	}
+
+	public String getTemplateProperty(String key) {
+		if (_templateLayout == null) {
+			return StringPool.BLANK;
+		}
+
+		UnicodeProperties typeSettingsProperties =
+			_templateLayout.getTypeSettingsProperties();
+
+		return typeSettingsProperties.getProperty(key);
 	}
 
 	public boolean hasDefaultScopePortletId(long groupId, String portletId)
@@ -993,9 +1011,8 @@ public class LayoutTypePortletImpl
 			PermissionChecker permissionChecker =
 				PermissionThreadLocal.getPermissionChecker();
 
-			if (!PortletPermissionUtil.contains(
-					permissionChecker, getLayout(), portlet,
-					ActionKeys.ADD_TO_PAGE) &&
+			if (!LayoutPermissionUtil.contains(
+					permissionChecker, getLayout(), ActionKeys.UPDATE) &&
 				!isCustomizable()) {
 
 				return;
@@ -1341,21 +1358,30 @@ public class LayoutTypePortletImpl
 	}
 
 	protected String getColumnValue(String columnId) {
-		String columnValue = StringPool.BLANK;
+		Boolean customizable = null;
+		Boolean columnDisabled = null;
 
-		if (isCustomizable() && isColumnDisabled(columnId) && hasTemplate()) {
-			columnValue = getTemplateProperty(columnId);
-		}
-		else if (isCustomizable() && !isColumnDisabled(columnId) &&
-				 hasUserPreferences()) {
+		if (hasTemplate()) {
+			customizable = isCustomizable();
 
-			columnValue = getUserPreference(columnId);
-		}
-		else {
-			columnValue = getTypeSettingsProperties().getProperty(columnId);
+			if (customizable) {
+				columnDisabled = isColumnDisabled(columnId);
+
+				if (columnDisabled) {
+					return getTemplateProperty(columnId);
+				}
+			}
 		}
 
-		return columnValue;
+		if (hasUserPreferences() &&
+			((customizable == null) ? isCustomizable() : customizable) &&
+			((columnDisabled == null) ?
+				!isColumnDisabled(columnId) : !columnDisabled)) {
+
+			return getUserPreference(columnId);
+		}
+
+		return getTypeSettingsProperties().getProperty(columnId);
 	}
 
 	protected long getCompanyId() {
@@ -1457,14 +1483,6 @@ public class LayoutTypePortletImpl
 		}
 
 		return portlets;
-	}
-
-	protected String getTemplateProperty(String key) {
-		if (_templateLayout == null) {
-			return StringPool.BLANK;
-		}
-
-		return _templateLayout.getTypeSettingsProperties().getProperty(key);
 	}
 
 	protected String getThemeId() {
@@ -1687,12 +1705,19 @@ public class LayoutTypePortletImpl
 
 	private static final String _MODIFIED_DATE = "modifiedDate";
 
-	private static final String _NESTED_PORTLETS_NAMESPACE =
-		PortalUtil.getPortletNamespace(PortletKeys.NESTED_PORTLETS);
-
 	private static final String _NULL_DATE = "00000000000000";
 
 	private static Log _log = LogFactoryUtil.getLog(
 		LayoutTypePortletImpl.class);
+
+	private static String _nestedPortletsNamespace;
+
+	private boolean _customizedView;
+	private Format _dateFormat = FastDateFormatFactoryUtil.getSimpleDateFormat(
+		PropsValues.INDEX_DATE_FORMAT_PATTERN);
+	private boolean _enablePortletLayoutListener = true;
+	private PortalPreferences _portalPreferences;
+	private Layout _templateLayout;
+	private boolean _updatePermission;
 
 }

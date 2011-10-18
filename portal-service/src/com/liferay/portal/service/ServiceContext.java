@@ -14,6 +14,8 @@
 
 package com.liferay.portal.service;
 
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.Validator;
@@ -56,6 +58,7 @@ public class ServiceContext implements Cloneable, Serializable {
 		serviceContext.setGroupPermissions(getGroupPermissions());
 		serviceContext.setGuestPermissions(getGuestPermissions());
 		serviceContext.setHeaders(getHeaders());
+		serviceContext.setIndexingEnabled(isIndexingEnabled());
 		serviceContext.setLanguageId(getLanguageId());
 		serviceContext.setLayoutFullURL(getLayoutFullURL());
 		serviceContext.setLayoutURL(getLayoutURL());
@@ -154,6 +157,22 @@ public class ServiceContext implements Cloneable, Serializable {
 		return _groupPermissions;
 	}
 
+	public long getGuestOrUserId() throws PortalException, SystemException {
+		long userId = getUserId();
+
+		if (userId > 0) {
+			return userId;
+		}
+
+		long companyId = getCompanyId();
+
+		if (companyId > 0) {
+			return UserLocalServiceUtil.getDefaultUserId(getCompanyId());
+		}
+
+		return 0;
+	}
+
 	public String[] getGuestPermissions() {
 		return _guestPermissions;
 	}
@@ -202,6 +221,15 @@ public class ServiceContext implements Cloneable, Serializable {
 		return _portalURL;
 	}
 
+	public String getPortletId() {
+		if (_portletPreferencesIds != null) {
+			return _portletPreferencesIds.getPortletId();
+		}
+		else {
+			return null;
+		}
+	}
+
 	public PortletPreferencesIds getPortletPreferencesIds() {
 		return _portletPreferencesIds;
 	}
@@ -219,6 +247,10 @@ public class ServiceContext implements Cloneable, Serializable {
 	}
 
 	public String getUserAgent() {
+		if (_headers == null) {
+			return null;
+		}
+
 		return _headers.get(HttpHeaders.USER_AGENT);
 	}
 
@@ -258,6 +290,10 @@ public class ServiceContext implements Cloneable, Serializable {
 		else {
 			return false;
 		}
+	}
+
+	public boolean isIndexingEnabled() {
+		return _indexingEnabled;
 	}
 
 	public boolean isSignedIn() {
@@ -345,6 +381,10 @@ public class ServiceContext implements Cloneable, Serializable {
 		_headers = headers;
 	}
 
+	public void setIndexingEnabled(boolean indexingEnabled) {
+		_indexingEnabled = indexingEnabled;
+	}
+
 	public void setLanguageId(String languageId) {
 		_languageId = languageId;
 	}
@@ -425,6 +465,7 @@ public class ServiceContext implements Cloneable, Serializable {
 	private String[] _groupPermissions;
 	private String[] _guestPermissions;
 	private Map<String, String> _headers;
+	private boolean _indexingEnabled = true;
 	private String _languageId;
 	private String _layoutFullURL;
 	private String _layoutURL;

@@ -8,6 +8,8 @@
 
 <#assign css_class = theme_display.getColorScheme().getCssClass() />
 
+<#assign liferay_toggle_controls = sessionClicks.get(request, "liferay_toggle_controls", "visible") />
+
 <#if layout??>
 	<#assign page_group = layout.getGroup() />
 
@@ -16,9 +18,12 @@
 	<#elseif theme_display.isShowStagingIcon() && page_group.hasStagingGroup()>
 		<#assign css_class = css_class + " live-view" />
 	</#if>
+
+	<#if page_group.isControlPanel()>
+		<#assign liferay_toggle_controls = "visible" />
+	</#if>
 </#if>
 
-<#assign liferay_toggle_controls = sessionClicks.get(request, "liferay_toggle_controls", "visible") />
 <#assign liferay_dockbar_pinned = sessionClicks.get(request, "liferay_dockbar_pinned", "") />
 
 <#if liferay_toggle_controls = "visible">
@@ -51,6 +56,15 @@
 <#assign company_logo = theme_display.getCompanyLogo() />
 <#assign company_logo_height = theme_display.getCompanyLogoHeight() />
 <#assign company_logo_width = theme_display.getCompanyLogoWidth() />
+
+<#assign logo_css_class = "logo" />
+
+<#if company.getLogoId() == 0 && !layout.layoutSet.isLogo()>
+	<#assign logo_css_class = logo_css_class + " default-logo" />
+<#else>
+	<#assign logo_css_class = logo_css_class + " custom-logo" />
+</#if>
+
 <#assign company_url = theme_display.getURLHome() />
 
 <#if !request.isRequestedSessionIdFromCookie()>
@@ -146,10 +160,6 @@
 	<#assign toggle_controls_url = "javascript:;" />
 </#if>
 
-<#if permissionChecker.isOmniadmin() && portalUtil.isUpdateAvailable()>
-	<#assign update_available_url = htmlUtil.escape(theme_display.getURLUpdateManager().toString()) />
-</#if>
-
 <#-- ---------- Page ---------- -->
 
 <#assign the_title = "" />
@@ -214,22 +224,24 @@
 		<#assign css_class = css_class + " private-page" />
 	</#if>
 
-	<#assign my_places_portlet_url = portletURLFactory.create(request, "49", page.getPlid(), "ACTION_PHASE") />
+	<#assign my_sites_portlet_url = portletURLFactory.create(request, "49", page.getPlid(), "ACTION_PHASE") />
 
-	${my_places_portlet_url.setWindowState("normal")}
-	${my_places_portlet_url.setPortletMode("view")}
+	<#assign my_places_portlet_url = my_sites_portlet_url />
 
-	${my_places_portlet_url.setParameter("struts_action", "/my_places/view")}
-	${my_places_portlet_url.setParameter("groupId", "${page.getGroupId()}")}
-	${my_places_portlet_url.setParameter("privateLayout", "false")}
+	${my_sites_portlet_url.setWindowState("normal")}
+	${my_sites_portlet_url.setPortletMode("view")}
 
-	<#assign site_default_public_url = htmlUtil.escape(my_places_portlet_url.toString()) />
+	${my_sites_portlet_url.setParameter("struts_action", "/my_sites/view")}
+	${my_sites_portlet_url.setParameter("groupId", "${page.getGroupId()}")}
+	${my_sites_portlet_url.setParameter("privateLayout", "false")}
+
+	<#assign site_default_public_url = htmlUtil.escape(my_sites_portlet_url.toString()) />
 
 	<#assign community_default_public_url = site_default_public_url />
 
-	${my_places_portlet_url.setParameter("privateLayout", "true")}
+	${my_sites_portlet_url.setParameter("privateLayout", "true")}
 
-	<#assign site_default_private_url = htmlUtil.escape(my_places_portlet_url.toString()) />
+	<#assign site_default_private_url = htmlUtil.escape(my_sites_portlet_url.toString()) />
 
 	<#assign community_default_private_url = site_default_private_url />
 
@@ -289,12 +301,16 @@
 	<#assign staging_text = languageUtil.get(locale, "staging") />
 </#if>
 
-<#-- ---------- My places ---------- -->
+<#-- ---------- My sites ---------- -->
 
-<#assign show_my_places = user.hasMyPlaces() />
+<#assign show_my_sites = user.hasMySites() />
 
-<#if show_my_places>
-	<#assign my_places_text = languageUtil.get(locale, "my-places") />
+<#assign show_my_places = show_my_sites />
+
+<#if show_my_sites>
+	<#assign my_sites_text = languageUtil.get(locale, "my-sites") />
+
+	<#assign my_places_text = my_sites_text />
 </#if>
 
 <#-- ---------- Includes ---------- -->

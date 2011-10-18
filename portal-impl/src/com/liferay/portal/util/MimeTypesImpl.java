@@ -18,10 +18,10 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.MimeTypes;
+import com.liferay.portal.kernel.util.StreamUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 
@@ -44,11 +44,22 @@ public class MimeTypesImpl implements MimeTypes {
 	}
 
 	public String getContentType(File file) {
+		return getContentType(file, file.getName());
+	}
+
+	public String getContentType(File file, String title) {
+		InputStream is = null;
+
 		try {
-			return getContentType(new FileInputStream(file), file.getName());
+			is = TikaInputStream.get(file);
+
+			return getContentType(is, title);
 		}
 		catch (FileNotFoundException fnfe) {
-			return getContentType(file.getName());
+			return getContentType(title);
+		}
+		finally {
+			StreamUtil.cleanUp(is);
 		}
 	}
 

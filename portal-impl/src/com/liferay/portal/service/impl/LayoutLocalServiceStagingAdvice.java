@@ -20,11 +20,14 @@ import com.liferay.portal.kernel.staging.LayoutStagingUtil;
 import com.liferay.portal.kernel.staging.StagingUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.Layout;
 import com.liferay.portal.model.LayoutRevision;
+import com.liferay.portal.model.LayoutSet;
 import com.liferay.portal.model.LayoutStagingHandler;
 import com.liferay.portal.model.User;
 import com.liferay.portal.security.auth.PrincipalThreadLocal;
@@ -34,7 +37,6 @@ import com.liferay.portal.service.UserLocalServiceUtil;
 import com.liferay.portlet.expando.model.ExpandoBridge;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -53,6 +55,24 @@ import org.aopalliance.intercept.MethodInvocation;
 public class LayoutLocalServiceStagingAdvice
 	extends LayoutLocalServiceImpl implements MethodInterceptor {
 
+	@Override
+	public void deleteLayout(
+			Layout layout, boolean updateLayoutSet,
+			ServiceContext serviceContext)
+		throws PortalException, SystemException {
+
+		long layoutSetBranchId = ParamUtil.getLong(
+			serviceContext, "layoutSetBranchId");
+
+		if (layoutSetBranchId > 0) {
+			layoutRevisionLocalService.deleteLayoutRevisions(
+				layoutSetBranchId, layout.getPlid());
+		}
+		else {
+			super.deleteLayout(layout, updateLayoutSet, serviceContext);
+		}
+	}
+
 	public Object invoke(MethodInvocation methodInvocation) throws Throwable {
 		Method method = methodInvocation.getMethod();
 
@@ -70,7 +90,14 @@ public class LayoutLocalServiceStagingAdvice
 
 		Object returnValue = null;
 
-		if (methodName.equals("updateLayout") && (arguments.length == 15)) {
+		if (methodName.equals("deleteLayout") && (arguments.length == 3)) {
+			deleteLayout(
+				(Layout)arguments[0], (Boolean)arguments[1],
+				(ServiceContext)arguments[2]);
+		}
+		else if (methodName.equals("updateLayout") &&
+				 (arguments.length == 16)) {
+
 			returnValue = updateLayout(
 				(Long)arguments[0], (Boolean)arguments[1], (Long)arguments[2],
 				(Long)arguments[3], (Map<Locale, String>)arguments[4],
@@ -80,7 +107,7 @@ public class LayoutLocalServiceStagingAdvice
 				(Map<Locale, String>)arguments[8], (String)arguments[9],
 				(Boolean)arguments[10], (String)arguments[11],
 				(Boolean)arguments[12], (byte[])arguments[13],
-				(ServiceContext)arguments[14]);
+				(Boolean)arguments[14], (ServiceContext)arguments[15]);
 		}
 		else if (methodName.equals("getLayouts")) {
 			if (arguments.length == 6) {
@@ -115,7 +142,7 @@ public class LayoutLocalServiceStagingAdvice
 			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
 			Map<Locale, String> keywordsMap, Map<Locale, String> robotsMap,
 			String type, boolean hidden, String friendlyURL, Boolean iconImage,
-			byte[] iconBytes, ServiceContext serviceContext)
+			byte[] iconBytes, boolean locked, ServiceContext serviceContext)
 		throws PortalException, SystemException {
 
 		// Layout
@@ -143,7 +170,7 @@ public class LayoutLocalServiceStagingAdvice
 			return super.updateLayout(
 				groupId, privateLayout, layoutId, parentLayoutId, nameMap,
 				titleMap, descriptionMap, keywordsMap, robotsMap, type, hidden,
-				friendlyURL, iconImage, iconBytes, serviceContext);
+				friendlyURL, iconImage, iconBytes, locked, serviceContext);
 		}
 
 		if (parentLayoutId != layout.getParentLayoutId()) {
@@ -356,7 +383,7 @@ public class LayoutLocalServiceStagingAdvice
 			return layout;
 		}
 
-		return (Layout)Proxy.newProxyInstance(
+		return (Layout)ProxyUtil.newProxyInstance(
 			PortalClassLoaderUtil.getClassLoader(), new Class[] {Layout.class},
 			new LayoutStagingHandler(layout));
 	}
@@ -386,8 +413,10 @@ public class LayoutLocalServiceStagingAdvice
 				if (userId > 0) {
 					User user = UserLocalServiceUtil.getUser(userId);
 
+					LayoutSet layoutSet = firstLayout.getLayoutSet();
+
 					layoutSetBranchId = StagingUtil.getRecentLayoutSetBranchId(
-						user);
+						user, layoutSet.getLayoutSetId());
 				}
 			}
 			catch (Exception e) {
@@ -427,6 +456,7 @@ public class LayoutLocalServiceStagingAdvice
 		new HashSet<String>();
 
 	static {
+		_layoutLocalServiceStagingAdviceMethodNames.add("deleteLayout");
 		_layoutLocalServiceStagingAdviceMethodNames.add("getLayouts");
 		_layoutLocalServiceStagingAdviceMethodNames.add("updateLayout");
 		_layoutLocalServiceStagingAdviceMethodNames.add("updateLookAndFeel");

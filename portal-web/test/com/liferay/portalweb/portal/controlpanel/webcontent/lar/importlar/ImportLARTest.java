@@ -25,7 +25,7 @@ public class ImportLARTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -40,21 +40,19 @@ public class ImportLARTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Control Panel", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Control Panel",
+			RuntimeVariables.replace("Control Panel"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		assertEquals(RuntimeVariables.replace("Web Content"),
-			selenium.getText("//div[2]/div[2]/div[2]/ul/li[3]/a"));
-		selenium.clickAt("//div[2]/div[2]/div[2]/ul/li[3]/a",
+		selenium.clickAt("link=Web Content",
 			RuntimeVariables.replace("Web Content"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		Thread.sleep(5000);
-		selenium.clickAt("//strong/a", RuntimeVariables.replace("Options"));
+		assertEquals(RuntimeVariables.replace("Options"),
+			selenium.getText("//menu/span/ul/li/strong/a"));
+		selenium.clickAt("//menu/span/ul/li/strong/a",
+			RuntimeVariables.replace("Options"));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -70,30 +68,36 @@ public class ImportLARTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
+		assertEquals(RuntimeVariables.replace("Export / Import"),
+			selenium.getText(
+				"//div[@class='lfr-component lfr-menu-list']/ul/li[2]/a"));
 		selenium.click(RuntimeVariables.replace(
 				"//div[@class='lfr-component lfr-menu-list']/ul/li[2]/a"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Import", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Import", RuntimeVariables.replace("Import"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.type("_86_importFileName",
+		selenium.type("//input[@id='_86_importFileName']",
 			RuntimeVariables.replace(
 				"L:\\portal\\build\\portal-web\\test\\com\\liferay\\portalweb\\portal\\controlpanel\\webcontent\\lar\\importlar\\dependencies\\Web_Content-Selenium.portlet.lar"));
-		selenium.saveScreenShotAndSource();
-		assertFalse(selenium.isChecked("_86_DELETE_PORTLET_DATACheckbox"));
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("_86_DELETE_PORTLET_DATACheckbox",
-			RuntimeVariables.replace(""));
-		assertTrue(selenium.isChecked("_86_DELETE_PORTLET_DATACheckbox"));
-		selenium.saveScreenShotAndSource();
+		assertFalse(selenium.isChecked(
+				"//input[@id='_86_DELETE_PORTLET_DATACheckbox']"));
+		selenium.clickAt("//input[@id='_86_DELETE_PORTLET_DATACheckbox']",
+			RuntimeVariables.replace("Delete Portlet Data Checkbox"));
+		assertTrue(selenium.isChecked(
+				"//input[@id='_86_DELETE_PORTLET_DATACheckbox']"));
+		assertFalse(selenium.isChecked("//input[@id='_86_PERMISSIONSCheckbox']"));
+		selenium.clickAt("//input[@id='_86_PERMISSIONSCheckbox']",
+			RuntimeVariables.replace("Permissions Checkbox"));
+		assertTrue(selenium.isChecked("//input[@id='_86_PERMISSIONSCheckbox']"));
+		assertFalse(selenium.isChecked("//input[@id='_86_CATEGORIESCheckbox']"));
+		selenium.clickAt("//input[@id='_86_CATEGORIESCheckbox']",
+			RuntimeVariables.replace("Categories Checkbox"));
+		assertTrue(selenium.isChecked("//input[@id='_86_CATEGORIESCheckbox']"));
 		selenium.clickAt("//input[@value='Import']",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Import"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace(
 				"Your request completed successfully."),
-			selenium.getText("//section/div/div/div/div"));
+			selenium.getText("//div[@class='portlet-msg-success']"));
 	}
 }

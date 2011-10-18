@@ -27,9 +27,9 @@ import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.util.SystemProperties;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,7 +43,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.StringTokenizer;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.portlet.ActionRequest;
@@ -78,6 +78,7 @@ import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
+import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.commons.httpclient.params.HostParams;
 import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
@@ -86,6 +87,7 @@ import org.apache.commons.httpclient.params.HttpMethodParams;
 
 /**
  * @author Brian Wing Shun Chan
+ * @author Hugo Huijser
  */
 public class HttpImpl implements Http {
 
@@ -178,14 +180,11 @@ public class HttpImpl implements Http {
 			return null;
 		}
 
-		String anchor = StringPool.BLANK;
+		String[] urlArray = PortalUtil.stripURLAnchor(url, StringPool.POUND);
 
-		int pos = url.indexOf(CharPool.POUND);
+		url = urlArray[0];
 
-		if (pos != -1) {
-			anchor = url.substring(pos);
-			url = url.substring(0, pos);
-		}
+		String anchor = urlArray[1];
 
 		StringBundler sb = new StringBundler(7);
 
@@ -444,7 +443,7 @@ public class HttpImpl implements Http {
 			return StringPool.BLANK;
 		}
 
-		String[] parts = StringUtil.split(url, StringPool.QUESTION);
+		String[] parts = StringUtil.split(url, CharPool.QUESTION);
 
 		if (parts.length == 2) {
 			String[] params = null;
@@ -453,11 +452,11 @@ public class HttpImpl implements Http {
 				params = StringUtil.split(parts[1], "&amp;");
 			}
 			else {
-				params = StringUtil.split(parts[1], StringPool.AMPERSAND);
+				params = StringUtil.split(parts[1], CharPool.AMPERSAND);
 			}
 
 			for (String param : params) {
-				String[] kvp = StringUtil.split(param, StringPool.EQUAL);
+				String[] kvp = StringUtil.split(param, CharPool.EQUAL);
 
 				if ((kvp.length == 2) && kvp[0].equals(name)) {
 					return kvp[1];
@@ -548,14 +547,15 @@ public class HttpImpl implements Http {
 	}
 
 	public boolean isNonProxyHost(String host) {
-		if (_nonProxyHostsPattern == null ||
-			_nonProxyHostsPattern.matcher(host).matches()) {
+		if (_nonProxyHostsPattern != null) {
+			Matcher matcher = _nonProxyHostsPattern.matcher(host);
 
-			return true;
+			if (matcher.matches()) {
+				return true;
+			}
 		}
-		else {
-			return false;
-		}
+
+		return false;
 	}
 
 	public boolean isProxyHost(String host) {
@@ -578,14 +578,11 @@ public class HttpImpl implements Http {
 		Map<String, List<String>> tempParameterMap =
 			new LinkedHashMap<String, List<String>>();
 
-		StringTokenizer st = new StringTokenizer(
-			queryString, StringPool.AMPERSAND);
+		String[] parameters = StringUtil.split(queryString, CharPool.AMPERSAND);
 
-		while (st.hasMoreTokens()) {
-			String token = st.nextToken();
-
-			if (Validator.isNotNull(token)) {
-				String[] kvp = StringUtil.split(token, StringPool.EQUAL);
+		for (String parameter : parameters) {
+			if (parameter.length() > 0) {
+				String[] kvp = StringUtil.split(parameter, CharPool.EQUAL);
 
 				String key = kvp[0];
 
@@ -718,27 +715,22 @@ public class HttpImpl implements Http {
 			return url;
 		}
 
-		String anchor = StringPool.BLANK;
+		String[] array = PortalUtil.stripURLAnchor(url, StringPool.POUND);
 
-		int anchorPos = url.indexOf(CharPool.POUND);
+		url = array[0];
 
-		if (anchorPos != -1) {
-			anchor = url.substring(anchorPos);
-			url = url.substring(0, anchorPos);
-		}
+		String anchor = array[1];
 
 		StringBundler sb = new StringBundler();
 
 		sb.append(url.substring(0, pos + 1));
 
-		StringTokenizer st = new StringTokenizer(
-			url.substring(pos + 1, url.length()), StringPool.AMPERSAND);
+		String[] parameters = StringUtil.split(
+			url.substring(pos + 1, url.length()), CharPool.AMPERSAND);
 
-		while (st.hasMoreTokens()) {
-			String token = st.nextToken();
-
-			if (Validator.isNotNull(token)) {
-				String[] kvp = StringUtil.split(token, StringPool.EQUAL);
+		for (String parameter : parameters) {
+			if (parameter.length() > 0) {
+				String[] kvp = StringUtil.split(parameter, CharPool.EQUAL);
 
 				String key = kvp[0];
 
@@ -914,6 +906,49 @@ public class HttpImpl implements Http {
 		}
 	}
 
+	protected void processPostMethod(
+		PostMethod postMethod, List<Http.FilePart> fileParts,
+		Map<String, String> parts) {
+
+		if ((fileParts == null) || fileParts.isEmpty()) {
+			if (parts != null) {
+				for (Map.Entry<String, String> entry : parts.entrySet()) {
+					String value = entry.getValue();
+
+					if (Validator.isNotNull(value)) {
+						postMethod.addParameter(entry.getKey(), value);
+					}
+				}
+			}
+		}
+		else {
+			List<Part> partsList = new ArrayList<Part>();
+
+			if (parts != null) {
+				for (Map.Entry<String, String> entry : parts.entrySet()) {
+					String value = entry.getValue();
+
+					if (Validator.isNotNull(value)) {
+						StringPart stringPart = new StringPart(
+							entry.getKey(), value);
+
+						partsList.add(stringPart);
+					}
+				}
+			}
+
+			for (Http.FilePart filePart : fileParts) {
+				partsList.add(toCommonsFilePart(filePart));
+			}
+
+			MultipartRequestEntity multipartRequestEntity =
+				new MultipartRequestEntity(
+					partsList.toArray(new Part[0]), postMethod.getParams());
+
+			postMethod.setRequestEntity(multipartRequestEntity);
+		}
+	}
+
 	protected org.apache.commons.httpclient.Cookie toCommonsCookie(
 		Cookie cookie) {
 
@@ -1056,39 +1091,10 @@ public class HttpImpl implements Http {
 
 					entityEnclosingMethod.setRequestEntity(requestEntity);
 				}
-				else if (method.equals(Http.Method.POST) &&
-						 (((fileParts != null) && !fileParts.isEmpty()) ||
-						  ((parts != null) && !parts.isEmpty()))) {
-
+				else if (method.equals(Http.Method.POST)) {
 					PostMethod postMethod = (PostMethod)httpMethod;
 
-					List<Part> partsList = new ArrayList<Part>();
-
-					if (parts != null) {
-						for (Map.Entry<String, String> entry :
-								parts.entrySet()) {
-
-							String key = entry.getKey();
-							String value = entry.getValue();
-
-							if (value != null) {
-								postMethod.addParameter(key, value);
-							}
-						}
-					}
-
-					if (fileParts != null) {
-						for (Http.FilePart filePart : fileParts) {
-							partsList.add(toCommonsFilePart(filePart));
-						}
-					}
-
-					MultipartRequestEntity multipartRequestEntity =
-						new MultipartRequestEntity(
-							partsList.toArray(new Part[0]),
-							postMethod.getParams());
-
-					postMethod.setRequestEntity(multipartRequestEntity);
+					processPostMethod(postMethod, fileParts, parts);
 				}
 			}
 			else if (method.equals(Http.Method.DELETE)) {
@@ -1187,8 +1193,6 @@ public class HttpImpl implements Http {
 				}
 
 				bytes = FileUtil.getBytes(inputStream);
-
-				inputStream.close();
 			}
 
 			for (Header header : httpMethod.getResponseHeaders()) {

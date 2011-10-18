@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.dao.orm.SQLQuery;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.Type;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringBundler;
@@ -43,6 +44,9 @@ import java.util.List;
  */
 public class AssetTagFinderImpl
 	extends BasePersistenceImpl<AssetTag> implements AssetTagFinder {
+
+	public static String COUNT_BY_G_N =
+		AssetTagFinder.class.getName() + ".countByG_N";
 
 	public static String COUNT_BY_G_C_N =
 		AssetTagFinder.class.getName() + ".countByG_C_N";
@@ -75,6 +79,18 @@ public class AssetTagFinderImpl
 		throws SystemException {
 
 		return doCountByG_N_P(groupId, name, tagProperties, false);
+	}
+
+	public int filterCountByG_N(long groupId, String name)
+		throws SystemException {
+
+		return doCountByG_N(groupId, name, true);
+	}
+
+	public int filterCountByG_C_N(long groupId, long classNameId, String name)
+		throws SystemException {
+
+		return doCountByG_C_N(groupId, classNameId, name, true);
 	}
 
 	public int filterCountByG_N_P(
@@ -220,6 +236,51 @@ public class AssetTagFinderImpl
 		}
 	}
 
+	protected int doCountByG_N(
+			long groupId, String name, boolean inlineSQLHelper)
+		throws SystemException {
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			String sql = CustomSQLUtil.get(COUNT_BY_G_N);
+
+			if (inlineSQLHelper) {
+				sql = InlineSQLHelperUtil.replacePermissionCheck(
+					sql, AssetTag.class.getName(), "AssetTag.tagId", groupId);
+			}
+
+			SQLQuery q = session.createSQLQuery(sql);
+
+			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+
+			QueryPos qPos = QueryPos.getInstance(q);
+
+			qPos.add(groupId);
+			qPos.add(name);
+
+			Iterator<Long> itr = q.list().iterator();
+
+			if (itr.hasNext()) {
+				Long count = itr.next();
+
+				if (count != null) {
+					return count.intValue();
+				}
+			}
+
+			return 0;
+		}
+		catch (Exception e) {
+			throw new SystemException(e);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
 	protected int doCountByG_C_N(
 			long groupId, long classNameId, String name,
 			boolean inlineSQLHelper)
@@ -294,6 +355,7 @@ public class AssetTagFinderImpl
 			QueryPos qPos = QueryPos.getInstance(q);
 
 			setJoin(qPos, tagProperties);
+
 			qPos.add(groupId);
 			qPos.add(name);
 			qPos.add(name);
@@ -441,6 +503,7 @@ public class AssetTagFinderImpl
 			QueryPos qPos = QueryPos.getInstance(q);
 
 			setJoin(qPos, tagProperties);
+
 			qPos.add(groupId);
 			qPos.add(name);
 			qPos.add(name);
@@ -458,7 +521,7 @@ public class AssetTagFinderImpl
 	protected void setJoin(QueryPos qPos, String[] tagProperties) {
 		for (String tagProperty : tagProperties) {
 			String[] tagPropertyParts = StringUtil.split(
-				tagProperty, StringPool.COLON);
+				tagProperty, CharPool.COLON);
 
 			String key = StringPool.BLANK;
 

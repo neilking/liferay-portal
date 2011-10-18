@@ -109,9 +109,7 @@ portletURL.setParameter("mbCategoryId", String.valueOf(categoryId));
 
 		message = message.toEscapedModel();
 
-		boolean readThread = MBMessageFlagLocalServiceUtil.hasReadFlag(themeDisplay.getUserId(), thread);
-
-		row.setBold(!readThread);
+		row.setBold(!MBThreadFlagLocalServiceUtil.hasThreadFlag(themeDisplay.getUserId(), thread));
 		row.setObject(new Object[] {message, threadSubscriptionClassPKs});
 		row.setRestricted(!MBMessagePermission.contains(permissionChecker, message, ActionKeys.VIEW));
 		%>
@@ -128,7 +126,7 @@ portletURL.setParameter("mbCategoryId", String.valueOf(categoryId));
 		>
 
 			<%
-			int replies = MBMessageServiceUtil.getThreadMessagesCount(scopeGroupId, categoryId, thread.getThreadId(), WorkflowConstants.STATUS_ANY) - 1;
+			int answers = MBMessageServiceUtil.getThreadAnswersCount(scopeGroupId, categoryId, thread.getThreadId());
 
 			RatingsStats ratingsStats = RatingsStatsLocalServiceUtil.getStats(MBMessage.class.getName(), message.getMessageId());
 
@@ -140,8 +138,8 @@ portletURL.setParameter("mbCategoryId", String.valueOf(categoryId));
 					<span class="count"><%= String.valueOf(ratingScore) %></span> <span><%= LanguageUtil.get(pageContext, "votes") %></span>
 				</span>
 
-				<span class="status <%= (replies != 0) ? "answered" : " unanswered" %> ">
-					<span class="count"><%= replies %></span> <span><%= LanguageUtil.get(pageContext, (replies != 1) ? "answers" : "answer") %></span>
+				<span class="status <%= (answers != 0) ? "answered" : " unanswered" %> ">
+					<span class="count"><%= answers %></span> <span><%= LanguageUtil.get(pageContext, (answers != 1) ? "answers" : "answer") %></span>
 				</span>
 
 				<span class="views">

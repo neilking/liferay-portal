@@ -44,6 +44,7 @@ WorkflowTask workflowTask = (WorkflowTask)row.getObject();
 	</c:if>
 
 	<c:if test="<%= !workflowTask.isCompleted() && _isAssignedToUser(workflowTask, user) %>">
+
 		<%
 		List<String> transitionNames = WorkflowTaskManagerUtil.getNextTransitionNames(company.getCompanyId(), user.getUserId(), workflowTask.getWorkflowTaskId());
 
@@ -109,13 +110,13 @@ WorkflowTask workflowTask = (WorkflowTask)row.getObject();
 						handler: function() {
 							submitForm(form);
 						},
-						text: '<liferay-ui:message key="ok" />'
+						label: '<liferay-ui:message key="ok" />'
 					},
 					{
 						handler: function() {
 							dialog.close();
 						},
-						text: '<liferay-ui:message key="cancel" />'
+						label: '<liferay-ui:message key="cancel" />'
 					}
 				],
 				centered: true,

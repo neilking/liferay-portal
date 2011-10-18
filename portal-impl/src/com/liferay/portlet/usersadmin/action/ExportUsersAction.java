@@ -16,6 +16,7 @@ package com.liferay.portlet.usersadmin.action;
 
 import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.CSVUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
@@ -41,7 +42,6 @@ import com.liferay.portlet.ActionResponseImpl;
 import com.liferay.portlet.expando.model.ExpandoBridge;
 import com.liferay.portlet.usersadmin.search.UserSearch;
 import com.liferay.portlet.usersadmin.search.UserSearchTerms;
-import com.liferay.util.servlet.ServletResponseUtil;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -104,7 +104,7 @@ public class ExportUsersAction extends PortletAction {
 				sb.append(CSVUtil.encode(user.getFullName()));
 			}
 			else if (field.startsWith("expando:")) {
-				String attributeName = field.substring(7);
+				String attributeName = field.substring(8);
 
 				ExpandoBridge expandoBridge = user.getExpandoBridge();
 

@@ -25,13 +25,13 @@ public class Member_AssertCannotViewWCDTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
 				if (selenium.isElementPresent(
-							"link=Web Content Display Test Page")) {
+							"link=Web Content Display Permissions Page")) {
 					break;
 				}
 			}
@@ -41,12 +41,11 @@ public class Member_AssertCannotViewWCDTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Web Content Display Test Page",
-			RuntimeVariables.replace(""));
+		selenium.clickAt("link=Web Content Display Permissions Page",
+			RuntimeVariables.replace("Web Content Display Permissions Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		assertTrue(selenium.isTextPresent(
-				"You do not have the roles required to access this portlet. "));
+		assertEquals(RuntimeVariables.replace(
+				"You do not have the roles required to access this portlet."),
+			selenium.getText("//div[@class='portlet-msg-error']"));
 	}
 }

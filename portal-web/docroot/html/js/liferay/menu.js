@@ -59,6 +59,8 @@ AUI().add(
 
 		var SELECTOR_ANCHOR = 'a';
 
+		var SELECTOR_TEXT = 'a, span';
+
 		var SELECTOR_LIST_ITEM = 'li';
 
 		var SELECTOR_SEARCH_CONTAINER = '.lfr-menu-list-search-container';
@@ -77,38 +79,9 @@ AUI().add(
 			if (!arguments.callee._hasRun) {
 				arguments.callee._hasRun = true;
 
-				var Layout = Liferay.Layout;
-
-				if (Layout) {
-					Layout.on('drag:start', instance._closeActiveMenu, instance);
-				}
+				Liferay.on('portletDragStart', instance._closeActiveMenu, instance);
 
 				A.getWin().on('resize', A.debounce(instance._positionActiveMenu, 200, instance));
-
-				A.getBody().delegate(
-					EVENT_CLICK,
-					function(event) {
-						var trigger = event.currentTarget;
-
-						var activeTrigger = instance._activeTrigger;
-
-						if (activeTrigger && (activeTrigger != trigger)) {
-							activeTrigger.removeClass(CSS_STATE_ACTIVE);
-						}
-
-						if (!trigger.hasClass('disabled')) {
-							var menu = instance._getMenu(trigger);
-
-							instance._activeMenu = menu;
-							instance._activeTrigger = trigger;
-
-							instance._positionActiveMenu();
-
-							event.halt();
-						}
-					},
-					'.lfr-actions'
-				);
 
 				A.getDoc().on(EVENT_CLICK, instance._closeActiveMenu, instance);
 			}
@@ -170,7 +143,7 @@ AUI().add(
 
 					var searchLabelNode = trigger.one(SELECTOR_ANCHOR) || trigger;
 
-					var searchBoxContent = Lang.substitute(
+					var searchBoxContent = Lang.sub(
 						TPL_SEARCH_BOX,
 						{
 							searchId: searchId,
@@ -185,7 +158,7 @@ AUI().add(
 
 					var options = {
 						data: function(node) {
-							return trim(node.one(SELECTOR_ANCHOR).text());
+							return trim(node.one(SELECTOR_TEXT).text());
 						},
 						input: '#' + searchId,
 						nodes: '#' + listNode.guid() + ' > li'
@@ -399,11 +372,9 @@ AUI().add(
 
 					align.points = instance._getAlignPoints(cssClass);
 
-					overlay.set('align', align);
-
-					overlay._syncUIPosAlign();
-
 					overlay.show();
+
+					overlay.set('align', align);
 
 					if (Liferay.Browser.isIe() && Liferay.Browser.getMajorVersion() <= 7) {
 						var searchContainer = menu.one(SELECTOR_SEARCH_CONTAINER);
@@ -465,6 +436,61 @@ AUI().add(
 			}
 		};
 
+		var buffer = [];
+
+		Menu.register = function(id) {
+			var instance = Menu._INSTANCE;
+
+			if (!instance) {
+				instance = new Menu();
+
+				Menu._INSTANCE = instance;
+			}
+
+			buffer.push(id);
+
+			Menu._registerTask();
+		};
+
+		Menu._registerTask = A.debounce(
+			function() {
+				var instance = Menu._INSTANCE;
+
+				if (buffer.length) {
+					var list = buffer.join();
+
+					buffer.length = 0;
+
+					var nodes = A.all(list);
+
+					nodes.on(
+						EVENT_CLICK,
+						function(event) {
+							var trigger = event.currentTarget;
+
+							var activeTrigger = instance._activeTrigger;
+
+							if (activeTrigger && (activeTrigger != trigger)) {
+								activeTrigger.removeClass(CSS_STATE_ACTIVE);
+							}
+
+							if (!trigger.hasClass('disabled')) {
+								var menu = instance._getMenu(trigger);
+
+								instance._activeMenu = menu;
+								instance._activeTrigger = trigger;
+
+								instance._positionActiveMenu();
+
+								event.halt();
+							}
+						}
+					);
+				}
+			},
+			100
+		);
+
 		Menu._targetLink = function(event, action) {
 			var anchor = event.currentTarget.one(SELECTOR_ANCHOR);
 
@@ -477,6 +503,6 @@ AUI().add(
 	},
 	'',
 	{
-		requires: ['aui-live-search','aui-overlay', 'node-focusmanager', 'selector-css3']
+		requires: ['aui-live-search', 'aui-overlay', 'node-focusmanager']
 	}
 );

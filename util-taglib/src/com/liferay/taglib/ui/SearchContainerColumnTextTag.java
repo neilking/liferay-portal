@@ -60,6 +60,12 @@ public class SearchContainerColumnTextTag<R>
 				if (bodyContent != null) {
 					_value = bodyContent.getString();
 				}
+				else {
+					Object object = BeanPropertiesUtil.getObject(
+						row.getObject(), getName());
+
+					_value = String.valueOf(object);
+				}
 			}
 
 			if (_translate) {

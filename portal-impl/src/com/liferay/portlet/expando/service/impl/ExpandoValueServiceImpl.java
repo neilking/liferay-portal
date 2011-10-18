@@ -24,9 +24,12 @@ import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portlet.expando.model.ExpandoColumn;
 import com.liferay.portlet.expando.model.ExpandoValue;
 import com.liferay.portlet.expando.service.base.ExpandoValueServiceBaseImpl;
-import com.liferay.portlet.expando.service.permission.ExpandoColumnPermission;
+import com.liferay.portlet.expando.service.permission.ExpandoColumnPermissionUtil;
 
 import java.io.Serializable;
+
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * @author Brian Wing Shun Chan
@@ -41,7 +44,7 @@ public class ExpandoValueServiceImpl extends ExpandoValueServiceBaseImpl {
 		ExpandoColumn column = expandoColumnLocalService.getColumn(
 			companyId, className, tableName, columnName);
 
-		ExpandoColumnPermission.check(
+		ExpandoColumnPermissionUtil.check(
 			getPermissionChecker(), column, ActionKeys.UPDATE);
 
 		return expandoValueLocalService.addValue(
@@ -56,11 +59,25 @@ public class ExpandoValueServiceImpl extends ExpandoValueServiceBaseImpl {
 		ExpandoColumn column = expandoColumnLocalService.getColumn(
 			companyId, className, tableName, columnName);
 
-		ExpandoColumnPermission.check(
+		ExpandoColumnPermissionUtil.check(
 			getPermissionChecker(), column, ActionKeys.UPDATE);
 
 		return expandoValueLocalService.addValue(
 			companyId, className, tableName, columnName, classPK, data);
+	}
+
+	public void addValues(
+			long companyId, String className, String tableName,
+			long classPK, Map<String, Serializable> attributeValues)
+		throws PortalException, SystemException {
+
+		for (Map.Entry<String, Serializable> entry :
+				attributeValues.entrySet()) {
+
+			addValue(
+				companyId, className, tableName, entry.getKey(), classPK,
+				entry.getValue());
+		}
 	}
 
 	public Serializable getData(
@@ -71,7 +88,7 @@ public class ExpandoValueServiceImpl extends ExpandoValueServiceBaseImpl {
 		ExpandoColumn column = expandoColumnLocalService.getColumn(
 			companyId, className, tableName, columnName);
 
-		if (ExpandoColumnPermission.contains(
+		if (ExpandoColumnPermissionUtil.contains(
 				getPermissionChecker(), column, ActionKeys.VIEW)) {
 
 			return expandoValueLocalService.getData(
@@ -82,6 +99,29 @@ public class ExpandoValueServiceImpl extends ExpandoValueServiceBaseImpl {
 		}
 	}
 
+	public Map<String, Serializable> getData(
+			long companyId, String className, String tableName,
+			Collection<String> columnNames, long classPK)
+		throws PortalException, SystemException {
+
+		Map<String, Serializable> attributeValues =
+			expandoValueLocalService.getData(
+				companyId, className, tableName, columnNames, classPK);
+
+		for (String columnName : columnNames) {
+			ExpandoColumn column = expandoColumnLocalService.getColumn(
+				companyId, className, tableName, columnName);
+
+			if (!ExpandoColumnPermissionUtil.contains(
+					getPermissionChecker(), column, ActionKeys.VIEW)) {
+
+				attributeValues.remove(columnName);
+			}
+		}
+
+		return attributeValues;
+	}
+
 	public JSONObject getJSONData(
 			long companyId, String className, String tableName,
 			String columnName, long classPK)
@@ -90,7 +130,7 @@ public class ExpandoValueServiceImpl extends ExpandoValueServiceBaseImpl {
 		ExpandoColumn column = expandoColumnLocalService.getColumn(
 			companyId, className, tableName, columnName);
 
-		if (ExpandoColumnPermission.contains(
+		if (ExpandoColumnPermissionUtil.contains(
 				getPermissionChecker(), column, ActionKeys.VIEW)) {
 
 			String data = expandoValueLocalService.getData(

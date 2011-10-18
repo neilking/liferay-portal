@@ -19,6 +19,7 @@ import com.liferay.portal.editor.fckeditor.exception.FCKException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.StringBundler;
@@ -29,14 +30,17 @@ import com.liferay.portal.repository.liferayrepository.model.LiferayFolder;
 import com.liferay.portal.security.auth.PrincipalException;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.util.PortletKeys;
+import com.liferay.portal.webserver.WebServerServletTokenUtil;
 import com.liferay.portlet.documentlibrary.model.DLFolder;
 import com.liferay.portlet.documentlibrary.model.DLFolderConstants;
 import com.liferay.portlet.documentlibrary.model.impl.DLFolderImpl;
 import com.liferay.portlet.documentlibrary.service.DLAppServiceUtil;
+import com.liferay.portlet.documentlibrary.util.ImageProcessor;
 
-import java.io.File;
+import java.io.InputStream;
 
 import java.util.List;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.w3c.dom.Document;
@@ -57,6 +61,7 @@ public class DocumentCommandReceiver extends BaseCommandReceiver {
 				group.getGroupId(),
 				StringPool.SLASH + commandArgument.getCurrentFolder());
 
+			long repositoryId = folder.getRepositoryId();
 			long parentFolderId = folder.getFolderId();
 			String name = commandArgument.getNewFolder();
 			String description = StringPool.BLANK;
@@ -67,7 +72,7 @@ public class DocumentCommandReceiver extends BaseCommandReceiver {
 			serviceContext.setAddGuestPermissions(true);
 
 			DLAppServiceUtil.addFolder(
-				group.getGroupId(), parentFolderId, name, description,
+				repositoryId, parentFolderId, name, description,
 				serviceContext);
 		}
 		catch (Exception e) {
@@ -79,8 +84,8 @@ public class DocumentCommandReceiver extends BaseCommandReceiver {
 
 	@Override
 	protected String fileUpload(
-		CommandArgument commandArgument, String fileName, File file,
-		String contentType) {
+		CommandArgument commandArgument, String fileName,
+		InputStream inputStream, String contentType, long size) {
 
 		try {
 			Group group = commandArgument.getCurrentGroup();
@@ -88,6 +93,7 @@ public class DocumentCommandReceiver extends BaseCommandReceiver {
 			Folder folder = _getFolder(
 				group.getGroupId(), commandArgument.getCurrentFolder());
 
+			long repositoryId = folder.getRepositoryId();
 			long folderId = folder.getFolderId();
 			String title = fileName;
 			String description = StringPool.BLANK;
@@ -99,8 +105,8 @@ public class DocumentCommandReceiver extends BaseCommandReceiver {
 			serviceContext.setAddGuestPermissions(true);
 
 			DLAppServiceUtil.addFileEntry(
-				group.getGroupId(), folderId, contentType, title, description,
-				changeLog, file, serviceContext);
+				repositoryId, folderId, title, contentType, title,
+				description, changeLog, inputStream, size, serviceContext);
 		}
 		catch (Exception e) {
 			throw new FCKException(e);
@@ -162,7 +168,7 @@ public class DocumentCommandReceiver extends BaseCommandReceiver {
 			group.getGroupId(), commandArgument.getCurrentFolder());
 
 		List<FileEntry> fileEntries = DLAppServiceUtil.getFileEntries(
-			group.getGroupId(), folder.getFolderId());
+			folder.getRepositoryId(), folder.getFolderId());
 
 		for (FileEntry fileEntry : fileEntries) {
 			Element fileElement = document.createElement("File");
@@ -173,16 +179,28 @@ public class DocumentCommandReceiver extends BaseCommandReceiver {
 			fileElement.setAttribute("desc", fileEntry.getTitle());
 			fileElement.setAttribute("size", getSize(fileEntry.getSize()));
 
-			StringBundler url = new StringBundler(6);
+			StringBundler sb = new StringBundler(8);
 
-			url.append("/documents/");
-			url.append(group.getGroupId());
-			url.append(StringPool.SLASH);
-			url.append(fileEntry.getFolderId());
-			url.append(StringPool.SLASH);
-			url.append(HttpUtil.encodeURL(fileEntry.getTitle()));
+			sb.append("/documents/");
+			sb.append(group.getGroupId());
+			sb.append(StringPool.SLASH);
+			sb.append(fileEntry.getFolderId());
+			sb.append(StringPool.SLASH);
+			sb.append(HttpUtil.encodeURL(fileEntry.getTitle()));
 
-			fileElement.setAttribute("url", url.toString());
+			Set<String> imageMimeTypes = ImageProcessor.getImageMimeTypes();
+
+			if (imageMimeTypes.contains(fileEntry.getMimeType())) {
+				sb.append("&t=");
+
+				FileVersion fileVersion = fileEntry.getFileVersion();
+
+				sb.append(
+					WebServerServletTokenUtil.getToken(
+						fileVersion.getFileVersionId()));
+			}
+
+			fileElement.setAttribute("url", sb.toString());
 		}
 	}
 
@@ -193,6 +211,7 @@ public class DocumentCommandReceiver extends BaseCommandReceiver {
 
 		dlFolder.setFolderId(DLFolderConstants.DEFAULT_PARENT_FOLDER_ID);
 		dlFolder.setGroupId(groupId);
+		dlFolder.setRepositoryId(groupId);
 
 		Folder folder = new LiferayFolder(dlFolder);
 
@@ -206,7 +225,7 @@ public class DocumentCommandReceiver extends BaseCommandReceiver {
 			String curFolderName = st.nextToken();
 
 			List<Folder> folders = DLAppServiceUtil.getFolders(
-				groupId, folder.getFolderId());
+				folder.getRepositoryId(), folder.getFolderId());
 
 			for (Folder curFolder : folders) {
 				if (curFolder.getName().equals(curFolderName)) {
@@ -238,7 +257,7 @@ public class DocumentCommandReceiver extends BaseCommandReceiver {
 				group.getGroupId(), commandArgument.getCurrentFolder());
 
 			List<Folder> folders = DLAppServiceUtil.getFolders(
-				group.getGroupId(), folder.getFolderId());
+				folder.getRepositoryId(), folder.getFolderId());
 
 			for (Folder curFolder : folders) {
 				Element folderElement = document.createElement("Folder");

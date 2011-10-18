@@ -16,6 +16,7 @@ package com.liferay.portal.spring.context;
 
 import com.liferay.portal.bean.BeanLocatorImpl;
 import com.liferay.portal.cache.ehcache.ClearEhcacheThreadUtil;
+import com.liferay.portal.kernel.adaptor.AdaptorUtil;
 import com.liferay.portal.kernel.bean.BeanLocator;
 import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 import com.liferay.portal.kernel.cache.CacheRegistryUtil;
@@ -54,6 +55,7 @@ import java.lang.reflect.Field;
 
 import java.util.Map;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 
 import org.springframework.beans.CachedIntrospectionResults;
@@ -66,6 +68,7 @@ import org.springframework.web.context.ContextLoaderListener;
 /**
  * @author Michael Young
  * @author Shuyang Zhou
+ * @author Raymond Augé
  */
 public class PortalContextLoaderListener extends ContextLoaderListener {
 
@@ -80,8 +83,9 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 
 		InitUtil.init();
 
-		ClassPathUtil.initializeClassPaths(
-			servletContextEvent.getServletContext());
+		ServletContext servletContext = servletContextEvent.getServletContext();
+
+		ClassPathUtil.initializeClassPaths(servletContext);
 
 		DirectServletRegistry.clearServlets();
 
@@ -137,6 +141,15 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 			applicationContext.getAutowireCapableBeanFactory();
 
 		clearFilteredPropertyDescriptorsCache(autowireCapableBeanFactory);
+
+		try {
+			AdaptorUtil.init(applicationContext);
+
+			AdaptorUtil.start();
+		}
+		catch (Exception e) {
+			_log.error(e, e);
+		}
 	}
 
 	@Override
@@ -144,10 +157,10 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 		PortalContextLoaderLifecycleThreadLocal.setDestroying(true);
 
 		try {
-			super.contextDestroyed(event);
+			AdaptorUtil.stop();
 		}
-		finally {
-			PortalContextLoaderLifecycleThreadLocal.setDestroying(false);
+		catch (Exception e) {
+			_log.error(e, e);
 		}
 
 		ThreadLocalCacheManager.destroy();
@@ -171,6 +184,13 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 		}
 		catch (Exception e) {
 			_log.error(e, e);
+		}
+
+		try {
+			super.contextDestroyed(event);
+		}
+		finally {
+			PortalContextLoaderLifecycleThreadLocal.setDestroying(false);
 		}
 	}
 

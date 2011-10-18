@@ -49,7 +49,7 @@ public class WikiPageAssetRenderer extends BaseAssetRenderer {
 
 	public long getClassPK() {
 		if (!_page.isApproved() &&
-			(_page.getVersion() != WikiPageConstants.DEFAULT_VERSION)) {
+			(_page.getVersion() != WikiPageConstants.VERSION_DEFAULT)) {
 
 			return _page.getPageId();
 		}
@@ -146,12 +146,9 @@ public class WikiPageAssetRenderer extends BaseAssetRenderer {
 		LiferayPortletResponse liferayPortletResponse,
 		String noSuchEntryRedirect) {
 
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)liferayPortletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
-		return themeDisplay.getPathMain() +
-			"/wiki/find_page?pageResourcePrimKey=" + _page.getResourcePrimKey();
+		return getURLViewInContext(
+			liferayPortletRequest, noSuchEntryRedirect, "/wiki/find_page",
+			"pageResourcePrimKey", _page.getResourcePrimKey());
 	}
 
 	public long getUserId() {

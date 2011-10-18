@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.expando.service;
 
+import com.liferay.portal.service.ServiceWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link ExpandoTableLocalService}.
@@ -23,7 +25,8 @@ package com.liferay.portlet.expando.service;
  * @see       ExpandoTableLocalService
  * @generated
  */
-public class ExpandoTableLocalServiceWrapper implements ExpandoTableLocalService {
+public class ExpandoTableLocalServiceWrapper implements ExpandoTableLocalService,
+	ServiceWrapper<ExpandoTableLocalService> {
 	public ExpandoTableLocalServiceWrapper(
 		ExpandoTableLocalService expandoTableLocalService) {
 		_expandoTableLocalService = expandoTableLocalService;
@@ -330,6 +333,25 @@ public class ExpandoTableLocalServiceWrapper implements ExpandoTableLocalService
 		_expandoTableLocalService.deleteTables(companyId, className);
 	}
 
+	public com.liferay.portlet.expando.model.ExpandoTable fetchDefaultTable(
+		long companyId, long classNameId)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _expandoTableLocalService.fetchDefaultTable(companyId,
+			classNameId);
+	}
+
+	public com.liferay.portlet.expando.model.ExpandoTable fetchDefaultTable(
+		long companyId, java.lang.String className)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _expandoTableLocalService.fetchDefaultTable(companyId, className);
+	}
+
+	public com.liferay.portlet.expando.model.ExpandoTable fetchTable(
+		long companyId, long classNameId, java.lang.String name)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _expandoTableLocalService.fetchTable(companyId, classNameId, name);
+	}
+
 	public com.liferay.portlet.expando.model.ExpandoTable getDefaultTable(
 		long companyId, long classNameId)
 		throws com.liferay.portal.kernel.exception.PortalException,
@@ -403,11 +425,26 @@ public class ExpandoTableLocalServiceWrapper implements ExpandoTableLocalService
 		return _expandoTableLocalService.updateTable(tableId, name);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public ExpandoTableLocalService getWrappedExpandoTableLocalService() {
 		return _expandoTableLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedExpandoTableLocalService(
+		ExpandoTableLocalService expandoTableLocalService) {
+		_expandoTableLocalService = expandoTableLocalService;
+	}
+
+	public ExpandoTableLocalService getWrappedService() {
+		return _expandoTableLocalService;
+	}
+
+	public void setWrappedService(
 		ExpandoTableLocalService expandoTableLocalService) {
 		_expandoTableLocalService = expandoTableLocalService;
 	}

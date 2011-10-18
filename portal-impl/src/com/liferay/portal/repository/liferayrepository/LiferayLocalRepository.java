@@ -21,6 +21,8 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.SortedArrayList;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFileEntry;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFileVersion;
@@ -30,16 +32,20 @@ import com.liferay.portal.service.ServiceContext;
 import com.liferay.portlet.documentlibrary.model.DLFileEntry;
 import com.liferay.portlet.documentlibrary.model.DLFileVersion;
 import com.liferay.portlet.documentlibrary.model.DLFolder;
+import com.liferay.portlet.documentlibrary.service.DLAppHelperLocalService;
 import com.liferay.portlet.documentlibrary.service.DLFileEntryLocalService;
 import com.liferay.portlet.documentlibrary.service.DLFileEntryService;
 import com.liferay.portlet.documentlibrary.service.DLFileVersionLocalService;
 import com.liferay.portlet.documentlibrary.service.DLFileVersionService;
 import com.liferay.portlet.documentlibrary.service.DLFolderLocalService;
 import com.liferay.portlet.documentlibrary.service.DLFolderService;
+import com.liferay.portlet.dynamicdatamapping.storage.Fields;
 
+import java.io.File;
 import java.io.InputStream;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Alexander Chow
@@ -49,6 +55,7 @@ public class LiferayLocalRepository
 
 	public LiferayLocalRepository(
 		RepositoryService repositoryService,
+		DLAppHelperLocalService dlAppHelperLocalService,
 		DLFileEntryLocalService dlFileEntryLocalService,
 		DLFileEntryService dlFileEntryService,
 		DLFileVersionLocalService dlFileVersionLocalService,
@@ -57,13 +64,14 @@ public class LiferayLocalRepository
 		DLFolderService dlFolderService, long repositoryId) {
 
 		super(
-			repositoryService, dlFileEntryLocalService, dlFileEntryService,
-			dlFileVersionLocalService, dlFileVersionService,
+			repositoryService, dlAppHelperLocalService, dlFileEntryLocalService,
+			dlFileEntryService, dlFileVersionLocalService, dlFileVersionService,
 			dlFolderLocalService, dlFolderService, repositoryId);
 	}
 
 	public LiferayLocalRepository(
 		RepositoryService repositoryService,
+		DLAppHelperLocalService dlAppHelperLocalService,
 		DLFileEntryLocalService dlFileEntryLocalService,
 		DLFileEntryService dlFileEntryService,
 		DLFileVersionLocalService dlFileVersionLocalService,
@@ -73,21 +81,55 @@ public class LiferayLocalRepository
 		long fileVersionId) {
 
 		super(
-			repositoryService, dlFileEntryLocalService, dlFileEntryService,
-			dlFileVersionLocalService, dlFileVersionService,
+			repositoryService, dlAppHelperLocalService, dlFileEntryLocalService,
+			dlFileEntryService, dlFileVersionLocalService, dlFileVersionService,
 			dlFolderLocalService, dlFolderService, folderId, fileEntryId,
 			fileVersionId);
 	}
 
 	public FileEntry addFileEntry(
-			long userId, long folderId, String mimeType, String title,
-			String description, String changeLog, InputStream is, long size,
+			long userId, long folderId, String sourceFileName, String mimeType,
+			String title, String description, String changeLog, File file,
 			ServiceContext serviceContext)
 		throws PortalException, SystemException {
 
+		long fileEntryTypeId = ParamUtil.getLong(
+			serviceContext, "fileEntryTypeId", -1L);
+		Map<String, Fields> fieldsMap = getFieldsMap(
+			serviceContext, fileEntryTypeId);
+		long size = 0;
+
+		if (file != null) {
+			size = file.length();
+		}
+
 		DLFileEntry dlFileEntry = dlFileEntryLocalService.addFileEntry(
 			userId, getGroupId(), getRepositoryId(), toFolderId(folderId),
-			mimeType, title, description, changeLog, is, size, serviceContext);
+			sourceFileName, mimeType, title, description, changeLog,
+			fileEntryTypeId, fieldsMap, file, null, size, serviceContext);
+
+		addFileEntryResources(dlFileEntry, serviceContext);
+
+		return new LiferayFileEntry(dlFileEntry);
+	}
+
+	public FileEntry addFileEntry(
+			long userId, long folderId, String sourceFileName, String mimeType,
+			String title, String description, String changeLog, InputStream is,
+			long size, ServiceContext serviceContext)
+		throws PortalException, SystemException {
+
+		long fileEntryTypeId = ParamUtil.getLong(
+			serviceContext, "fileEntryTypeId", -1L);
+		Map<String, Fields> fieldsMap = getFieldsMap(
+			serviceContext, fileEntryTypeId);
+
+		DLFileEntry dlFileEntry = dlFileEntryLocalService.addFileEntry(
+			userId, getGroupId(), getRepositoryId(), toFolderId(folderId),
+			sourceFileName, mimeType, title, description, changeLog,
+			fileEntryTypeId, fieldsMap, null, is, size, serviceContext);
+
+		addFileEntryResources(dlFileEntry, serviceContext);
 
 		return new LiferayFileEntry(dlFileEntry);
 	}
@@ -97,9 +139,11 @@ public class LiferayLocalRepository
 			ServiceContext serviceContext)
 		throws PortalException, SystemException {
 
+		boolean mountPoint = ParamUtil.getBoolean(serviceContext, "mountPoint");
+
 		DLFolder dlFolder = dlFolderLocalService.addFolder(
-			userId, getGroupId(), getRepositoryId(), toFolderId(parentFolderId),
-			title, description, serviceContext);
+			userId, getGroupId(), getRepositoryId(), mountPoint,
+			toFolderId(parentFolderId), title, description, serviceContext);
 
 		return new LiferayFolder(dlFolder);
 	}
@@ -238,6 +282,20 @@ public class LiferayLocalRepository
 		return toFileEntriesAndFolders(dlFoldersAndFileEntriesAndFileShortcuts);
 	}
 
+	public List<Object> getFoldersAndFileEntriesAndFileShortcuts(
+			long folderId, int status, String[] mimeTypes,
+			boolean includeMountFolders, int start, int end,
+			OrderByComparator obc)
+		throws SystemException {
+
+		List<Object> dlFoldersAndFileEntriesAndFileShortcuts =
+			dlFolderLocalService.getFoldersAndFileEntriesAndFileShortcuts(
+				getGroupId(), toFolderId(folderId), status, mimeTypes,
+				includeMountFolders, start, end, obc);
+
+		return toFileEntriesAndFolders(dlFoldersAndFileEntriesAndFileShortcuts);
+	}
+
 	public int getFoldersAndFileEntriesAndFileShortcutsCount(
 			long folderId, int status, boolean includeMountFolders)
 		throws SystemException {
@@ -245,6 +303,17 @@ public class LiferayLocalRepository
 		return dlFolderLocalService.
 			getFoldersAndFileEntriesAndFileShortcutsCount(
 				getGroupId(), toFolderId(folderId), status,
+				includeMountFolders);
+	}
+
+	public int getFoldersAndFileEntriesAndFileShortcutsCount(
+			long folderId, int status, String[] mimeTypes,
+			boolean includeMountFolders)
+		throws SystemException {
+
+		return dlFolderLocalService.
+			getFoldersAndFileEntriesAndFileShortcutsCount(
+				getGroupId(), toFolderId(folderId), status, mimeTypes,
 				includeMountFolders);
 	}
 
@@ -296,12 +365,33 @@ public class LiferayLocalRepository
 			long[] assetLinkEntryIds)
 		throws PortalException, SystemException {
 
-		DLFileEntry dlFileEntry = (DLFileEntry)fileEntry.getModel();
-		DLFileVersion dlFileVersion = (DLFileVersion)fileVersion.getModel();
+		dlAppHelperLocalService.updateAsset(
+			userId, fileEntry, fileVersion, assetCategoryIds, assetTagNames,
+			assetLinkEntryIds);
+	}
 
-		dlFileEntryLocalService.updateAsset(
-			userId, dlFileEntry, dlFileVersion, assetCategoryIds,
-			assetTagNames, assetLinkEntryIds);
+	public FileEntry updateFileEntry(
+			long userId, long fileEntryId, String sourceFileName,
+			String mimeType, String title, String description, String changeLog,
+			boolean majorVersion, File file, ServiceContext serviceContext)
+		throws PortalException, SystemException {
+
+		long fileEntryTypeId = ParamUtil.getLong(
+			serviceContext, "fileEntryTypeId", -1L);
+		Map<String, Fields> fieldsMap = getFieldsMap(
+			serviceContext, fileEntryTypeId);
+		long size = 0;
+
+		if (file != null) {
+			size = file.length();
+		}
+
+		DLFileEntry dlFileEntry = dlFileEntryLocalService.updateFileEntry(
+			userId, fileEntryId, sourceFileName, mimeType, title, description,
+			changeLog, majorVersion, fileEntryTypeId, fieldsMap, file, null,
+			size, serviceContext);
+
+		return new LiferayFileEntry(dlFileEntry);
 	}
 
 	public FileEntry updateFileEntry(
@@ -311,9 +401,15 @@ public class LiferayLocalRepository
 			ServiceContext serviceContext)
 		throws PortalException, SystemException {
 
+		long fileEntryTypeId = ParamUtil.getLong(
+			serviceContext, "fileEntryTypeId", -1L);
+		Map<String, Fields> fieldsMap = getFieldsMap(
+			serviceContext, fileEntryTypeId);
+
 		DLFileEntry dlFileEntry = dlFileEntryLocalService.updateFileEntry(
 			userId, fileEntryId, sourceFileName, mimeType, title, description,
-			changeLog, majorVersion, is, size, serviceContext);
+			changeLog, majorVersion, fileEntryTypeId, fieldsMap, null, is, size,
+			serviceContext);
 
 		return new LiferayFileEntry(dlFileEntry);
 	}
@@ -323,9 +419,17 @@ public class LiferayLocalRepository
 			String description, ServiceContext serviceContext)
 		throws PortalException, SystemException {
 
+		long defaultFileEntryTypeId = ParamUtil.getLong(
+			serviceContext, "defaultFileEntryTypeId");
+		SortedArrayList<Long> fileEntryTypeIds = getLongList(
+			serviceContext, "fileEntryTypeSearchContainerPrimaryKeys");
+		boolean overrideFileEntryTypes = ParamUtil.getBoolean(
+			serviceContext, "overrideFileEntryTypes");
+
 		DLFolder dlFolder = dlFolderLocalService.updateFolder(
 			toFolderId(folderId), toFolderId(parentFolderId), title,
-			description, serviceContext);
+			description, defaultFileEntryTypeId, fileEntryTypeIds,
+			overrideFileEntryTypes, serviceContext);
 
 		return new LiferayFolder(dlFolder);
 	}

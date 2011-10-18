@@ -25,12 +25,12 @@ public class SearchCouponTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent("link=Shopping Test Page")) {
+				if (selenium.isVisible("link=Shopping Test Page")) {
 					break;
 				}
 			}
@@ -40,33 +40,34 @@ public class SearchCouponTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Shopping Test Page", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Shopping Test Page",
+			RuntimeVariables.replace("Shopping Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Coupons", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Coupons", RuntimeVariables.replace("Coupons"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
+		assertEquals(RuntimeVariables.replace(
+				"Shopping Coupon Name\nShopping Coupon Description"),
+			selenium.getText("//td[3]/a"));
 
 		String codeSearch = selenium.getText("//td[2]/a");
 		RuntimeVariables.setValue("codeSearch", codeSearch);
-		selenium.type("_34_code",
+		selenium.type("//input[@id='_34_code']",
 			RuntimeVariables.replace(RuntimeVariables.getValue("codeSearch")));
-		selenium.saveScreenShotAndSource();
 		selenium.clickAt("//input[@value='Search']",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Search"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		assertTrue(selenium.isTextPresent("Coupon Test\nThis is a coupon test."));
+		assertEquals(RuntimeVariables.replace(
+				"Shopping Coupon Name\nShopping Coupon Description"),
+			selenium.getText("//td[3]/a"));
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent("link=Shopping Test Page")) {
+				if (selenium.isVisible("link=Shopping Test Page")) {
 					break;
 				}
 			}
@@ -76,23 +77,19 @@ public class SearchCouponTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Shopping Test Page", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Shopping Test Page",
+			RuntimeVariables.replace("Shopping Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Coupons", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Coupons", RuntimeVariables.replace("Coupons"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.type("_34_code",
+		selenium.type("//input[@id='_34_code']",
 			RuntimeVariables.replace(RuntimeVariables.getValue("codeSearch")));
-		selenium.saveScreenShotAndSource();
-		selenium.typeKeys("_34_code", RuntimeVariables.replace("1"));
-		selenium.saveScreenShotAndSource();
+		selenium.typeKeys("//input[@id='_34_code']",
+			RuntimeVariables.replace("1"));
 		selenium.clickAt("//input[@value='Search']",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Search"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 		assertFalse(selenium.isTextPresent(
-				"Coupon Test\nThis is a coupon test."));
+				"Shopping Coupon Name\nShopping Coupon Description"));
 	}
 }

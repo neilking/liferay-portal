@@ -19,7 +19,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BaseIndexer;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
-import com.liferay.portal.kernel.search.DocumentImpl;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.SearchContext;
@@ -72,6 +71,10 @@ public class JournalIndexer extends BaseIndexer {
 		return CLASS_NAMES;
 	}
 
+	public String getPortletId() {
+		return PORTLET_ID;
+	}
+
 	@Override
 	public void postProcessContextQuery(
 			BooleanQuery contextQuery, SearchContext searchContext)
@@ -117,13 +120,14 @@ public class JournalIndexer extends BaseIndexer {
 		throws Exception {
 
 		addSearchTerm(searchQuery, searchContext, Field.CLASS_PK, false);
-		addLocalizedSearchTerm(searchQuery, searchContext, Field.CONTENT, true);
 		addLocalizedSearchTerm(
-			searchQuery, searchContext, Field.DESCRIPTION, true);
-		addSearchTerm(searchQuery, searchContext, Field.ENTRY_CLASS_PK, true);
-		addLocalizedSearchTerm(searchQuery, searchContext, Field.TITLE, true);
+			searchQuery, searchContext, Field.CONTENT, false);
+		addLocalizedSearchTerm(
+			searchQuery, searchContext, Field.DESCRIPTION, false);
+		addSearchTerm(searchQuery, searchContext, Field.ENTRY_CLASS_PK, false);
+		addLocalizedSearchTerm(searchQuery, searchContext, Field.TITLE, false);
 		addSearchTerm(searchQuery, searchContext, Field.TYPE, false);
-		addSearchTerm(searchQuery, searchContext, Field.USER_NAME, true);
+		addSearchTerm(searchQuery, searchContext, Field.USER_NAME, false);
 
 		LinkedHashMap<String, Object> params =
 			(LinkedHashMap<String, Object>)searchContext.getAttribute("params");
@@ -141,13 +145,9 @@ public class JournalIndexer extends BaseIndexer {
 	protected void doDelete(Object obj) throws Exception {
 		JournalArticle article = (JournalArticle)obj;
 
-		Document document = new DocumentImpl();
-
-		document.addUID(
-			PORTLET_ID, article.getGroupId(), article.getArticleId());
-
-		SearchEngineUtil.deleteDocument(
-			article.getCompanyId(), document.get(Field.UID));
+		deleteDocument(
+			article.getCompanyId(), article.getGroupId(),
+			article.getArticleId());
 	}
 
 	@Override
@@ -270,7 +270,7 @@ public class JournalIndexer extends BaseIndexer {
 		if (!article.isIndexable() ||
 			(!article.isApproved() &&
 			 (article.getVersion() !=
-			  	JournalArticleConstants.DEFAULT_VERSION))) {
+				  JournalArticleConstants.VERSION_DEFAULT))) {
 
 			SearchEngineUtil.deleteDocument(
 				article.getCompanyId(), document.get(Field.UID));
@@ -489,7 +489,7 @@ public class JournalIndexer extends BaseIndexer {
 
 		List<JournalArticle> draftArticles =
 			JournalArticleLocalServiceUtil.getCompanyArticles(
-				companyId, JournalArticleConstants.DEFAULT_VERSION,
+				companyId, JournalArticleConstants.VERSION_DEFAULT,
 				WorkflowConstants.STATUS_DRAFT, start, end);
 
 		articles.addAll(draftArticles);

@@ -78,6 +78,7 @@ public class TeamFinderImpl
 			QueryPos qPos = QueryPos.getInstance(q);
 
 			setJoin(qPos, params);
+
 			qPos.add(groupId);
 			qPos.add(name);
 			qPos.add(name);
@@ -131,6 +132,7 @@ public class TeamFinderImpl
 			QueryPos qPos = QueryPos.getInstance(q);
 
 			setJoin(qPos, params);
+
 			qPos.add(groupId);
 			qPos.add(name);
 			qPos.add(name);
@@ -241,21 +243,18 @@ public class TeamFinderImpl
 	protected void setJoin(
 		QueryPos qPos, LinkedHashMap<String, Object> params) {
 
-		if (params != null) {
-			Iterator<Map.Entry<String, Object>> itr =
-				params.entrySet().iterator();
+		if (params == null) {
+			return;
+		}
 
-			while (itr.hasNext()) {
-				Map.Entry<String, Object> entry = itr.next();
+		for (Map.Entry<String, Object> entry : params.entrySet()) {
+			Object value = entry.getValue();
 
-				Object value = entry.getValue();
+			if (value instanceof Long) {
+				Long valueLong = (Long)value;
 
-				if (value instanceof Long) {
-					Long valueLong = (Long)value;
-
-					if (Validator.isNotNull(valueLong)) {
-						qPos.add(valueLong);
-					}
+				if (Validator.isNotNull(valueLong)) {
+					qPos.add(valueLong);
 				}
 			}
 		}

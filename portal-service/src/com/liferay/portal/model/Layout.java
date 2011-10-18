@@ -14,6 +14,8 @@
 
 package com.liferay.portal.model;
 
+import com.liferay.portal.kernel.util.Accessor;
+
 /**
  * The extended model interface for the Layout service. Represents a row in the &quot;Layout&quot; database table, with each column mapped to a property of this class.
  *
@@ -29,6 +31,12 @@ public interface Layout extends LayoutModel, PersistedModel {
 	 *
 	 * Never modify this interface directly. Add methods to {@link com.liferay.portal.model.impl.LayoutImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
+	public static final Accessor<Layout, Long> LAYOUT_ID_ACCESSOR = new Accessor<Layout, Long>() {
+			public Long get(Layout layout) {
+				return layout.getLayoutId();
+			}
+		};
+
 	public java.util.List<com.liferay.portal.model.Layout> getAllChildren()
 		throws com.liferay.portal.kernel.exception.SystemException;
 
@@ -110,6 +118,8 @@ public interface Layout extends LayoutModel, PersistedModel {
 
 	public com.liferay.portal.kernel.util.UnicodeProperties getTypeSettingsProperties();
 
+	public java.lang.String getTypeSettingsProperty(java.lang.String key);
+
 	public com.liferay.portal.model.ColorScheme getWapColorScheme()
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException;
@@ -164,6 +174,12 @@ public interface Layout extends LayoutModel, PersistedModel {
 	public boolean isTypePortlet();
 
 	public boolean isTypeURL();
+
+	public void setGroupId(long groupId);
+
+	public void setLayoutSet(com.liferay.portal.model.LayoutSet layoutSet);
+
+	public void setPrivateLayout(boolean privateLayout);
 
 	public void setTypeSettings(java.lang.String typeSettings);
 

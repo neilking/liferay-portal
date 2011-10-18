@@ -244,7 +244,7 @@ public class CreateAccountAction extends PortletAction {
 		String lastName = ParamUtil.getString(actionRequest, "lastName");
 		int prefixId = ParamUtil.getInteger(actionRequest, "prefixId");
 		int suffixId = ParamUtil.getInteger(actionRequest, "suffixId");
-		boolean male = ParamUtil.get(actionRequest, "male", true);
+		boolean male = ParamUtil.getBoolean(actionRequest, "male", true);
 		int birthdayMonth = ParamUtil.getInteger(
 			actionRequest, "birthdayMonth");
 		int birthdayDay = ParamUtil.getInteger(actionRequest, "birthdayDay");
@@ -351,7 +351,7 @@ public class CreateAccountAction extends PortletAction {
 		User anonymousUser = UserLocalServiceUtil.getUserByEmailAddress(
 			themeDisplay.getCompanyId(), emailAddress);
 
-		UserServiceUtil.deleteUser(anonymousUser.getUserId());
+		UserLocalServiceUtil.deleteUser(anonymousUser.getUserId());
 
 		addUser(actionRequest, actionResponse);
 	}
@@ -409,7 +409,7 @@ public class CreateAccountAction extends PortletAction {
 		String lastName = ParamUtil.getString(actionRequest, "lastName");
 		int prefixId = ParamUtil.getInteger(actionRequest, "prefixId");
 		int suffixId = ParamUtil.getInteger(actionRequest, "suffixId");
-		boolean male = ParamUtil.get(actionRequest, "male", true);
+		boolean male = ParamUtil.getBoolean(actionRequest, "male", true);
 		int birthdayMonth = ParamUtil.getInteger(
 			actionRequest, "birthdayMonth");
 		int birthdayDay = ParamUtil.getInteger(actionRequest, "birthdayDay");

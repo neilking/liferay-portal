@@ -14,6 +14,8 @@
 
 package com.liferay.portal.model;
 
+import com.liferay.portal.kernel.util.Accessor;
+
 /**
  * The extended model interface for the Portlet service. Represents a row in the &quot;Portlet&quot; database table, with each column mapped to a property of this class.
  *
@@ -29,6 +31,11 @@ public interface Portlet extends PortletModel, PersistedModel {
 	 *
 	 * Never modify this interface directly. Add methods to {@link com.liferay.portal.model.impl.PortletImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
+	public static final Accessor<Portlet, String> PORTLET_ID_ACCESSOR = new Accessor<Portlet, String>() {
+			public String get(Portlet portlet) {
+				return portlet.getPortletId();
+			}
+		};
 
 	/**
 	* Returns the root portlet of this portlet instance.
@@ -732,6 +739,29 @@ public interface Portlet extends PortletModel, PersistedModel {
 	* @return the custom attribute display instances of the portlet
 	*/
 	public java.util.List<com.liferay.portlet.expando.model.CustomAttributesDisplay> getCustomAttributesDisplayInstances();
+
+	/**
+	* Returns the name of the permission propagator class of the portlet.
+	*
+	* @return the name of the permission propagator class of the portlet
+	*/
+	public java.lang.String getPermissionPropagatorClass();
+
+	/**
+	* Sets the name of the permission propagator class of the portlet.
+	*
+	* @param pollerProcessorClass the name of the permission propagator class
+	of the portlet
+	*/
+	public void setPermissionPropagatorClass(
+		java.lang.String permissionPropagatorClass);
+
+	/**
+	* Returns the permission propagator instance of the portlet.
+	*
+	* @return the permission propagator instance of the portlet
+	*/
+	public com.liferay.portal.security.permission.PermissionPropagator getPermissionPropagatorInstance();
 
 	/**
 	* Returns the names of the classes that represent workflow handlers

@@ -19,8 +19,8 @@
 <%
 long groupId = ParamUtil.getLong(request, "groupId");
 
-String typeSelection = request.getParameter("typeSelection");
-
+long refererAssetEntryId = ParamUtil.getLong(request, "refererAssetEntryId");
+String typeSelection = ParamUtil.getString(request, "typeSelection");
 String callback = ParamUtil.getString(request, "callback");
 
 PortletURL portletURL = renderResponse.createRenderURL();
@@ -78,7 +78,15 @@ portletURL.setParameter("typeSelection", typeSelection);
 				assetEntryId = GetterUtil.getLong(doc.get(Field.ENTRY_CLASS_PK));
 			}
 
-			AssetEntry assetEntry = AssetEntryLocalServiceUtil.getEntry(typeSelection, assetEntryId);
+			AssetEntry assetEntry = AssetEntryLocalServiceUtil.fetchEntry(typeSelection, assetEntryId);
+
+			if (assetEntry == null) {
+				continue;
+			}
+
+			if ((assetEntry.getEntryId() == refererAssetEntryId) || !assetEntry.isVisible()) {
+				continue;
+			}
 
 			assetEntry = assetEntry.toEscapedModel();
 
@@ -93,7 +101,7 @@ portletURL.setParameter("typeSelection", typeSelection);
 			sb.append("', '");
 			sb.append(ResourceActionsUtil.getModelResource(locale, assetEntry.getClassName()));
 			sb.append("', '");
-			sb.append(assetRenderer.getTitle(locale));
+			sb.append(HtmlUtil.escapeJS(assetRenderer.getTitle(locale)));
 			sb.append("');Liferay.Util.getWindow().close();");
 
 			String rowHREF = sb.toString();

@@ -25,7 +25,7 @@ public class ViewTransactionTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -40,15 +40,20 @@ public class ViewTransactionTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		selenium.clickAt("link=Test Transaction Page",
 			RuntimeVariables.replace("Test Transaction Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		assertTrue(selenium.isTextPresent("BarLocalServiceUtil.addBar=PASSED"));
-		assertTrue(selenium.isTextPresent(
-				"BarLocalServiceUtil.addBarPortalRollback=PASSED"));
-		assertTrue(selenium.isTextPresent(
-				"BarLocalServiceUtil.addBarPortletRollback=PASSED"));
+		assertTrue(selenium.isPartialText("//p[1]",
+				"BarLocalServiceUtil.addBar_Success=PASSED"));
+		assertTrue(selenium.isPartialText("//p[1]",
+				"BarLocalServiceUtil.addBarAndClassName_PortalRollback=PASSED"));
+		assertTrue(selenium.isPartialText("//p[1]",
+				"BarLocalServiceUtil.addBarAndClassName_PortletRollback=PASSED"));
+		assertTrue(selenium.isPartialText("//p[2]",
+				"PortalServiceUtil.testAddClassNameAndTestTransactionPortletBar_Success=PASSED"));
+		assertTrue(selenium.isPartialText("//p[2]",
+				"PortalServiceUtil.testAddClassNameAndTestTransactionPortletBar_PortalRollback=PASSED"));
+		assertTrue(selenium.isPartialText("//p[2]",
+				"PortletServiceUtil.testAddClassNameAndTestTransactionPortletBar_PortletRollback=PASSED"));
 	}
 }

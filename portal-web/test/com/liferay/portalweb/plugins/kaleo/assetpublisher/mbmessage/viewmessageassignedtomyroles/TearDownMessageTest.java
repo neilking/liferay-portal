@@ -30,12 +30,12 @@ public class TearDownMessageTest extends BaseTestCase {
 				selenium.open("/web/guest/home/");
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
 					try {
-						if (selenium.isElementPresent("link=Control Panel")) {
+						if (selenium.isVisible("link=Message Boards Test Page")) {
 							break;
 						}
 					}
@@ -45,20 +45,15 @@ public class TearDownMessageTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
-				selenium.click(RuntimeVariables.replace("link=Control Panel"));
+				selenium.click(RuntimeVariables.replace(
+						"link=Message Boards Test Page"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
-				selenium.clickAt("link=Message Boards",
-					RuntimeVariables.replace(""));
+				selenium.clickAt("link=My Posts",
+					RuntimeVariables.replace("My Posts"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
-				selenium.clickAt("link=My Posts", RuntimeVariables.replace(""));
-				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
 
 				boolean message1Present = selenium.isElementPresent(
-						"//td[7]/span/ul/li/strong/a");
+						"//td[7]/span/ul/li/strong/a/span");
 
 				if (!message1Present) {
 					label = 2;
@@ -66,11 +61,11 @@ public class TearDownMessageTest extends BaseTestCase {
 					continue;
 				}
 
-				selenium.clickAt("//td[7]/span/ul/li/strong/a",
+				selenium.clickAt("//td[7]/span/ul/li/strong/a/span",
 					RuntimeVariables.replace("Actions"));
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
@@ -86,7 +81,6 @@ public class TearDownMessageTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
 				assertEquals(RuntimeVariables.replace("Delete"),
 					selenium.getText(
 						"//div[@class='lfr-component lfr-menu-list']/ul/li[7]/a"));
@@ -95,12 +89,11 @@ public class TearDownMessageTest extends BaseTestCase {
 				selenium.waitForPageToLoad("30000");
 				assertTrue(selenium.getConfirmation()
 								   .matches("^Are you sure you want to delete this[\\s\\S]$"));
-				selenium.saveScreenShotAndSource();
 
 			case 2:
 
 				boolean message2Present = selenium.isElementPresent(
-						"//td[7]/span/ul/li/strong/a");
+						"//td[7]/span/ul/li/strong/a/span");
 
 				if (!message2Present) {
 					label = 3;
@@ -108,11 +101,11 @@ public class TearDownMessageTest extends BaseTestCase {
 					continue;
 				}
 
-				selenium.clickAt("//td[7]/span/ul/li/strong/a",
+				selenium.clickAt("//td[7]/span/ul/li/strong/a/span",
 					RuntimeVariables.replace("Actions"));
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
@@ -128,7 +121,6 @@ public class TearDownMessageTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
 				assertEquals(RuntimeVariables.replace("Delete"),
 					selenium.getText(
 						"//div[@class='lfr-component lfr-menu-list']/ul/li[7]/a"));
@@ -137,12 +129,11 @@ public class TearDownMessageTest extends BaseTestCase {
 				selenium.waitForPageToLoad("30000");
 				assertTrue(selenium.getConfirmation()
 								   .matches("^Are you sure you want to delete this[\\s\\S]$"));
-				selenium.saveScreenShotAndSource();
 
 			case 3:
 
 				boolean message3Present = selenium.isElementPresent(
-						"//td[7]/span/ul/li/strong/a");
+						"//td[7]/span/ul/li/strong/a/span");
 
 				if (!message3Present) {
 					label = 4;
@@ -150,11 +141,11 @@ public class TearDownMessageTest extends BaseTestCase {
 					continue;
 				}
 
-				selenium.clickAt("//td[7]/span/ul/li/strong/a",
+				selenium.clickAt("//td[7]/span/ul/li/strong/a/span",
 					RuntimeVariables.replace("Actions"));
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
@@ -170,7 +161,6 @@ public class TearDownMessageTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
 				assertEquals(RuntimeVariables.replace("Delete"),
 					selenium.getText(
 						"//div[@class='lfr-component lfr-menu-list']/ul/li[7]/a"));
@@ -179,12 +169,11 @@ public class TearDownMessageTest extends BaseTestCase {
 				selenium.waitForPageToLoad("30000");
 				assertTrue(selenium.getConfirmation()
 								   .matches("^Are you sure you want to delete this[\\s\\S]$"));
-				selenium.saveScreenShotAndSource();
 
 			case 4:
 
 				boolean message4Present = selenium.isElementPresent(
-						"//td[7]/span/ul/li/strong/a");
+						"//td[7]/span/ul/li/strong/a/span");
 
 				if (!message4Present) {
 					label = 5;
@@ -192,11 +181,11 @@ public class TearDownMessageTest extends BaseTestCase {
 					continue;
 				}
 
-				selenium.clickAt("//td[7]/span/ul/li/strong/a",
+				selenium.clickAt("//td[7]/span/ul/li/strong/a/span",
 					RuntimeVariables.replace("Actions"));
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
@@ -212,7 +201,6 @@ public class TearDownMessageTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
 				assertEquals(RuntimeVariables.replace("Delete"),
 					selenium.getText(
 						"//div[@class='lfr-component lfr-menu-list']/ul/li[7]/a"));
@@ -221,12 +209,11 @@ public class TearDownMessageTest extends BaseTestCase {
 				selenium.waitForPageToLoad("30000");
 				assertTrue(selenium.getConfirmation()
 								   .matches("^Are you sure you want to delete this[\\s\\S]$"));
-				selenium.saveScreenShotAndSource();
 
 			case 5:
 
 				boolean message5Present = selenium.isElementPresent(
-						"//td[7]/span/ul/li/strong/a");
+						"//td[7]/span/ul/li/strong/a/span");
 
 				if (!message5Present) {
 					label = 6;
@@ -234,11 +221,11 @@ public class TearDownMessageTest extends BaseTestCase {
 					continue;
 				}
 
-				selenium.clickAt("//td[7]/span/ul/li/strong/a",
+				selenium.clickAt("//td[7]/span/ul/li/strong/a/span",
 					RuntimeVariables.replace("Actions"));
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
@@ -254,7 +241,6 @@ public class TearDownMessageTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
 				assertEquals(RuntimeVariables.replace("Delete"),
 					selenium.getText(
 						"//div[@class='lfr-component lfr-menu-list']/ul/li[7]/a"));
@@ -263,7 +249,6 @@ public class TearDownMessageTest extends BaseTestCase {
 				selenium.waitForPageToLoad("30000");
 				assertTrue(selenium.getConfirmation()
 								   .matches("^Are you sure you want to delete this[\\s\\S]$"));
-				selenium.saveScreenShotAndSource();
 
 			case 6:
 			case 100:

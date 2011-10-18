@@ -22,10 +22,10 @@ import com.liferay.portalweb.portal.util.RuntimeVariables;
  */
 public class SA_AddGeneralAnnouncementTest extends BaseTestCase {
 	public void testSA_AddGeneralAnnouncement() throws Exception {
-		selenium.open("/web/guest/home/");
+		selenium.open("/web/site-name/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -40,22 +40,31 @@ public class SA_AddGeneralAnnouncementTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		selenium.clickAt("link=Announcements Permissions Page",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Announcements Permissions Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Manage Entries", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Manage Entries",
+			RuntimeVariables.replace("Manage Entries"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
+		selenium.select("//select[@id='_84_distributionScope']",
+			RuntimeVariables.replace("label=General"));
+		selenium.waitForPageToLoad("30000");
+		selenium.clickAt("//input[@value='Add Entry']",
+			RuntimeVariables.replace("Add Entry"));
+		selenium.waitForPageToLoad("30000");
+		selenium.type("//input[@id='_84_title']",
+			RuntimeVariables.replace("Test General Announcement"));
+		selenium.type("//input[@id='_84_url']",
+			RuntimeVariables.replace("http://www.liferay.com"));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isVisible("_84_distributionScope")) {
+				if (selenium.isVisible(
+							"//td[@id='cke_contents__84_editor']/iframe")) {
 					break;
 				}
 			}
@@ -65,27 +74,19 @@ public class SA_AddGeneralAnnouncementTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.select("_84_distributionScope",
-			RuntimeVariables.replace("label=General"));
-		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("//input[@value='Add Entry']",
-			RuntimeVariables.replace(""));
-		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.type("_84_title",
-			RuntimeVariables.replace("Test General Announcement"));
-		selenium.saveScreenShotAndSource();
-		selenium.type("_84_url",
-			RuntimeVariables.replace("http://www.liferay.com"));
-		selenium.saveScreenShotAndSource();
-		selenium.type("_84_content",
+		selenium.selectFrame("//td[@id='cke_contents__84_editor']/iframe");
+		selenium.type("//body",
 			RuntimeVariables.replace("This is a test General Announcement."));
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("//input[@value='Save']", RuntimeVariables.replace(""));
+		selenium.selectFrame("relative=top");
+		selenium.clickAt("//input[@value='Save']",
+			RuntimeVariables.replace("Save"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		assertTrue(selenium.isElementPresent("link=Test General Announcement"));
+		assertEquals(RuntimeVariables.replace("Test General Announcement"),
+			selenium.getText("//tr[3]/td[1]/a"));
+		assertEquals(RuntimeVariables.replace("General"),
+			selenium.getText("//tr[3]/td[2]/a"));
+		assertTrue(selenium.isElementPresent("//tr[3]/td[3]/a"));
+		assertTrue(selenium.isElementPresent("//tr[3]/td[4]/a"));
+		assertTrue(selenium.isElementPresent("//tr[3]/td[5]/a"));
 	}
 }

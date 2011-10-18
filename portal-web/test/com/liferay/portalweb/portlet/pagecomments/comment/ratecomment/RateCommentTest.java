@@ -25,12 +25,12 @@ public class RateCommentTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent("link=Page Comments Test Page")) {
+				if (selenium.isVisible("link=Page Comments Test Page")) {
 					break;
 				}
 			}
@@ -40,21 +40,19 @@ public class RateCommentTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		selenium.clickAt("link=Page Comments Test Page",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Page Comments Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isPartialText(
-							"//div[@class='aui-rating-label-element']",
-							"0 Votes")) {
+				if (RuntimeVariables.replace("0 (0 Votes)")
+										.equals(selenium.getText(
+								"//div[@class='aui-rating-label-element']"))) {
 					break;
 				}
 			}
@@ -64,14 +62,15 @@ public class RateCommentTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		assertTrue(selenium.isPartialText(
-				"//div[@class='aui-rating-label-element']", "0 Votes"));
+		assertEquals(RuntimeVariables.replace("0 (0 Votes)"),
+			selenium.getText("//div[@class='aui-rating-label-element']"));
+		assertEquals(RuntimeVariables.replace("Rate this as good."),
+			selenium.getText("//div[@class='taglib-ratings thumbs']/div/div/a"));
 		selenium.clickAt("//div[@class='taglib-ratings thumbs']/div/div/a",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Rate this as good."));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -88,14 +87,15 @@ public class RateCommentTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace("+1 (1 Vote)"),
 			selenium.getText("//div[@class='aui-rating-label-element']"));
+		assertEquals(RuntimeVariables.replace("Rate this as good."),
+			selenium.getText("//div[@class='taglib-ratings thumbs']/div/div/a"));
 		selenium.clickAt("//div[@class='taglib-ratings thumbs']/div/div/a",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Rate this as good."));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -112,14 +112,16 @@ public class RateCommentTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace("0 (0 Votes)"),
 			selenium.getText("//div[@class='aui-rating-label-element']"));
+		assertEquals(RuntimeVariables.replace("Rate this as bad."),
+			selenium.getText(
+				"//div[@class='taglib-ratings thumbs']/div/div/a[2]"));
 		selenium.clickAt("//div[@class='taglib-ratings thumbs']/div/div/a[2]",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Rate this as bad."));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -136,14 +138,16 @@ public class RateCommentTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace("-1 (1 Vote)"),
 			selenium.getText("//div[@class='aui-rating-label-element']"));
+		assertEquals(RuntimeVariables.replace("Rate this as bad."),
+			selenium.getText(
+				"//div[@class='taglib-ratings thumbs']/div/div/a[2]"));
 		selenium.clickAt("//div[@class='taglib-ratings thumbs']/div/div/a[2]",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Rate this as bad."));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -160,14 +164,15 @@ public class RateCommentTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace("0 (0 Votes)"),
 			selenium.getText("//div[@class='aui-rating-label-element']"));
+		assertEquals(RuntimeVariables.replace("Rate this as good."),
+			selenium.getText("//div[@class='taglib-ratings thumbs']/div/div/a"));
 		selenium.clickAt("//div[@class='taglib-ratings thumbs']/div/div/a",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Rate this as good."));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -184,14 +189,16 @@ public class RateCommentTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace("+1 (1 Vote)"),
 			selenium.getText("//div[@class='aui-rating-label-element']"));
+		assertEquals(RuntimeVariables.replace("Rate this as bad."),
+			selenium.getText(
+				"//div[@class='taglib-ratings thumbs']/div/div/a[2]"));
 		selenium.clickAt("//div[@class='taglib-ratings thumbs']/div/div/a[2]",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Rate this as bad."));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -208,14 +215,16 @@ public class RateCommentTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace("-1 (1 Vote)"),
 			selenium.getText("//div[@class='aui-rating-label-element']"));
+		assertEquals(RuntimeVariables.replace("Rate this as bad."),
+			selenium.getText(
+				"//div[@class='taglib-ratings thumbs']/div/div/a[2]"));
 		selenium.clickAt("//div[@class='taglib-ratings thumbs']/div/div/a[2]",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Rate this as bad."));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -232,14 +241,16 @@ public class RateCommentTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace("0 (0 Votes)"),
 			selenium.getText("//div[@class='aui-rating-label-element']"));
+		assertEquals(RuntimeVariables.replace("Rate this as bad."),
+			selenium.getText(
+				"//div[@class='taglib-ratings thumbs']/div/div/a[2]"));
 		selenium.clickAt("//div[@class='taglib-ratings thumbs']/div/div/a[2]",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Rate this as bad."));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -256,14 +267,15 @@ public class RateCommentTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace("-1 (1 Vote)"),
 			selenium.getText("//div[@class='aui-rating-label-element']"));
+		assertEquals(RuntimeVariables.replace("Rate this as good."),
+			selenium.getText("//div[@class='taglib-ratings thumbs']/div/div/a"));
 		selenium.clickAt("//div[@class='taglib-ratings thumbs']/div/div/a",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Rate this as good."));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -280,14 +292,15 @@ public class RateCommentTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace("+1 (1 Vote)"),
 			selenium.getText("//div[@class='aui-rating-label-element']"));
+		assertEquals(RuntimeVariables.replace("Rate this as good."),
+			selenium.getText("//div[@class='taglib-ratings thumbs']/div/div/a"));
 		selenium.clickAt("//div[@class='taglib-ratings thumbs']/div/div/a",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Rate this as good."));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -303,7 +316,5 @@ public class RateCommentTest extends BaseTestCase {
 
 			Thread.sleep(1000);
 		}
-
-		selenium.saveScreenShotAndSource();
 	}
 }

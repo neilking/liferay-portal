@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.journal.model;
 
+import com.liferay.portal.model.ModelWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link JournalTemplate}.
@@ -23,7 +25,8 @@ package com.liferay.portlet.journal.model;
  * @see       JournalTemplate
  * @generated
  */
-public class JournalTemplateWrapper implements JournalTemplate {
+public class JournalTemplateWrapper implements JournalTemplate,
+	ModelWrapper<JournalTemplate> {
 	public JournalTemplateWrapper(JournalTemplate journalTemplate) {
 		_journalTemplate = journalTemplate;
 	}
@@ -264,12 +267,120 @@ public class JournalTemplateWrapper implements JournalTemplate {
 	}
 
 	/**
+	* Returns the localized name of this journal template in the language. Uses the default language if no localization exists for the requested language.
+	*
+	* @param locale the locale of the language
+	* @return the localized name of this journal template
+	*/
+	public java.lang.String getName(java.util.Locale locale) {
+		return _journalTemplate.getName(locale);
+	}
+
+	/**
+	* Returns the localized name of this journal template in the language, optionally using the default language if no localization exists for the requested language.
+	*
+	* @param locale the local of the language
+	* @param useDefault whether to use the default language if no localization exists for the requested language
+	* @return the localized name of this journal template. If <code>useDefault</code> is <code>false</code> and no localization exists for the requested language, an empty string will be returned.
+	*/
+	public java.lang.String getName(java.util.Locale locale, boolean useDefault) {
+		return _journalTemplate.getName(locale, useDefault);
+	}
+
+	/**
+	* Returns the localized name of this journal template in the language. Uses the default language if no localization exists for the requested language.
+	*
+	* @param languageId the ID of the language
+	* @return the localized name of this journal template
+	*/
+	public java.lang.String getName(java.lang.String languageId) {
+		return _journalTemplate.getName(languageId);
+	}
+
+	/**
+	* Returns the localized name of this journal template in the language, optionally using the default language if no localization exists for the requested language.
+	*
+	* @param languageId the ID of the language
+	* @param useDefault whether to use the default language if no localization exists for the requested language
+	* @return the localized name of this journal template
+	*/
+	public java.lang.String getName(java.lang.String languageId,
+		boolean useDefault) {
+		return _journalTemplate.getName(languageId, useDefault);
+	}
+
+	public java.lang.String getNameCurrentLanguageId() {
+		return _journalTemplate.getNameCurrentLanguageId();
+	}
+
+	public java.lang.String getNameCurrentValue() {
+		return _journalTemplate.getNameCurrentValue();
+	}
+
+	/**
+	* Returns a map of the locales and localized names of this journal template.
+	*
+	* @return the locales and localized names of this journal template
+	*/
+	public java.util.Map<java.util.Locale, java.lang.String> getNameMap() {
+		return _journalTemplate.getNameMap();
+	}
+
+	/**
 	* Sets the name of this journal template.
 	*
 	* @param name the name of this journal template
 	*/
 	public void setName(java.lang.String name) {
 		_journalTemplate.setName(name);
+	}
+
+	/**
+	* Sets the localized name of this journal template in the language.
+	*
+	* @param name the localized name of this journal template
+	* @param locale the locale of the language
+	*/
+	public void setName(java.lang.String name, java.util.Locale locale) {
+		_journalTemplate.setName(name, locale);
+	}
+
+	/**
+	* Sets the localized name of this journal template in the language, and sets the default locale.
+	*
+	* @param name the localized name of this journal template
+	* @param locale the locale of the language
+	* @param defaultLocale the default locale
+	*/
+	public void setName(java.lang.String name, java.util.Locale locale,
+		java.util.Locale defaultLocale) {
+		_journalTemplate.setName(name, locale, defaultLocale);
+	}
+
+	public void setNameCurrentLanguageId(java.lang.String languageId) {
+		_journalTemplate.setNameCurrentLanguageId(languageId);
+	}
+
+	/**
+	* Sets the localized names of this journal template from the map of locales and localized names.
+	*
+	* @param nameMap the locales and localized names of this journal template
+	*/
+	public void setNameMap(
+		java.util.Map<java.util.Locale, java.lang.String> nameMap) {
+		_journalTemplate.setNameMap(nameMap);
+	}
+
+	/**
+	* Sets the localized names of this journal template from the map of locales and localized names, and sets the default locale.
+	*
+	* @param nameMap the locales and localized names of this journal template
+	* @param defaultLocale the default locale
+	*/
+	public void setNameMap(
+		java.util.Map<java.util.Locale, java.lang.String> nameMap,
+		java.util.Locale defaultLocale) {
+		_journalTemplate.setNameMap(nameMap, defaultLocale);
 	}
 
 	/**
@@ -282,12 +393,122 @@ public class JournalTemplateWrapper implements JournalTemplate {
 	}
 
 	/**
+	* Returns the localized description of this journal template in the language. Uses the default language if no localization exists for the requested language.
+	*
+	* @param locale the locale of the language
+	* @return the localized description of this journal template
+	*/
+	public java.lang.String getDescription(java.util.Locale locale) {
+		return _journalTemplate.getDescription(locale);
+	}
+
+	/**
+	* Returns the localized description of this journal template in the language, optionally using the default language if no localization exists for the requested language.
+	*
+	* @param locale the local of the language
+	* @param useDefault whether to use the default language if no localization exists for the requested language
+	* @return the localized description of this journal template. If <code>useDefault</code> is <code>false</code> and no localization exists for the requested language, an empty string will be returned.
+	*/
+	public java.lang.String getDescription(java.util.Locale locale,
+		boolean useDefault) {
+		return _journalTemplate.getDescription(locale, useDefault);
+	}
+
+	/**
+	* Returns the localized description of this journal template in the language. Uses the default language if no localization exists for the requested language.
+	*
+	* @param languageId the ID of the language
+	* @return the localized description of this journal template
+	*/
+	public java.lang.String getDescription(java.lang.String languageId) {
+		return _journalTemplate.getDescription(languageId);
+	}
+
+	/**
+	* Returns the localized description of this journal template in the language, optionally using the default language if no localization exists for the requested language.
+	*
+	* @param languageId the ID of the language
+	* @param useDefault whether to use the default language if no localization exists for the requested language
+	* @return the localized description of this journal template
+	*/
+	public java.lang.String getDescription(java.lang.String languageId,
+		boolean useDefault) {
+		return _journalTemplate.getDescription(languageId, useDefault);
+	}
+
+	public java.lang.String getDescriptionCurrentLanguageId() {
+		return _journalTemplate.getDescriptionCurrentLanguageId();
+	}
+
+	public java.lang.String getDescriptionCurrentValue() {
+		return _journalTemplate.getDescriptionCurrentValue();
+	}
+
+	/**
+	* Returns a map of the locales and localized descriptions of this journal template.
+	*
+	* @return the locales and localized descriptions of this journal template
+	*/
+	public java.util.Map<java.util.Locale, java.lang.String> getDescriptionMap() {
+		return _journalTemplate.getDescriptionMap();
+	}
+
+	/**
 	* Sets the description of this journal template.
 	*
 	* @param description the description of this journal template
 	*/
 	public void setDescription(java.lang.String description) {
 		_journalTemplate.setDescription(description);
+	}
+
+	/**
+	* Sets the localized description of this journal template in the language.
+	*
+	* @param description the localized description of this journal template
+	* @param locale the locale of the language
+	*/
+	public void setDescription(java.lang.String description,
+		java.util.Locale locale) {
+		_journalTemplate.setDescription(description, locale);
+	}
+
+	/**
+	* Sets the localized description of this journal template in the language, and sets the default locale.
+	*
+	* @param description the localized description of this journal template
+	* @param locale the locale of the language
+	* @param defaultLocale the default locale
+	*/
+	public void setDescription(java.lang.String description,
+		java.util.Locale locale, java.util.Locale defaultLocale) {
+		_journalTemplate.setDescription(description, locale, defaultLocale);
+	}
+
+	public void setDescriptionCurrentLanguageId(java.lang.String languageId) {
+		_journalTemplate.setDescriptionCurrentLanguageId(languageId);
+	}
+
+	/**
+	* Sets the localized descriptions of this journal template from the map of locales and localized descriptions.
+	*
+	* @param descriptionMap the locales and localized descriptions of this journal template
+	*/
+	public void setDescriptionMap(
+		java.util.Map<java.util.Locale, java.lang.String> descriptionMap) {
+		_journalTemplate.setDescriptionMap(descriptionMap);
+	}
+
+	/**
+	* Sets the localized descriptions of this journal template from the map of locales and localized descriptions, and sets the default locale.
+	*
+	* @param descriptionMap the locales and localized descriptions of this journal template
+	* @param defaultLocale the default locale
+	*/
+	public void setDescriptionMap(
+		java.util.Map<java.util.Locale, java.lang.String> descriptionMap,
+		java.util.Locale defaultLocale) {
+		_journalTemplate.setDescriptionMap(descriptionMap, defaultLocale);
 	}
 
 	/**
@@ -436,10 +657,6 @@ public class JournalTemplateWrapper implements JournalTemplate {
 		return _journalTemplate.isEscapedModel();
 	}
 
-	public void setEscapedModel(boolean escapedModel) {
-		_journalTemplate.setEscapedModel(escapedModel);
-	}
-
 	public java.io.Serializable getPrimaryKeyObj() {
 		return _journalTemplate.getPrimaryKeyObj();
 	}
@@ -504,7 +721,14 @@ public class JournalTemplateWrapper implements JournalTemplate {
 		_journalTemplate.setSmallImageType(smallImageType);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedModel}
+	 */
 	public JournalTemplate getWrappedJournalTemplate() {
+		return _journalTemplate;
+	}
+
+	public JournalTemplate getWrappedModel() {
 		return _journalTemplate;
 	}
 

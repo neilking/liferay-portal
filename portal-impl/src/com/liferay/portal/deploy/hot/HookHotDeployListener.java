@@ -71,6 +71,7 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PropertiesUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -109,6 +110,7 @@ import com.liferay.portal.service.ReleaseLocalServiceUtil;
 import com.liferay.portal.service.persistence.BasePersistence;
 import com.liferay.portal.servlet.filters.autologin.AutoLoginFilter;
 import com.liferay.portal.servlet.filters.cache.CacheUtil;
+import com.liferay.portal.spring.aop.ServiceBeanAopProxy;
 import com.liferay.portal.struts.AuthPublicPathRegistry;
 import com.liferay.portal.struts.StrutsActionRegistry;
 import com.liferay.portal.upgrade.UpgradeProcessUtil;
@@ -120,6 +122,9 @@ import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.ControlPanelEntry;
 import com.liferay.portlet.DefaultControlPanelEntryFactory;
+import com.liferay.portlet.documentlibrary.antivirus.AntivirusScanner;
+import com.liferay.portlet.documentlibrary.antivirus.AntivirusScannerUtil;
+import com.liferay.portlet.documentlibrary.antivirus.AntivirusScannerWrapper;
 import com.liferay.portlet.documentlibrary.store.Store;
 import com.liferay.portlet.documentlibrary.store.StoreFactory;
 import com.liferay.portlet.documentlibrary.util.DLProcessor;
@@ -133,7 +138,6 @@ import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Proxy;
 
 import java.net.URL;
 
@@ -188,6 +192,7 @@ public class HookHotDeployListener
 		"dl.file.entry.drafts.enabled",
 		"dl.file.entry.processors",
 		"dl.repository.impl",
+		"dl.store.antivirus.impl",
 		"dl.store.impl",
 		"dl.webdav.hold.lock",
 		"dl.webdav.save.to.single.version",
@@ -196,7 +201,6 @@ public class HookHotDeployListener
 		"field.enable.com.liferay.portal.model.Contact.male",
 		"field.enable.com.liferay.portal.model.Organization.status",
 		"hot.deploy.listeners",
-		"image.hook.impl",
 		"javascript.fast.load",
 		"layout.static.portlets.all",
 		"layout.template.cache.enabled",
@@ -217,13 +221,15 @@ public class HookHotDeployListener
 		"logout.events.post",
 		"logout.events.pre",
 		"mail.hook.impl",
-		"my.places.show.private.sites.with.no.layouts",
-		"my.places.show.public.sites.with.no.layouts",
-		"my.places.show.user.private.sites.with.no.layouts",
-		"my.places.show.user.public.sites.with.no.layouts",
+		"my.sites.show.private.sites.with.no.layouts",
+		"my.sites.show.public.sites.with.no.layouts",
+		"my.sites.show.user.private.sites.with.no.layouts",
+		"my.sites.show.user.public.sites.with.no.layouts",
 		"passwords.passwordpolicytoolkit.generator",
 		"passwords.passwordpolicytoolkit.static",
 		"portlet.add.default.resource.check.enabled",
+		"portlet.add.default.resource.check.whitelist",
+		"portlet.add.default.resource.check.whitelist.actions",
 		"sanitizer.impl",
 		"servlet.session.create.events",
 		"servlet.session.destroy.events",
@@ -231,6 +237,7 @@ public class HookHotDeployListener
 		"servlet.service.events.pre",
 		"session.phishing.protected.attributes",
 		"session.store.password",
+		"social.bookmark.*",
 		"terms.of.use.required",
 		"theme.css.fast.load",
 		"theme.images.fast.load",
@@ -239,6 +246,7 @@ public class HookHotDeployListener
 		"theme.portlet.sharing.default",
 		"theme.shortcut.icon",
 		"upgrade.processes",
+		"user.notification.hotDeployEvent.confirmation.enabled",
 		"users.email.address.generator",
 		"users.email.address.required",
 		"users.form.add.identification",
@@ -270,21 +278,27 @@ public class HookHotDeployListener
 		}
 	}
 
-	public void invokeDeploy(HotDeployEvent event) throws HotDeployException {
+	public void invokeDeploy(HotDeployEvent hotDeployEvent)
+		throws HotDeployException {
+
 		try {
-			doInvokeDeploy(event);
+			doInvokeDeploy(hotDeployEvent);
 		}
 		catch (Throwable t) {
-			throwHotDeployException(event, "Error registering hook for ", t);
+			throwHotDeployException(
+				hotDeployEvent, "Error registering hook for ", t);
 		}
 	}
 
-	public void invokeUndeploy(HotDeployEvent event) throws HotDeployException {
+	public void invokeUndeploy(HotDeployEvent hotDeployEvent)
+		throws HotDeployException {
+
 		try {
-			doInvokeUndeploy(event);
+			doInvokeUndeploy(hotDeployEvent);
 		}
 		catch (Throwable t) {
-			throwHotDeployException(event, "Error unregistering hook for ", t);
+			throwHotDeployException(
+				hotDeployEvent, "Error unregistering hook for ", t);
 		}
 	}
 
@@ -298,7 +312,8 @@ public class HookHotDeployListener
 	}
 
 	protected void destroyCustomJspBag(
-		String servletContextName, CustomJspBag customJspBag) {
+			String servletContextName, CustomJspBag customJspBag)
+		throws Exception {
 
 		String customJspDir = customJspBag.getCustomJspDir();
 		boolean customJspGlobal = customJspBag.isCustomJspGlobal();
@@ -393,12 +408,16 @@ public class HookHotDeployListener
 			dlRepositoryContainer.unregisterRepositoryFactories();
 		}
 
-		if (portalProperties.containsKey(PropsKeys.DL_STORE_IMPL)) {
-			StoreFactory.setInstance(null);
+		if (portalProperties.containsKey(PropsKeys.DL_STORE_ANTIVIRUS_IMPL)) {
+			AntivirusScannerWrapper antivirusScannerWrapper =
+				(AntivirusScannerWrapper)
+					AntivirusScannerUtil.getAntivirusScanner();
+
+			antivirusScannerWrapper.setAntivirusScanner(null);
 		}
 
-		if (portalProperties.containsKey(PropsKeys.IMAGE_HOOK_IMPL)) {
-			com.liferay.portal.image.HookFactory.setInstance(null);
+		if (portalProperties.containsKey(PropsKeys.DL_STORE_IMPL)) {
+			StoreFactory.setInstance(null);
 		}
 
 		if (portalProperties.containsKey(
@@ -472,8 +491,10 @@ public class HookHotDeployListener
 		}
 	}
 
-	protected void doInvokeDeploy(HotDeployEvent event) throws Exception {
-		ServletContext servletContext = event.getServletContext();
+	protected void doInvokeDeploy(HotDeployEvent hotDeployEvent)
+		throws Exception {
+
+		ServletContext servletContext = hotDeployEvent.getServletContext();
 
 		String servletContextName = servletContext.getServletContextName();
 
@@ -488,13 +509,11 @@ public class HookHotDeployListener
 			return;
 		}
 
-		if (_log.isInfoEnabled()) {
-			_log.info("Registering hook for " + servletContextName);
-		}
+		logRegistration(servletContextName);
 
 		_servletContextNames.add(servletContextName);
 
-		ClassLoader portletClassLoader = event.getContextClassLoader();
+		ClassLoader portletClassLoader = hotDeployEvent.getContextClassLoader();
 
 		initLogger(portletClassLoader);
 
@@ -670,7 +689,7 @@ public class HookHotDeployListener
 
 				_customJspBagsMap.put(servletContextName, customJspBag);
 
-				PluginPackage pluginPackage = event.getPluginPackage();
+				PluginPackage pluginPackage = hotDeployEvent.getPluginPackage();
 
 				initCustomJspBag(
 					servletContextName, pluginPackage.getName(), customJspBag);
@@ -734,7 +753,7 @@ public class HookHotDeployListener
 
 			Object serviceProxy = PortalBeanLocatorUtil.locate(serviceType);
 
-			if (Proxy.isProxyClass(serviceProxy.getClass())) {
+			if (ProxyUtil.isProxyClass(serviceProxy.getClass())) {
 				initServices(
 					servletContextName, portletClassLoader, serviceType,
 					serviceTypeClass, serviceImplConstructor, serviceProxy);
@@ -931,8 +950,10 @@ public class HookHotDeployListener
 		}
 	}
 
-	protected void doInvokeUndeploy(HotDeployEvent event) throws Exception {
-		ServletContext servletContext = event.getServletContext();
+	protected void doInvokeUndeploy(HotDeployEvent hotDeployEvent)
+		throws Exception {
+
+		ServletContext servletContext = hotDeployEvent.getServletContext();
 
 		String servletContextName = servletContext.getServletContextName();
 
@@ -1054,7 +1075,7 @@ public class HookHotDeployListener
 	protected AdvisedSupport getAdvisedSupport(Object serviceProxy)
 		throws Exception {
 
-		InvocationHandler invocationHandler = Proxy.getInvocationHandler(
+		InvocationHandler invocationHandler = ProxyUtil.getInvocationHandler(
 			serviceProxy);
 
 		Class<?> invocationHandlerClass = invocationHandler.getClass();
@@ -1602,6 +1623,21 @@ public class HookHotDeployListener
 			}
 		}
 
+		if (portalProperties.containsKey(PropsKeys.DL_STORE_ANTIVIRUS_IMPL)) {
+			String antivirusScannerClassName = portalProperties.getProperty(
+				PropsKeys.DL_STORE_ANTIVIRUS_IMPL);
+
+			AntivirusScanner antivirusScanner = (AntivirusScanner)newInstance(
+				portletClassLoader, AntivirusScanner.class,
+				antivirusScannerClassName);
+
+			AntivirusScannerWrapper antivirusScannerWrapper =
+				(AntivirusScannerWrapper)
+					AntivirusScannerUtil.getAntivirusScanner();
+
+			antivirusScannerWrapper.setAntivirusScanner(antivirusScanner);
+		}
+
 		if (portalProperties.containsKey(PropsKeys.DL_STORE_IMPL)) {
 			String storeClassName = portalProperties.getProperty(
 				PropsKeys.DL_STORE_IMPL);
@@ -1610,19 +1646,6 @@ public class HookHotDeployListener
 				portletClassLoader, Store.class, storeClassName);
 
 			StoreFactory.setInstance(store);
-		}
-
-		if (portalProperties.containsKey(PropsKeys.IMAGE_HOOK_IMPL)) {
-			String imageHookClassName = portalProperties.getProperty(
-				PropsKeys.IMAGE_HOOK_IMPL);
-
-			com.liferay.portal.kernel.image.Hook imageHook =
-				(com.liferay.portal.kernel.image.Hook)newInstance(
-					portletClassLoader,
-					com.liferay.portal.kernel.image.Hook.class,
-					imageHookClassName);
-
-			com.liferay.portal.image.HookFactory.setInstance(imageHook);
 		}
 
 		if (portalProperties.containsKey(
@@ -1752,9 +1775,9 @@ public class HookHotDeployListener
 
 		Object previousService = targetSource.getTarget();
 
-		if (Proxy.isProxyClass(previousService.getClass())) {
+		if (ProxyUtil.isProxyClass(previousService.getClass())) {
 			InvocationHandler invocationHandler =
-				Proxy.getInvocationHandler(previousService);
+				ProxyUtil.getInvocationHandler(previousService);
 
 			if (invocationHandler instanceof ClassLoaderBeanHandler) {
 				ClassLoaderBeanHandler classLoaderBeanHandler =
@@ -1767,7 +1790,7 @@ public class HookHotDeployListener
 		Object nextService = serviceImplConstructor.newInstance(
 			previousService);
 
-		Object nextTarget = Proxy.newProxyInstance(
+		Object nextTarget = ProxyUtil.newProxyInstance(
 			portletClassLoader, new Class<?>[] {serviceTypeClass},
 			new ClassLoaderBeanHandler(nextService, portletClassLoader));
 
@@ -1778,6 +1801,8 @@ public class HookHotDeployListener
 		_servicesContainer.addServiceBag(
 			servletContextName, portletClassLoader, serviceType,
 			serviceTypeClass, serviceImplConstructor, previousService);
+
+		ServiceBeanAopProxy.clearMethodInterceptorCache();
 	}
 
 	protected Filter initServletFilter(
@@ -1812,7 +1837,7 @@ public class HookHotDeployListener
 			interfaces.add(Filter.class);
 		}
 
-		filter = (Filter)Proxy.newProxyInstance(
+		filter = (Filter)ProxyUtil.newProxyInstance(
 			portletClassLoader, interfaces.toArray(new Class[0]),
 			new ClassLoaderBeanHandler(filter, portletClassLoader));
 
@@ -1828,14 +1853,20 @@ public class HookHotDeployListener
 			portletClassLoader, strutsActionClassName);
 
 		if (strutsAction instanceof StrutsAction) {
-			return Proxy.newProxyInstance(
+			return ProxyUtil.newProxyInstance(
 				portletClassLoader, new Class[] {StrutsAction.class},
 				new ClassLoaderBeanHandler(strutsAction, portletClassLoader));
 		}
 		else {
-			return Proxy.newProxyInstance(
+			return ProxyUtil.newProxyInstance(
 				portletClassLoader, new Class[] {StrutsPortletAction.class},
 				new ClassLoaderBeanHandler(strutsAction, portletClassLoader));
+		}
+	}
+
+	protected void logRegistration(String servletContextName) {
+		if (_log.isInfoEnabled()) {
+			_log.info("Registering hook for " + servletContextName);
 		}
 	}
 
@@ -1946,6 +1977,20 @@ public class HookHotDeployListener
 			PropsValues.LOCALES = PropsUtil.getArray(LOCALES);
 
 			LanguageUtil.init();
+		}
+
+		if (containsKey(
+				portalProperties,
+				PORTLET_ADD_DEFAULT_RESOURCE_CHECK_WHITELIST)) {
+
+			PortalUtil.resetPortletAddDefaultResourceCheckWhitelist();
+		}
+
+		if (containsKey(
+				portalProperties,
+				PORTLET_ADD_DEFAULT_RESOURCE_CHECK_WHITELIST_ACTIONS)) {
+
+			PortalUtil.resetPortletAddDefaultResourceCheckWhitelistActions();
 		}
 
 		CacheUtil.clearCache();
@@ -2112,12 +2157,10 @@ public class HookHotDeployListener
 		"layout.user.public.layouts.modifiable",
 		"layout.user.public.layouts.power.user.required",
 		"login.create.account.allow.custom.password",
-		"my.places.show.community.private.sites.with.no.layouts",
-		"my.places.show.community.public.sites.with.no.layouts",
-		"my.places.show.organization.private.sites.with.no.layouts",
-		"my.places.show.organization.public.sites.with.no.layouts",
-		"my.places.show.user.private.sites.with.no.layouts",
-		"my.places.show.user.public.sites.with.no.layouts",
+		"my.sites.show.private.sites.with.no.layouts",
+		"my.sites.show.public.sites.with.no.layouts",
+		"my.sites.show.user.private.sites.with.no.layouts",
+		"my.sites.show.user.public.sites.with.no.layouts",
 		"portlet.add.default.resource.check.enabled",
 		"session.store.password",
 		"terms.of.use.required",
@@ -2126,6 +2169,7 @@ public class HookHotDeployListener
 		"theme.loader.new.theme.id.on.import",
 		"theme.portlet.decorate.default",
 		"theme.portlet.sharing.default",
+		"user.notification.hotDeployEvent.confirmation.enabled",
 		"users.email.address.required",
 		"users.screen.name.always.autogenerate"
 	};
@@ -2146,6 +2190,8 @@ public class HookHotDeployListener
 			"dockbar.add.portlets",
 			"layout.static.portlets.all",
 			"layout.types",
+			"portlet.add.default.resource.check.whitelist",
+			"portlet.add.default.resource.check.whitelist.actions",
 			"session.phishing.protected.attributes",
 			"users.form.add.identification",
 			"users.form.add.main",
@@ -2737,7 +2783,7 @@ public class HookHotDeployListener
 				customService = serviceImplConstructor.newInstance(
 					customService);
 
-				customService = Proxy.newProxyInstance(
+				customService = ProxyUtil.newProxyInstance(
 					portletClassLoader, new Class<?>[] {serviceTypeClass},
 					new ClassLoaderBeanHandler(
 						customService, portletClassLoader));

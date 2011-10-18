@@ -26,15 +26,17 @@ import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Lock;
 import com.liferay.portal.model.User;
 import com.liferay.portal.repository.cmis.CMISRepository;
+import com.liferay.portal.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.security.permission.PermissionChecker;
 import com.liferay.portal.service.CMISRepositoryLocalServiceUtil;
 import com.liferay.portal.service.persistence.LockUtil;
 import com.liferay.portlet.documentlibrary.NoSuchFileVersionException;
 import com.liferay.portlet.documentlibrary.model.DLFileEntry;
-import com.liferay.portlet.documentlibrary.model.DLFileEntryConstants;
+import com.liferay.portlet.documentlibrary.service.DLAppHelperLocalServiceUtil;
 import com.liferay.portlet.documentlibrary.util.DLUtil;
 
 import java.io.InputStream;
@@ -48,6 +50,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.chemistry.opencmis.client.api.Document;
+import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.chemistry.opencmis.commons.data.AllowableActions;
 import org.apache.chemistry.opencmis.commons.data.ContentStream;
 import org.apache.chemistry.opencmis.commons.enums.Action;
@@ -86,15 +89,35 @@ public class CMISFileEntry extends CMISModel implements FileEntry {
 	public InputStream getContentStream() {
 		ContentStream contentStream = _document.getContentStream();
 
+		try {
+			DLAppHelperLocalServiceUtil.getFileAsStream(
+				PrincipalThreadLocal.getUserId(), this, true);
+		}
+		catch (Exception e) {
+			_log.error(e, e);
+		}
+
 		return contentStream.getStream();
 	}
 
 	public InputStream getContentStream(String version)
 		throws PortalException {
 
+		if (Validator.isNull(version)) {
+			return getContentStream();
+		}
+
 		for (Document document : _document.getAllVersions()) {
 			if (version.equals(document.getVersionLabel())) {
 				ContentStream contentStream = document.getContentStream();
+
+				try {
+					DLAppHelperLocalServiceUtil.getFileAsStream(
+						PrincipalThreadLocal.getUserId(), this, true);
+				}
+				catch (Exception e) {
+					_log.error(e, e);
+				}
 
 				return contentStream.getStream();
 			}
@@ -126,6 +149,10 @@ public class CMISFileEntry extends CMISModel implements FileEntry {
 
 	public FileVersion getFileVersion(String version)
 		throws PortalException, SystemException {
+
+		if (Validator.isNull(version)) {
+			return getFileVersion();
+		}
 
 		for (Document document : _document.getAllVersions()) {
 			if (version.equals(document.getVersionLabel())) {
@@ -207,18 +234,22 @@ public class CMISFileEntry extends CMISModel implements FileEntry {
 		throws PortalException, SystemException {
 
 		if (_latestFileVersion == null) {
-			Document latestDocumentVersion = null;
+			_document.refresh();
+
+			Document latestDocumentVersion = _document;
 
 			CMISRepository cmisRepository = getCmisRepository();
 
-			if (cmisRepository.isDocumentRetrievableByVersionSeriesId()) {
-				latestDocumentVersion = _document.getObjectOfLatestVersion(
-					false);
-			}
-			else {
-				List<Document> documentVersions = _document.getAllVersions();
+			String versionSeriesCheckedOutId =
+				_document.getVersionSeriesCheckedOutId();
 
-				latestDocumentVersion = documentVersions.get(0);
+			if (Validator.isNotNull(versionSeriesCheckedOutId)) {
+				Session session = cmisRepository.getSession();
+
+				latestDocumentVersion = (Document)session.getObject(
+					versionSeriesCheckedOutId);
+
+				latestDocumentVersion.refresh();
 			}
 
 			_latestFileVersion = CMISRepositoryLocalServiceUtil.toFileVersion(
@@ -256,6 +287,10 @@ public class CMISFileEntry extends CMISModel implements FileEntry {
 	}
 
 	public String getMimeType(String version) {
+		if (Validator.isNull(version)) {
+			return getMimeType();
+		}
+
 		for (Document document : _document.getAllVersions()) {
 			if (version.equals(document.getVersionLabel())) {
 				return document.getContentStreamMimeType();
@@ -346,8 +381,7 @@ public class CMISFileEntry extends CMISModel implements FileEntry {
 	}
 
 	public String getVersion() {
-		return GetterUtil.get(
-			_document.getVersionLabel(), DLFileEntryConstants.DEFAULT_VERSION);
+		return GetterUtil.getString(_document.getVersionLabel(), null);
 	}
 
 	public long getVersionUserId() {

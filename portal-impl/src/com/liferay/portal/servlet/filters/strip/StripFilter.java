@@ -21,6 +21,8 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.scripting.ScriptingException;
+import com.liferay.portal.kernel.servlet.HttpHeaders;
+import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.servlet.StringServletResponse;
 import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.ContentTypes;
@@ -34,7 +36,6 @@ import com.liferay.portal.servlet.filters.BasePortalFilter;
 import com.liferay.portal.servlet.filters.dynamiccss.DynamicCSSUtil;
 import com.liferay.portal.util.MinifierUtil;
 import com.liferay.portal.util.PropsValues;
-import com.liferay.util.servlet.ServletResponseUtil;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -204,7 +205,8 @@ public class StripFilter extends BasePortalFilter {
 	}
 
 	protected void processCSS(
-			HttpServletResponse response, CharBuffer charBuffer, Writer writer)
+			HttpServletRequest request, HttpServletResponse response,
+			CharBuffer charBuffer, Writer writer)
 		throws IOException {
 
 		outputOpenTag(charBuffer, writer, _MARKER_STYLE_OPEN);
@@ -237,7 +239,7 @@ public class StripFilter extends BasePortalFilter {
 
 			if (minifiedContent == null) {
 				try {
-					content = DynamicCSSUtil.parseSass(key, content);
+					content = DynamicCSSUtil.parseSass(request, key, content);
 				}
 				catch (ScriptingException se) {
 					_log.error("Unable to parse SASS on CSS " + key, se);
@@ -247,8 +249,9 @@ public class StripFilter extends BasePortalFilter {
 					}
 
 					if (response != null) {
-						response.setStatus(
-							HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+						response.setHeader(
+							HttpHeaders.CACHE_CONTROL,
+							HttpHeaders.CACHE_CONTROL_NO_CACHE_VALUE);
 					}
 				}
 
@@ -307,7 +310,9 @@ public class StripFilter extends BasePortalFilter {
 
 		response.setContentType(contentType);
 
-		if (contentType.startsWith(ContentTypes.TEXT_HTML)) {
+		if (contentType.startsWith(ContentTypes.TEXT_HTML) &&
+			(stringResponse.getStatus() == HttpServletResponse.SC_OK)) {
+
 			CharBuffer oldCharBuffer = CharBuffer.wrap(
 				stringResponse.getString());
 
@@ -319,7 +324,7 @@ public class StripFilter extends BasePortalFilter {
 					new UnsyncByteArrayOutputStream();
 
 				strip(
-					response, oldCharBuffer,
+					request, response, oldCharBuffer,
 					new OutputStreamWriter(unsyncByteArrayOutputStream));
 
 				response.setContentLength(unsyncByteArrayOutputStream.size());
@@ -327,7 +332,7 @@ public class StripFilter extends BasePortalFilter {
 				unsyncByteArrayOutputStream.writeTo(response.getOutputStream());
 			}
 			else {
-				strip(response, oldCharBuffer, response.getWriter());
+				strip(request, response, oldCharBuffer, response.getWriter());
 			}
 		}
 		else {
@@ -365,7 +370,66 @@ public class StripFilter extends BasePortalFilter {
 			CharBuffer charBuffer, Writer writer, char[] openTag)
 		throws IOException {
 
-		outputOpenTag(charBuffer, writer, openTag);
+		int endPos = openTag.length + 1;
+
+		char c = charBuffer.charAt(openTag.length);
+
+		if (c == CharPool.SPACE) {
+			int startPos = openTag.length + 1;
+
+			for (int i = startPos; i < charBuffer.length(); i++) {
+				c = charBuffer.charAt(i);
+
+				if (c == CharPool.GREATER_THAN) {
+
+					// Open script tag complete
+
+					endPos = i + 1;
+
+					int length = i - startPos;
+
+					if ((length < _MARKER_TYPE_JAVASCRIPT.length()) ||
+						(KMPSearch.search(
+							charBuffer, startPos, length,
+							_MARKER_TYPE_JAVASCRIPT,
+							_MARKER_TYPE_JAVASCRIPT_NEXTS) == -1)) {
+
+						// Open script tag has attribute other than
+						// type="text/javascript". Skip stripping.
+
+						return;
+					}
+
+					// Open script tag has no attribute or has attribute
+					// type="text/javascript". Start stripping.
+
+					break;
+				}
+				else if (c == CharPool.LESS_THAN) {
+
+					// Illegal open script tag. Found a '<' before seeing a '>'.
+
+					return;
+				}
+			}
+
+			if (endPos == charBuffer.length()) {
+
+				// Illegal open script tag. Unable to find a '>'.
+
+				return;
+			}
+		}
+		else if (c != CharPool.GREATER_THAN) {
+
+			// Illegal open script tag. Not followed by a '>' or a ' '.
+
+			return;
+		}
+
+		writer.append(charBuffer, 0, endPos);
+
+		charBuffer.position(charBuffer.position() + endPos);
 
 		int length = KMPSearch.search(
 			charBuffer, _MARKER_SCRIPT_CLOSE, _MARKER_SCRIPT_CLOSE_NEXTS);
@@ -506,7 +570,8 @@ public class StripFilter extends BasePortalFilter {
 	}
 
 	protected void strip(
-			HttpServletResponse response, CharBuffer charBuffer, Writer writer)
+			HttpServletRequest request, HttpServletResponse response,
+			CharBuffer charBuffer, Writer writer)
 		throws IOException {
 
 		skipWhiteSpace(charBuffer, writer, false);
@@ -532,18 +597,13 @@ public class StripFilter extends BasePortalFilter {
 
 					continue;
 				}
-				else if (hasMarker(charBuffer, _MARKER_JS_OPEN)) {
-					processJavaScript(charBuffer, writer, _MARKER_JS_OPEN);
-
-					continue;
-				}
 				else if (hasMarker(charBuffer, _MARKER_SCRIPT_OPEN)) {
 					processJavaScript(charBuffer, writer, _MARKER_SCRIPT_OPEN);
 
 					continue;
 				}
 				else if (hasMarker(charBuffer, _MARKER_STYLE_OPEN)) {
-					processCSS(response, charBuffer, writer);
+					processCSS(request, response, charBuffer, writer);
 
 					continue;
 				}
@@ -571,9 +631,6 @@ public class StripFilter extends BasePortalFilter {
 
 	private static final char[] _MARKER_INPUT_OPEN = "input".toCharArray();
 
-	private static final char[] _MARKER_JS_OPEN =
-		"script type=\"text/javascript\">".toCharArray();
-
 	private static final String _MARKER_PRE_CLOSE = "/pre>";
 
 	private static final int[] _MARKER_PRE_CLOSE_NEXTS =
@@ -586,7 +643,7 @@ public class StripFilter extends BasePortalFilter {
 	private static final int[] _MARKER_SCRIPT_CLOSE_NEXTS =
 		KMPSearch.generateNexts(_MARKER_SCRIPT_CLOSE);
 
-	private static final char[] _MARKER_SCRIPT_OPEN = "script>".toCharArray();
+	private static final char[] _MARKER_SCRIPT_OPEN = "script".toCharArray();
 
 	private static final String _MARKER_STYLE_CLOSE = "</style>";
 
@@ -603,6 +660,12 @@ public class StripFilter extends BasePortalFilter {
 
 	private static final char[] _MARKER_TEXTAREA_OPEN =
 		"textarea ".toCharArray();
+
+	private static final String _MARKER_TYPE_JAVASCRIPT =
+		"type=\"text/javascript\"";
+
+	private static final int[] _MARKER_TYPE_JAVASCRIPT_NEXTS =
+		KMPSearch.generateNexts(_MARKER_TYPE_JAVASCRIPT);
 
 	private static final String _STRIP = "strip";
 

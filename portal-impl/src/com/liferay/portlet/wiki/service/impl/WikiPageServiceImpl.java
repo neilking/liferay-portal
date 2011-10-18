@@ -22,11 +22,9 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.Diff;
 import com.liferay.portal.kernel.util.DiffResult;
 import com.liferay.portal.kernel.util.DiffUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.ObjectValuePair;
-import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -36,7 +34,7 @@ import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.PortletKeys;
-import com.liferay.portal.util.PropsUtil;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.wiki.model.WikiNode;
 import com.liferay.portlet.wiki.model.WikiPage;
 import com.liferay.portlet.wiki.model.WikiPageConstants;
@@ -55,6 +53,10 @@ import com.sun.syndication.feed.synd.SyndEntryImpl;
 import com.sun.syndication.feed.synd.SyndFeed;
 import com.sun.syndication.feed.synd.SyndFeedImpl;
 import com.sun.syndication.io.FeedException;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -91,21 +93,44 @@ public class WikiPageServiceImpl extends WikiPageServiceBaseImpl {
 			getPermissionChecker(), nodeId, ActionKeys.ADD_PAGE);
 
 		return wikiPageLocalService.addPage(
-			getUserId(), nodeId, title, WikiPageConstants.DEFAULT_VERSION,
+			getUserId(), nodeId, title, WikiPageConstants.VERSION_DEFAULT,
 			content, summary, minorEdit, format, true, parentTitle,
 			redirectTitle, serviceContext);
 	}
 
+	public void addPageAttachment(
+			long nodeId, String title, String fileName,	File file)
+		throws PortalException, SystemException {
+
+		WikiNodePermission.check(
+			getPermissionChecker(), nodeId, ActionKeys.ADD_ATTACHMENT);
+
+		wikiPageLocalService.addPageAttachment(
+			getUserId(), nodeId, title, fileName, file);
+	}
+
 	public void addPageAttachments(
 			long nodeId, String title,
-			List<ObjectValuePair<String, byte[]>> files)
+			List<ObjectValuePair<String, InputStream>> inputStream)
 		throws PortalException, SystemException {
 
 		WikiNodePermission.check(
 			getPermissionChecker(), nodeId, ActionKeys.ADD_ATTACHMENT);
 
 		wikiPageLocalService.addPageAttachments(
-			getUserId(), nodeId, title, files);
+			getUserId(), nodeId, title, inputStream);
+	}
+
+	public String addTempPageAttachment(
+			long nodeId, String fileName, String tempFolderName,
+			InputStream inputStream)
+		throws IOException, PortalException, SystemException {
+
+		WikiNodePermission.check(
+			getPermissionChecker(), nodeId, ActionKeys.ADD_ATTACHMENT);
+
+		return wikiPageLocalService.addTempPageAttachment(
+			getUserId(), fileName, tempFolderName, inputStream);
 	}
 
 	public void changeParent(
@@ -148,6 +173,17 @@ public class WikiPageServiceImpl extends WikiPageServiceBaseImpl {
 			getPermissionChecker(), nodeId, title, ActionKeys.DELETE);
 
 		wikiPageLocalService.deletePageAttachment(nodeId, title, fileName);
+	}
+
+	public void deleteTempPageAttachment(
+			long nodeId, String fileName, String tempFolderName)
+		throws PortalException, SystemException {
+
+		WikiNodePermission.check(
+			getPermissionChecker(), nodeId, ActionKeys.ADD_ATTACHMENT);
+
+		wikiPageLocalService.deleteTempPageAttachment(
+			getUserId(), fileName, tempFolderName);
 	}
 
 	public WikiPage getDraftPage(long nodeId, String title)
@@ -256,6 +292,17 @@ public class WikiPageServiceImpl extends WikiPageServiceBaseImpl {
 		return exportToRSS(
 			companyId, title, description, type, version, displayStyle, feedURL,
 			entryURL, pages, diff, locale);
+	}
+
+	public String[] getTempPageAttachmentNames(
+			long nodeId, String tempFolderName)
+		throws PortalException, SystemException {
+
+		WikiNodePermission.check(
+			getPermissionChecker(), nodeId, ActionKeys.ADD_ATTACHMENT);
+
+		return wikiPageLocalService.getTempPageAttachmentNames(
+			getUserId(), tempFolderName);
 	}
 
 	public void movePage(
@@ -368,7 +415,7 @@ public class WikiPageServiceImpl extends WikiPageServiceBaseImpl {
 
 			SyndContent syndContent = new SyndContentImpl();
 
-			syndContent.setType(RSSUtil.DEFAULT_ENTRY_TYPE);
+			syndContent.setType(RSSUtil.ENTRY_TYPE_DEFAULT);
 
 			if (diff) {
 				if (latestPage != null) {
@@ -394,7 +441,7 @@ public class WikiPageServiceImpl extends WikiPageServiceBaseImpl {
 				if (displayStyle.equals(RSSUtil.DISPLAY_STYLE_ABSTRACT)) {
 					value = StringUtil.shorten(
 						HtmlUtil.extractText(page.getContent()),
-						_RSS_ABSTRACT_LENGTH, StringPool.BLANK);
+						PropsValues.WIKI_RSS_ABSTRACT_LENGTH, StringPool.BLANK);
 				}
 				else if (displayStyle.equals(RSSUtil.DISPLAY_STYLE_TITLE)) {
 					value = StringPool.BLANK;
@@ -467,8 +514,5 @@ public class WikiPageServiceImpl extends WikiPageServiceBaseImpl {
 			throw new SystemException(e);
 		}
 	}
-
-	private static final int _RSS_ABSTRACT_LENGTH = GetterUtil.getInteger(
-		PropsUtil.get(PropsKeys.WIKI_RSS_ABSTRACT_LENGTH));
 
 }

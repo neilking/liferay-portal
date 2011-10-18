@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.messageboards.model;
 
+import com.liferay.portal.model.ModelWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link MBMessage}.
@@ -23,7 +25,7 @@ package com.liferay.portlet.messageboards.model;
  * @see       MBMessage
  * @generated
  */
-public class MBMessageWrapper implements MBMessage {
+public class MBMessageWrapper implements MBMessage, ModelWrapper<MBMessage> {
 	public MBMessageWrapper(MBMessage mbMessage) {
 		_mbMessage = mbMessage;
 	}
@@ -489,6 +491,33 @@ public class MBMessageWrapper implements MBMessage {
 	}
 
 	/**
+	* Returns the answer of this message-boards message.
+	*
+	* @return the answer of this message-boards message
+	*/
+	public boolean getAnswer() {
+		return _mbMessage.getAnswer();
+	}
+
+	/**
+	* Returns <code>true</code> if this message-boards message is answer.
+	*
+	* @return <code>true</code> if this message-boards message is answer; <code>false</code> otherwise
+	*/
+	public boolean isAnswer() {
+		return _mbMessage.isAnswer();
+	}
+
+	/**
+	* Sets whether this message-boards message is answer.
+	*
+	* @param answer the answer of this message-boards message
+	*/
+	public void setAnswer(boolean answer) {
+		_mbMessage.setAnswer(answer);
+	}
+
+	/**
 	* Returns the status of this message-boards message.
 	*
 	* @return the status of this message-boards message
@@ -643,10 +672,6 @@ public class MBMessageWrapper implements MBMessage {
 		return _mbMessage.isEscapedModel();
 	}
 
-	public void setEscapedModel(boolean escapedModel) {
-		_mbMessage.setEscapedModel(escapedModel);
-	}
-
 	public java.io.Serializable getPrimaryKeyObj() {
 		return _mbMessage.getPrimaryKeyObj();
 	}
@@ -758,7 +783,14 @@ public class MBMessageWrapper implements MBMessage {
 		_mbMessage.setAttachmentsDir(attachmentsDir);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedModel}
+	 */
 	public MBMessage getWrappedMBMessage() {
+		return _mbMessage;
+	}
+
+	public MBMessage getWrappedModel() {
 		return _mbMessage;
 	}
 

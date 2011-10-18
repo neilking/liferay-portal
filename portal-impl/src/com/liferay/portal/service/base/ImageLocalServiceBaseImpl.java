@@ -52,6 +52,7 @@ import com.liferay.portal.service.GroupService;
 import com.liferay.portal.service.ImageLocalService;
 import com.liferay.portal.service.ImageService;
 import com.liferay.portal.service.LayoutBranchLocalService;
+import com.liferay.portal.service.LayoutBranchService;
 import com.liferay.portal.service.LayoutLocalService;
 import com.liferay.portal.service.LayoutPrototypeLocalService;
 import com.liferay.portal.service.LayoutPrototypeService;
@@ -95,13 +96,18 @@ import com.liferay.portal.service.PortletService;
 import com.liferay.portal.service.QuartzLocalService;
 import com.liferay.portal.service.RegionService;
 import com.liferay.portal.service.ReleaseLocalService;
+import com.liferay.portal.service.RepositoryEntryLocalService;
 import com.liferay.portal.service.RepositoryService;
 import com.liferay.portal.service.ResourceActionLocalService;
+import com.liferay.portal.service.ResourceBlockLocalService;
+import com.liferay.portal.service.ResourceBlockPermissionLocalService;
+import com.liferay.portal.service.ResourceBlockService;
 import com.liferay.portal.service.ResourceCodeLocalService;
 import com.liferay.portal.service.ResourceLocalService;
 import com.liferay.portal.service.ResourcePermissionLocalService;
 import com.liferay.portal.service.ResourcePermissionService;
 import com.liferay.portal.service.ResourceService;
+import com.liferay.portal.service.ResourceTypePermissionLocalService;
 import com.liferay.portal.service.RoleLocalService;
 import com.liferay.portal.service.RoleService;
 import com.liferay.portal.service.ServiceComponentLocalService;
@@ -178,11 +184,16 @@ import com.liferay.portal.service.persistence.ReleasePersistence;
 import com.liferay.portal.service.persistence.RepositoryEntryPersistence;
 import com.liferay.portal.service.persistence.RepositoryPersistence;
 import com.liferay.portal.service.persistence.ResourceActionPersistence;
+import com.liferay.portal.service.persistence.ResourceBlockFinder;
+import com.liferay.portal.service.persistence.ResourceBlockPermissionPersistence;
+import com.liferay.portal.service.persistence.ResourceBlockPersistence;
 import com.liferay.portal.service.persistence.ResourceCodePersistence;
 import com.liferay.portal.service.persistence.ResourceFinder;
 import com.liferay.portal.service.persistence.ResourcePermissionFinder;
 import com.liferay.portal.service.persistence.ResourcePermissionPersistence;
 import com.liferay.portal.service.persistence.ResourcePersistence;
+import com.liferay.portal.service.persistence.ResourceTypePermissionFinder;
+import com.liferay.portal.service.persistence.ResourceTypePermissionPersistence;
 import com.liferay.portal.service.persistence.RoleFinder;
 import com.liferay.portal.service.persistence.RolePersistence;
 import com.liferay.portal.service.persistence.ServiceComponentPersistence;
@@ -208,10 +219,10 @@ import com.liferay.portal.service.persistence.WebsitePersistence;
 import com.liferay.portal.service.persistence.WorkflowDefinitionLinkPersistence;
 import com.liferay.portal.service.persistence.WorkflowInstanceLinkPersistence;
 
-import com.liferay.portlet.imagegallery.service.IGImageLocalService;
-import com.liferay.portlet.imagegallery.service.IGImageService;
-import com.liferay.portlet.imagegallery.service.persistence.IGImageFinder;
-import com.liferay.portlet.imagegallery.service.persistence.IGImagePersistence;
+import com.liferay.portlet.documentlibrary.service.DLFileEntryLocalService;
+import com.liferay.portlet.documentlibrary.service.DLFileEntryService;
+import com.liferay.portlet.documentlibrary.service.persistence.DLFileEntryFinder;
+import com.liferay.portlet.documentlibrary.service.persistence.DLFileEntryPersistence;
 
 import java.io.Serializable;
 
@@ -1148,6 +1159,24 @@ public abstract class ImageLocalServiceBaseImpl implements ImageLocalService,
 	public void setLayoutBranchLocalService(
 		LayoutBranchLocalService layoutBranchLocalService) {
 		this.layoutBranchLocalService = layoutBranchLocalService;
+	}
+
+	/**
+	 * Returns the layout branch remote service.
+	 *
+	 * @return the layout branch remote service
+	 */
+	public LayoutBranchService getLayoutBranchService() {
+		return layoutBranchService;
+	}
+
+	/**
+	 * Sets the layout branch remote service.
+	 *
+	 * @param layoutBranchService the layout branch remote service
+	 */
+	public void setLayoutBranchService(LayoutBranchService layoutBranchService) {
+		this.layoutBranchService = layoutBranchService;
 	}
 
 	/**
@@ -2513,6 +2542,25 @@ public abstract class ImageLocalServiceBaseImpl implements ImageLocalService,
 	}
 
 	/**
+	 * Returns the repository entry local service.
+	 *
+	 * @return the repository entry local service
+	 */
+	public RepositoryEntryLocalService getRepositoryEntryLocalService() {
+		return repositoryEntryLocalService;
+	}
+
+	/**
+	 * Sets the repository entry local service.
+	 *
+	 * @param repositoryEntryLocalService the repository entry local service
+	 */
+	public void setRepositoryEntryLocalService(
+		RepositoryEntryLocalService repositoryEntryLocalService) {
+		this.repositoryEntryLocalService = repositoryEntryLocalService;
+	}
+
+	/**
 	 * Returns the repository entry persistence.
 	 *
 	 * @return the repository entry persistence
@@ -2643,6 +2691,119 @@ public abstract class ImageLocalServiceBaseImpl implements ImageLocalService,
 	}
 
 	/**
+	 * Returns the resource block local service.
+	 *
+	 * @return the resource block local service
+	 */
+	public ResourceBlockLocalService getResourceBlockLocalService() {
+		return resourceBlockLocalService;
+	}
+
+	/**
+	 * Sets the resource block local service.
+	 *
+	 * @param resourceBlockLocalService the resource block local service
+	 */
+	public void setResourceBlockLocalService(
+		ResourceBlockLocalService resourceBlockLocalService) {
+		this.resourceBlockLocalService = resourceBlockLocalService;
+	}
+
+	/**
+	 * Returns the resource block remote service.
+	 *
+	 * @return the resource block remote service
+	 */
+	public ResourceBlockService getResourceBlockService() {
+		return resourceBlockService;
+	}
+
+	/**
+	 * Sets the resource block remote service.
+	 *
+	 * @param resourceBlockService the resource block remote service
+	 */
+	public void setResourceBlockService(
+		ResourceBlockService resourceBlockService) {
+		this.resourceBlockService = resourceBlockService;
+	}
+
+	/**
+	 * Returns the resource block persistence.
+	 *
+	 * @return the resource block persistence
+	 */
+	public ResourceBlockPersistence getResourceBlockPersistence() {
+		return resourceBlockPersistence;
+	}
+
+	/**
+	 * Sets the resource block persistence.
+	 *
+	 * @param resourceBlockPersistence the resource block persistence
+	 */
+	public void setResourceBlockPersistence(
+		ResourceBlockPersistence resourceBlockPersistence) {
+		this.resourceBlockPersistence = resourceBlockPersistence;
+	}
+
+	/**
+	 * Returns the resource block finder.
+	 *
+	 * @return the resource block finder
+	 */
+	public ResourceBlockFinder getResourceBlockFinder() {
+		return resourceBlockFinder;
+	}
+
+	/**
+	 * Sets the resource block finder.
+	 *
+	 * @param resourceBlockFinder the resource block finder
+	 */
+	public void setResourceBlockFinder(ResourceBlockFinder resourceBlockFinder) {
+		this.resourceBlockFinder = resourceBlockFinder;
+	}
+
+	/**
+	 * Returns the resource block permission local service.
+	 *
+	 * @return the resource block permission local service
+	 */
+	public ResourceBlockPermissionLocalService getResourceBlockPermissionLocalService() {
+		return resourceBlockPermissionLocalService;
+	}
+
+	/**
+	 * Sets the resource block permission local service.
+	 *
+	 * @param resourceBlockPermissionLocalService the resource block permission local service
+	 */
+	public void setResourceBlockPermissionLocalService(
+		ResourceBlockPermissionLocalService resourceBlockPermissionLocalService) {
+		this.resourceBlockPermissionLocalService = resourceBlockPermissionLocalService;
+	}
+
+	/**
+	 * Returns the resource block permission persistence.
+	 *
+	 * @return the resource block permission persistence
+	 */
+	public ResourceBlockPermissionPersistence getResourceBlockPermissionPersistence() {
+		return resourceBlockPermissionPersistence;
+	}
+
+	/**
+	 * Sets the resource block permission persistence.
+	 *
+	 * @param resourceBlockPermissionPersistence the resource block permission persistence
+	 */
+	public void setResourceBlockPermissionPersistence(
+		ResourceBlockPermissionPersistence resourceBlockPermissionPersistence) {
+		this.resourceBlockPermissionPersistence = resourceBlockPermissionPersistence;
+	}
+
+	/**
 	 * Returns the resource code local service.
 	 *
 	 * @return the resource code local service
@@ -2754,6 +2915,63 @@ public abstract class ImageLocalServiceBaseImpl implements ImageLocalService,
 	public void setResourcePermissionFinder(
 		ResourcePermissionFinder resourcePermissionFinder) {
 		this.resourcePermissionFinder = resourcePermissionFinder;
+	}
+
+	/**
+	 * Returns the resource type permission local service.
+	 *
+	 * @return the resource type permission local service
+	 */
+	public ResourceTypePermissionLocalService getResourceTypePermissionLocalService() {
+		return resourceTypePermissionLocalService;
+	}
+
+	/**
+	 * Sets the resource type permission local service.
+	 *
+	 * @param resourceTypePermissionLocalService the resource type permission local service
+	 */
+	public void setResourceTypePermissionLocalService(
+		ResourceTypePermissionLocalService resourceTypePermissionLocalService) {
+		this.resourceTypePermissionLocalService = resourceTypePermissionLocalService;
+	}
+
+	/**
+	 * Returns the resource type permission persistence.
+	 *
+	 * @return the resource type permission persistence
+	 */
+	public ResourceTypePermissionPersistence getResourceTypePermissionPersistence() {
+		return resourceTypePermissionPersistence;
+	}
+
+	/**
+	 * Sets the resource type permission persistence.
+	 *
+	 * @param resourceTypePermissionPersistence the resource type permission persistence
+	 */
+	public void setResourceTypePermissionPersistence(
+		ResourceTypePermissionPersistence resourceTypePermissionPersistence) {
+		this.resourceTypePermissionPersistence = resourceTypePermissionPersistence;
+	}
+
+	/**
+	 * Returns the resource type permission finder.
+	 *
+	 * @return the resource type permission finder
+	 */
+	public ResourceTypePermissionFinder getResourceTypePermissionFinder() {
+		return resourceTypePermissionFinder;
+	}
+
+	/**
+	 * Sets the resource type permission finder.
+	 *
+	 * @param resourceTypePermissionFinder the resource type permission finder
+	 */
+	public void setResourceTypePermissionFinder(
+		ResourceTypePermissionFinder resourceTypePermissionFinder) {
+		this.resourceTypePermissionFinder = resourceTypePermissionFinder;
 	}
 
 	/**
@@ -3739,75 +3957,77 @@ public abstract class ImageLocalServiceBaseImpl implements ImageLocalService,
 	}
 
 	/**
-	 * Returns the i g image local service.
+	 * Returns the document library file entry local service.
 	 *
-	 * @return the i g image local service
+	 * @return the document library file entry local service
 	 */
-	public IGImageLocalService getIGImageLocalService() {
-		return igImageLocalService;
+	public DLFileEntryLocalService getDLFileEntryLocalService() {
+		return dlFileEntryLocalService;
 	}
 
 	/**
-	 * Sets the i g image local service.
+	 * Sets the document library file entry local service.
 	 *
-	 * @param igImageLocalService the i g image local service
+	 * @param dlFileEntryLocalService the document library file entry local service
 	 */
-	public void setIGImageLocalService(IGImageLocalService igImageLocalService) {
-		this.igImageLocalService = igImageLocalService;
+	public void setDLFileEntryLocalService(
+		DLFileEntryLocalService dlFileEntryLocalService) {
+		this.dlFileEntryLocalService = dlFileEntryLocalService;
 	}
 
 	/**
-	 * Returns the i g image remote service.
+	 * Returns the document library file entry remote service.
 	 *
-	 * @return the i g image remote service
+	 * @return the document library file entry remote service
 	 */
-	public IGImageService getIGImageService() {
-		return igImageService;
+	public DLFileEntryService getDLFileEntryService() {
+		return dlFileEntryService;
 	}
 
 	/**
-	 * Sets the i g image remote service.
+	 * Sets the document library file entry remote service.
 	 *
-	 * @param igImageService the i g image remote service
+	 * @param dlFileEntryService the document library file entry remote service
 	 */
-	public void setIGImageService(IGImageService igImageService) {
-		this.igImageService = igImageService;
+	public void setDLFileEntryService(DLFileEntryService dlFileEntryService) {
+		this.dlFileEntryService = dlFileEntryService;
 	}
 
 	/**
-	 * Returns the i g image persistence.
+	 * Returns the document library file entry persistence.
 	 *
-	 * @return the i g image persistence
+	 * @return the document library file entry persistence
 	 */
-	public IGImagePersistence getIGImagePersistence() {
-		return igImagePersistence;
+	public DLFileEntryPersistence getDLFileEntryPersistence() {
+		return dlFileEntryPersistence;
 	}
 
 	/**
-	 * Sets the i g image persistence.
+	 * Sets the document library file entry persistence.
 	 *
-	 * @param igImagePersistence the i g image persistence
+	 * @param dlFileEntryPersistence the document library file entry persistence
 	 */
-	public void setIGImagePersistence(IGImagePersistence igImagePersistence) {
-		this.igImagePersistence = igImagePersistence;
+	public void setDLFileEntryPersistence(
+		DLFileEntryPersistence dlFileEntryPersistence) {
+		this.dlFileEntryPersistence = dlFileEntryPersistence;
 	}
 
 	/**
-	 * Returns the i g image finder.
+	 * Returns the document library file entry finder.
 	 *
-	 * @return the i g image finder
+	 * @return the document library file entry finder
 	 */
-	public IGImageFinder getIGImageFinder() {
-		return igImageFinder;
+	public DLFileEntryFinder getDLFileEntryFinder() {
+		return dlFileEntryFinder;
 	}
 
 	/**
-	 * Sets the i g image finder.
+	 * Sets the document library file entry finder.
 	 *
-	 * @param igImageFinder the i g image finder
+	 * @param dlFileEntryFinder the document library file entry finder
 	 */
-	public void setIGImageFinder(IGImageFinder igImageFinder) {
-		this.igImageFinder = igImageFinder;
+	public void setDLFileEntryFinder(DLFileEntryFinder dlFileEntryFinder) {
+		this.dlFileEntryFinder = dlFileEntryFinder;
 	}
 
 	public void afterPropertiesSet() {
@@ -3939,6 +4159,8 @@ public abstract class ImageLocalServiceBaseImpl implements ImageLocalService,
 	protected LayoutFinder layoutFinder;
 	@BeanReference(type = LayoutBranchLocalService.class)
 	protected LayoutBranchLocalService layoutBranchLocalService;
+	@BeanReference(type = LayoutBranchService.class)
+	protected LayoutBranchService layoutBranchService;
 	@BeanReference(type = LayoutBranchPersistence.class)
 	protected LayoutBranchPersistence layoutBranchPersistence;
 	@BeanReference(type = LayoutPrototypeLocalService.class)
@@ -4085,6 +4307,8 @@ public abstract class ImageLocalServiceBaseImpl implements ImageLocalService,
 	protected RepositoryService repositoryService;
 	@BeanReference(type = RepositoryPersistence.class)
 	protected RepositoryPersistence repositoryPersistence;
+	@BeanReference(type = RepositoryEntryLocalService.class)
+	protected RepositoryEntryLocalService repositoryEntryLocalService;
 	@BeanReference(type = RepositoryEntryPersistence.class)
 	protected RepositoryEntryPersistence repositoryEntryPersistence;
 	@BeanReference(type = ResourceLocalService.class)
@@ -4099,6 +4323,18 @@ public abstract class ImageLocalServiceBaseImpl implements ImageLocalService,
 	protected ResourceActionLocalService resourceActionLocalService;
 	@BeanReference(type = ResourceActionPersistence.class)
 	protected ResourceActionPersistence resourceActionPersistence;
+	@BeanReference(type = ResourceBlockLocalService.class)
+	protected ResourceBlockLocalService resourceBlockLocalService;
+	@BeanReference(type = ResourceBlockService.class)
+	protected ResourceBlockService resourceBlockService;
+	@BeanReference(type = ResourceBlockPersistence.class)
+	protected ResourceBlockPersistence resourceBlockPersistence;
+	@BeanReference(type = ResourceBlockFinder.class)
+	protected ResourceBlockFinder resourceBlockFinder;
+	@BeanReference(type = ResourceBlockPermissionLocalService.class)
+	protected ResourceBlockPermissionLocalService resourceBlockPermissionLocalService;
+	@BeanReference(type = ResourceBlockPermissionPersistence.class)
+	protected ResourceBlockPermissionPersistence resourceBlockPermissionPersistence;
 	@BeanReference(type = ResourceCodeLocalService.class)
 	protected ResourceCodeLocalService resourceCodeLocalService;
 	@BeanReference(type = ResourceCodePersistence.class)
@@ -4111,6 +4347,12 @@ public abstract class ImageLocalServiceBaseImpl implements ImageLocalService,
 	protected ResourcePermissionPersistence resourcePermissionPersistence;
 	@BeanReference(type = ResourcePermissionFinder.class)
 	protected ResourcePermissionFinder resourcePermissionFinder;
+	@BeanReference(type = ResourceTypePermissionLocalService.class)
+	protected ResourceTypePermissionLocalService resourceTypePermissionLocalService;
+	@BeanReference(type = ResourceTypePermissionPersistence.class)
+	protected ResourceTypePermissionPersistence resourceTypePermissionPersistence;
+	@BeanReference(type = ResourceTypePermissionFinder.class)
+	protected ResourceTypePermissionFinder resourceTypePermissionFinder;
 	@BeanReference(type = RoleLocalService.class)
 	protected RoleLocalService roleLocalService;
 	@BeanReference(type = RoleService.class)
@@ -4217,14 +4459,14 @@ public abstract class ImageLocalServiceBaseImpl implements ImageLocalService,
 	protected WorkflowInstanceLinkPersistence workflowInstanceLinkPersistence;
 	@BeanReference(type = CounterLocalService.class)
 	protected CounterLocalService counterLocalService;
-	@BeanReference(type = IGImageLocalService.class)
-	protected IGImageLocalService igImageLocalService;
-	@BeanReference(type = IGImageService.class)
-	protected IGImageService igImageService;
-	@BeanReference(type = IGImagePersistence.class)
-	protected IGImagePersistence igImagePersistence;
-	@BeanReference(type = IGImageFinder.class)
-	protected IGImageFinder igImageFinder;
+	@BeanReference(type = DLFileEntryLocalService.class)
+	protected DLFileEntryLocalService dlFileEntryLocalService;
+	@BeanReference(type = DLFileEntryService.class)
+	protected DLFileEntryService dlFileEntryService;
+	@BeanReference(type = DLFileEntryPersistence.class)
+	protected DLFileEntryPersistence dlFileEntryPersistence;
+	@BeanReference(type = DLFileEntryFinder.class)
+	protected DLFileEntryFinder dlFileEntryFinder;
 	@BeanReference(type = PersistedModelLocalServiceRegistry.class)
 	protected PersistedModelLocalServiceRegistry persistedModelLocalServiceRegistry;
 	private static Log _log = LogFactoryUtil.getLog(ImageLocalServiceBaseImpl.class);

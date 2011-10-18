@@ -25,7 +25,7 @@ public class AssertTagOrderTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -40,21 +40,19 @@ public class AssertTagOrderTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Control Panel", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Control Panel",
+			RuntimeVariables.replace("Control Panel"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Tags", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Tags", RuntimeVariables.replace("Tags"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent("//div[4]/ul/li[1]/span/a")) {
+				if (selenium.isElementPresent("//div[2]/ul/li[1]/div/span/a")) {
 					break;
 				}
 			}
@@ -64,16 +62,15 @@ public class AssertTagOrderTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace("blue"),
-			selenium.getText("//div[4]/ul/li[1]/span/a"));
+			selenium.getText("//div[2]/ul/li[1]/div/span/a"));
 		assertEquals(RuntimeVariables.replace("blue car"),
-			selenium.getText("//div[4]/ul/li[2]/span/a"));
+			selenium.getText("//div[2]/ul/li[2]/div/span/a"));
 		assertEquals(RuntimeVariables.replace("blue green"),
-			selenium.getText("//div[4]/ul/li[3]/span/a"));
+			selenium.getText("//div[2]/ul/li[3]/div/span/a"));
 		assertEquals(RuntimeVariables.replace("green"),
-			selenium.getText("//div[4]/ul/li[4]/span/a"));
+			selenium.getText("//div[2]/ul/li[4]/div/span/a"));
 		assertEquals(RuntimeVariables.replace("green tree"),
-			selenium.getText("//div[4]/ul/li[5]/span/a"));
+			selenium.getText("//div[2]/ul/li[5]/div/span/a"));
 	}
 }

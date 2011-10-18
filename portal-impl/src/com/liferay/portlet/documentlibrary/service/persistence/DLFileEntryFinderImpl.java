@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.security.permission.InlineSQLHelperUtil;
 import com.liferay.portal.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portlet.documentlibrary.NoSuchFileEntryException;
 import com.liferay.portlet.documentlibrary.model.DLFileEntry;
 import com.liferay.portlet.documentlibrary.model.impl.DLFileEntryImpl;
 import com.liferay.util.dao.orm.CustomSQLUtil;
@@ -35,6 +36,7 @@ import java.util.List;
 
 /**
  * @author Brian Wing Shun Chan
+ * @author Shuyang Zhou
  */
 public class DLFileEntryFinderImpl
 	extends BasePersistenceImpl<DLFileEntry> implements DLFileEntryFinder {
@@ -42,8 +44,14 @@ public class DLFileEntryFinderImpl
 	public static String COUNT_BY_EXTRA_SETTINGS =
 		DLFileEntryFinder.class.getName() + ".countByExtraSettings";
 
+	public static String COUNT_BY_G_F =
+		DLFileEntryFinder.class.getName() + ".countByG_F";
+
 	public static String COUNT_BY_G_F_S =
 		DLFileEntryFinder.class.getName() + ".countByG_F_S";
+
+	public static String FIND_BY_ANY_IMAGE_ID =
+		DLFileEntryFinder.class.getName() + ".findByAnyImageId";
 
 	public static String FIND_BY_EXTRA_SETTINGS =
 		DLFileEntryFinder.class.getName() + ".findByExtraSettings";
@@ -92,11 +100,61 @@ public class DLFileEntryFinderImpl
 		return doCountByG_F_S(groupId, folderIds, status, false);
 	}
 
+	public DLFileEntry fetchByAnyImageId(long imageId) throws SystemException {
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			String sql = CustomSQLUtil.get(FIND_BY_ANY_IMAGE_ID);
+
+			SQLQuery q = session.createSQLQuery(sql);
+
+			q.addEntity("DLFileEntry", DLFileEntryImpl.class);
+
+			QueryPos qPos = QueryPos.getInstance(q);
+
+			qPos.add(imageId);
+			qPos.add(imageId);
+			qPos.add(imageId);
+			qPos.add(imageId);
+
+			List<DLFileEntry> list = q.list();
+
+			if (list.isEmpty()) {
+				return null;
+			}
+			else {
+				return list.get(0);
+			}
+		}
+		catch (Exception e) {
+			throw new SystemException(e);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
 	public int filterCountByG_F_S(
 			long groupId, List<Long> folderIds, int status)
 		throws SystemException {
 
 		return doCountByG_F_S(groupId, folderIds, status, true);
+	}
+
+	public DLFileEntry findByAnyImageId(long imageId)
+		throws NoSuchFileEntryException, SystemException {
+
+		DLFileEntry dlFileEntry = fetchByAnyImageId(imageId);
+
+		if (dlFileEntry == null) {
+			throw new NoSuchFileEntryException(
+				"No DLFileEntry exists with the imageId " + imageId);
+		}
+		else {
+			return dlFileEntry;
+		}
 	}
 
 	public List<DLFileEntry> findByExtraSettings(int start, int end)
@@ -136,7 +194,7 @@ public class DLFileEntryFinderImpl
 
 			q.addEntity("DLFileEntry", DLFileEntryImpl.class);
 
-			return q.list();
+			return q.list(true);
 		}
 		catch (Exception e) {
 			throw new SystemException(e);
@@ -160,7 +218,7 @@ public class DLFileEntryFinderImpl
 
 			q.addEntity("DLFileEntry", DLFileEntryImpl.class);
 
-			return q.list();
+			return q.list(true);
 		}
 		catch (Exception e) {
 			throw new SystemException(e);
@@ -180,7 +238,14 @@ public class DLFileEntryFinderImpl
 		try {
 			session = openSession();
 
-			String sql = CustomSQLUtil.get(COUNT_BY_G_F_S);
+			String sql = null;
+
+			if (status == WorkflowConstants.STATUS_ANY) {
+				sql = CustomSQLUtil.get(COUNT_BY_G_F);
+			}
+			else {
+				sql = CustomSQLUtil.get(COUNT_BY_G_F_S);
+			}
 
 			if (inlineSQLHelper) {
 				sql = InlineSQLHelperUtil.replacePermissionCheck(
@@ -190,11 +255,6 @@ public class DLFileEntryFinderImpl
 
 			sql = StringUtil.replace(
 				sql, "[$FOLDER_ID$]", getFolderIds(folderIds));
-
-			if (status == WorkflowConstants.STATUS_ANY) {
-				sql = StringUtil.replace(
-					sql, "(DLFileVersion.status = ?) AND", "");
-			}
 
 			SQLQuery q = session.createSQLQuery(sql);
 

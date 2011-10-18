@@ -19,9 +19,18 @@
 <%
 long layoutSetBranchId = ParamUtil.getLong(request, "layoutSetBranchId");
 
+LayoutRevision recentLayoutRevision = null;
+
 long currentLayoutRevisionId = StagingUtil.getRecentLayoutRevisionId(request, layoutSetBranchId, plid);
 
-LayoutRevision recentLayoutRevision = LayoutRevisionLocalServiceUtil.getLayoutRevision(currentLayoutRevisionId);
+if (currentLayoutRevisionId > 0) {
+	recentLayoutRevision = LayoutRevisionLocalServiceUtil.getLayoutRevision(currentLayoutRevisionId);
+}
+else {
+	recentLayoutRevision = LayoutStagingUtil.getLayoutRevision(layout);
+
+	currentLayoutRevisionId = recentLayoutRevision.getLayoutRevisionId();
+}
 
 List<LayoutRevision> rootLayoutRevisions = LayoutRevisionLocalServiceUtil.getChildLayoutRevisions(layoutSetBranchId, LayoutRevisionConstants.DEFAULT_PARENT_LAYOUT_REVISION_ID, plid, QueryUtil.ALL_POS, QueryUtil.ALL_POS, new LayoutRevisionIdComparator(true));
 %>
@@ -58,13 +67,13 @@ List<LayoutRevision> rootLayoutRevisions = LayoutRevisionLocalServiceUtil.getChi
 					LayoutBranch layoutBranch = rootLayoutRevision.getLayoutBranch();
 					%>
 
-					<h3 class="layout-variation-name"><%= layoutBranch.getName() %></h3>
+					<h3 class="layout-variation-name"><liferay-ui:message key="<%= layoutBranch.getName() %>" /></h3>
 				</c:if>
 
 				<liferay-ui:search-container>
 					<liferay-ui:search-container-results
-						results="<%= LayoutRevisionLocalServiceUtil.getLayoutRevisions(rootLayoutRevision.getLayoutSetBranchId(), rootLayoutRevision.getPlid(), rootLayoutRevision.getLayoutBranchId(), searchContainer.getStart(), searchContainer.getEnd(), new LayoutRevisionIdComparator(false)) %>"
-						total="<%= LayoutRevisionLocalServiceUtil.getLayoutRevisionsCount(rootLayoutRevision.getLayoutSetBranchId(), rootLayoutRevision.getPlid(), rootLayoutRevision.getLayoutBranchId()) %>"
+						results="<%= LayoutRevisionLocalServiceUtil.getLayoutRevisions(rootLayoutRevision.getLayoutSetBranchId(), rootLayoutRevision.getLayoutBranchId(), rootLayoutRevision.getPlid(), searchContainer.getStart(), searchContainer.getEnd(), new LayoutRevisionIdComparator(false)) %>"
+						total="<%= LayoutRevisionLocalServiceUtil.getLayoutRevisionsCount(rootLayoutRevision.getLayoutSetBranchId(), rootLayoutRevision.getLayoutBranchId(), rootLayoutRevision.getPlid()) %>"
 					/>
 
 					<liferay-ui:search-container-row

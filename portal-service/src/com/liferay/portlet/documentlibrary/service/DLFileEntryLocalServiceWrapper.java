@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.documentlibrary.service;
 
+import com.liferay.portal.service.ServiceWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link DLFileEntryLocalService}.
@@ -23,7 +25,8 @@ package com.liferay.portlet.documentlibrary.service;
  * @see       DLFileEntryLocalService
  * @generated
  */
-public class DLFileEntryLocalServiceWrapper implements DLFileEntryLocalService {
+public class DLFileEntryLocalServiceWrapper implements DLFileEntryLocalService,
+	ServiceWrapper<DLFileEntryLocalService> {
 	public DLFileEntryLocalServiceWrapper(
 		DLFileEntryLocalService dlFileEntryLocalService) {
 		_dlFileEntryLocalService = dlFileEntryLocalService;
@@ -265,15 +268,36 @@ public class DLFileEntryLocalServiceWrapper implements DLFileEntryLocalService {
 
 	public com.liferay.portlet.documentlibrary.model.DLFileEntry addFileEntry(
 		long userId, long groupId, long repositoryId, long folderId,
-		java.lang.String mimeType, java.lang.String title,
-		java.lang.String description, java.lang.String changeLog,
-		java.io.InputStream is, long size,
+		java.lang.String sourceFileName, java.lang.String mimeType,
+		java.lang.String title, java.lang.String description,
+		java.lang.String changeLog, long fileEntryTypeId,
+		java.util.Map<java.lang.String, com.liferay.portlet.dynamicdatamapping.storage.Fields> fieldsMap,
+		java.io.File file, java.io.InputStream is, long size,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		return _dlFileEntryLocalService.addFileEntry(userId, groupId,
-			repositoryId, folderId, mimeType, title, description, changeLog,
-			is, size, serviceContext);
+			repositoryId, folderId, sourceFileName, mimeType, title,
+			description, changeLog, fileEntryTypeId, fieldsMap, file, is, size,
+			serviceContext);
+	}
+
+	public void addFileEntryResources(
+		com.liferay.portlet.documentlibrary.model.DLFileEntry dlFileEntry,
+		boolean addGroupPermissions, boolean addGuestPermissions)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		_dlFileEntryLocalService.addFileEntryResources(dlFileEntry,
+			addGroupPermissions, addGuestPermissions);
+	}
+
+	public void addFileEntryResources(
+		com.liferay.portlet.documentlibrary.model.DLFileEntry dlFileEntry,
+		java.lang.String[] groupPermissions, java.lang.String[] guestPermissions)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		_dlFileEntryLocalService.addFileEntryResources(dlFileEntry,
+			groupPermissions, guestPermissions);
 	}
 
 	public void cancelCheckOut(long userId, long fileEntryId)
@@ -320,6 +344,16 @@ public class DLFileEntryLocalServiceWrapper implements DLFileEntryLocalService {
 		_dlFileEntryLocalService.convertExtraSettings(keys);
 	}
 
+	public void copyFileEntryMetadata(long companyId, long fileEntryTypeId,
+		long fileEntryId, long fromFileVersionId, long toFileVersionId,
+		com.liferay.portal.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		_dlFileEntryLocalService.copyFileEntryMetadata(companyId,
+			fileEntryTypeId, fileEntryId, fromFileVersionId, toFileVersionId,
+			serviceContext);
+	}
+
 	public void deleteFileEntries(long groupId, long folderId)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
@@ -338,10 +372,24 @@ public class DLFileEntryLocalServiceWrapper implements DLFileEntryLocalService {
 		_dlFileEntryLocalService.deleteFileEntry(userId, fileEntryId);
 	}
 
+	public com.liferay.portlet.documentlibrary.model.DLFileEntry fetchFileEntryByAnyImageId(
+		long imageId)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _dlFileEntryLocalService.fetchFileEntryByAnyImageId(imageId);
+	}
+
 	public java.util.List<com.liferay.portlet.documentlibrary.model.DLFileEntry> getExtraSettingsFileEntries(
 		int start, int end)
 		throws com.liferay.portal.kernel.exception.SystemException {
 		return _dlFileEntryLocalService.getExtraSettingsFileEntries(start, end);
+	}
+
+	public java.io.File getFile(long userId, long fileEntryId,
+		java.lang.String version, boolean incrementCounter)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return _dlFileEntryLocalService.getFile(userId, fileEntryId, version,
+			incrementCounter);
 	}
 
 	public java.io.InputStream getFileAsStream(long userId, long fileEntryId,
@@ -498,37 +546,36 @@ public class DLFileEntryLocalServiceWrapper implements DLFileEntryLocalService {
 			serviceContext);
 	}
 
-	public com.liferay.portlet.asset.model.AssetEntry updateAsset(long userId,
-		com.liferay.portlet.documentlibrary.model.DLFileEntry dlFileEntry,
-		com.liferay.portlet.documentlibrary.model.DLFileVersion dlFileVersion,
-		long[] assetCategoryIds, java.lang.String[] assetTagNames,
-		long[] assetLinkEntryIds)
-		throws com.liferay.portal.kernel.exception.PortalException,
-			com.liferay.portal.kernel.exception.SystemException {
-		return _dlFileEntryLocalService.updateAsset(userId, dlFileEntry,
-			dlFileVersion, assetCategoryIds, assetTagNames, assetLinkEntryIds);
-	}
-
 	public com.liferay.portlet.documentlibrary.model.DLFileEntry updateFileEntry(
 		long userId, long fileEntryId, java.lang.String sourceFileName,
 		java.lang.String mimeType, java.lang.String title,
 		java.lang.String description, java.lang.String changeLog,
-		boolean majorVersion, java.io.InputStream is, long size,
+		boolean majorVersion, long fileEntryTypeId,
+		java.util.Map<java.lang.String, com.liferay.portlet.dynamicdatamapping.storage.Fields> fieldsMap,
+		java.io.File file, java.io.InputStream is, long size,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		return _dlFileEntryLocalService.updateFileEntry(userId, fileEntryId,
 			sourceFileName, mimeType, title, description, changeLog,
-			majorVersion, is, size, serviceContext);
+			majorVersion, fileEntryTypeId, fieldsMap, file, is, size,
+			serviceContext);
+	}
+
+	public void updateSmallImage(long smallImageId, long largeImageId)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		_dlFileEntryLocalService.updateSmallImage(smallImageId, largeImageId);
 	}
 
 	public com.liferay.portlet.documentlibrary.model.DLFileEntry updateStatus(
 		long userId, long fileVersionId, int status,
+		java.util.Map<java.lang.String, java.io.Serializable> workflowContext,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		return _dlFileEntryLocalService.updateStatus(userId, fileVersionId,
-			status, serviceContext);
+			status, workflowContext, serviceContext);
 	}
 
 	public boolean verifyFileEntryCheckOut(long fileEntryId,
@@ -539,11 +586,26 @@ public class DLFileEntryLocalServiceWrapper implements DLFileEntryLocalService {
 			lockUuid);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public DLFileEntryLocalService getWrappedDLFileEntryLocalService() {
 		return _dlFileEntryLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedDLFileEntryLocalService(
+		DLFileEntryLocalService dlFileEntryLocalService) {
+		_dlFileEntryLocalService = dlFileEntryLocalService;
+	}
+
+	public DLFileEntryLocalService getWrappedService() {
+		return _dlFileEntryLocalService;
+	}
+
+	public void setWrappedService(
 		DLFileEntryLocalService dlFileEntryLocalService) {
 		_dlFileEntryLocalService = dlFileEntryLocalService;
 	}

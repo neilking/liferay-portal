@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.wiki.service;
 
+import com.liferay.portal.service.ServiceWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link WikiPageService}.
@@ -23,7 +25,8 @@ package com.liferay.portlet.wiki.service;
  * @see       WikiPageService
  * @generated
  */
-public class WikiPageServiceWrapper implements WikiPageService {
+public class WikiPageServiceWrapper implements WikiPageService,
+	ServiceWrapper<WikiPageService> {
 	public WikiPageServiceWrapper(WikiPageService wikiPageService) {
 		_wikiPageService = wikiPageService;
 	}
@@ -49,11 +52,28 @@ public class WikiPageServiceWrapper implements WikiPageService {
 			minorEdit, format, parentTitle, redirectTitle, serviceContext);
 	}
 
-	public void addPageAttachments(long nodeId, java.lang.String title,
-		java.util.List<com.liferay.portal.kernel.util.ObjectValuePair<java.lang.String, byte[]>> files)
+	public void addPageAttachment(long nodeId, java.lang.String title,
+		java.lang.String fileName, java.io.File file)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
-		_wikiPageService.addPageAttachments(nodeId, title, files);
+		_wikiPageService.addPageAttachment(nodeId, title, fileName, file);
+	}
+
+	public void addPageAttachments(long nodeId, java.lang.String title,
+		java.util.List<com.liferay.portal.kernel.util.ObjectValuePair<java.lang.String, java.io.InputStream>> inputStream)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		_wikiPageService.addPageAttachments(nodeId, title, inputStream);
+	}
+
+	public java.lang.String addTempPageAttachment(long nodeId,
+		java.lang.String fileName, java.lang.String tempFolderName,
+		java.io.InputStream inputStream)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException,
+			java.io.IOException {
+		return _wikiPageService.addTempPageAttachment(nodeId, fileName,
+			tempFolderName, inputStream);
 	}
 
 	public void changeParent(long nodeId, java.lang.String title,
@@ -82,6 +102,14 @@ public class WikiPageServiceWrapper implements WikiPageService {
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		_wikiPageService.deletePageAttachment(nodeId, title, fileName);
+	}
+
+	public void deleteTempPageAttachment(long nodeId,
+		java.lang.String fileName, java.lang.String tempFolderName)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		_wikiPageService.deleteTempPageAttachment(nodeId, fileName,
+			tempFolderName);
 	}
 
 	public com.liferay.portlet.wiki.model.WikiPage getDraftPage(long nodeId,
@@ -138,6 +166,14 @@ public class WikiPageServiceWrapper implements WikiPageService {
 			type, version, displayStyle, feedURL, entryURL, locale);
 	}
 
+	public java.lang.String[] getTempPageAttachmentNames(long nodeId,
+		java.lang.String tempFolderName)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return _wikiPageService.getTempPageAttachmentNames(nodeId,
+			tempFolderName);
+	}
+
 	public void movePage(long nodeId, java.lang.String title,
 		java.lang.String newTitle,
 		com.liferay.portal.service.ServiceContext serviceContext)
@@ -179,11 +215,25 @@ public class WikiPageServiceWrapper implements WikiPageService {
 			serviceContext);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public WikiPageService getWrappedWikiPageService() {
 		return _wikiPageService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedWikiPageService(WikiPageService wikiPageService) {
+		_wikiPageService = wikiPageService;
+	}
+
+	public WikiPageService getWrappedService() {
+		return _wikiPageService;
+	}
+
+	public void setWrappedService(WikiPageService wikiPageService) {
 		_wikiPageService = wikiPageService;
 	}
 

@@ -23,7 +23,8 @@ package com.liferay.portal.service;
  * @see       OrganizationLocalService
  * @generated
  */
-public class OrganizationLocalServiceWrapper implements OrganizationLocalService {
+public class OrganizationLocalServiceWrapper implements OrganizationLocalService,
+	ServiceWrapper<OrganizationLocalService> {
 	public OrganizationLocalServiceWrapper(
 		OrganizationLocalService organizationLocalService) {
 		_organizationLocalService = organizationLocalService;
@@ -366,12 +367,13 @@ public class OrganizationLocalServiceWrapper implements OrganizationLocalService
 	}
 
 	/**
-	* Returns the primary key of the organization with the name.
+	* Returns the organization with the name.
 	*
 	* @param companyId the primary key of the organization's company
 	* @param name the organization's name
-	* @return the primary key of the organization with the name, or
-	<code>0</code> if the organization could not be found
+	* @return the organization with the name
+	* @throws PortalException if the organization with the name could not be
+	found
 	* @throws SystemException if a system exception occurred
 	*/
 	public com.liferay.portal.model.Organization getOrganization(
@@ -634,8 +636,8 @@ public class OrganizationLocalServiceWrapper implements OrganizationLocalService
 	*
 	* @param groupId the primary key of the group
 	* @param organizationId the primary key of the organization
-	* @return <code>true</code> if the organization is associated with the
-	group; <code>false</code> otherwise
+	* @return <code>true</code> if the organization belongs to the group;
+	<code>false</code> otherwise
 	* @throws SystemException if a system exception occurred
 	*/
 	public boolean hasGroupOrganization(long groupId, long organizationId)
@@ -650,8 +652,8 @@ public class OrganizationLocalServiceWrapper implements OrganizationLocalService
 	*
 	* @param passwordPolicyId the primary key of the password policy
 	* @param organizationId the primary key of the organization
-	* @return <code>true</code> if the password policy is assigned to the
-	organization; <code>false</code> otherwise
+	* @return <code>true</code> if the password policy has been assigned to
+	the organization; <code>false</code> otherwise
 	* @throws SystemException if a system exception occurred
 	*/
 	public boolean hasPasswordPolicyOrganization(long passwordPolicyId,
@@ -768,6 +770,14 @@ public class OrganizationLocalServiceWrapper implements OrganizationLocalService
 	public void rebuildTree(long companyId, boolean force)
 		throws com.liferay.portal.kernel.exception.SystemException {
 		_organizationLocalService.rebuildTree(companyId, force);
+	}
+
+	public java.util.List<com.liferay.portal.model.Organization> search(
+		long companyId,
+		java.util.LinkedHashMap<java.lang.String, java.lang.Object> params,
+		int start, int end)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _organizationLocalService.search(companyId, params, start, end);
 	}
 
 	/**
@@ -1261,11 +1271,26 @@ public class OrganizationLocalServiceWrapper implements OrganizationLocalService
 			regionId, countryId, statusId, comments, site, serviceContext);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public OrganizationLocalService getWrappedOrganizationLocalService() {
 		return _organizationLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedOrganizationLocalService(
+		OrganizationLocalService organizationLocalService) {
+		_organizationLocalService = organizationLocalService;
+	}
+
+	public OrganizationLocalService getWrappedService() {
+		return _organizationLocalService;
+	}
+
+	public void setWrappedService(
 		OrganizationLocalService organizationLocalService) {
 		_organizationLocalService = organizationLocalService;
 	}

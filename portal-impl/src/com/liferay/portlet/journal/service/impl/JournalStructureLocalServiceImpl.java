@@ -52,6 +52,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -64,8 +66,8 @@ public class JournalStructureLocalServiceImpl
 	public JournalStructure addStructure(
 			long userId, long groupId, String structureId,
 			boolean autoStructureId, String parentStructureId,
-			String name, String description, String xsd,
-			ServiceContext serviceContext)
+			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
+			String xsd, ServiceContext serviceContext)
 		throws PortalException, SystemException {
 
 		// Structure
@@ -86,7 +88,7 @@ public class JournalStructureLocalServiceImpl
 		}
 
 		validate(
-			groupId, structureId, autoStructureId, parentStructureId, name,
+			groupId, structureId, autoStructureId, parentStructureId, nameMap,
 			xsd);
 
 		long id = counterLocalService.increment();
@@ -102,8 +104,8 @@ public class JournalStructureLocalServiceImpl
 		structure.setModifiedDate(serviceContext.getModifiedDate(now));
 		structure.setStructureId(structureId);
 		structure.setParentStructureId(parentStructureId);
-		structure.setName(name);
-		structure.setDescription(description);
+		structure.setNameMap(nameMap);
+		structure.setDescriptionMap(descriptionMap);
 		structure.setXsd(xsd);
 
 		journalStructurePersistence.update(structure, false);
@@ -238,8 +240,8 @@ public class JournalStructureLocalServiceImpl
 		newStructure.setCreateDate(now);
 		newStructure.setModifiedDate(now);
 		newStructure.setStructureId(newStructureId);
-		newStructure.setName(oldStructure.getName());
-		newStructure.setDescription(oldStructure.getDescription());
+		newStructure.setNameMap(oldStructure.getNameMap());
+		newStructure.setDescriptionMap(oldStructure.getDescriptionMap());
 		newStructure.setXsd(oldStructure.getXsd());
 
 		journalStructurePersistence.update(newStructure, false);
@@ -257,19 +259,22 @@ public class JournalStructureLocalServiceImpl
 		if (journalArticlePersistence.countByG_C_S(
 				structure.getGroupId(), 0, structure.getStructureId()) > 0) {
 
-			throw new RequiredStructureException();
+			throw new RequiredStructureException(
+				RequiredStructureException.REFERENCED_WEB_CONTENT);
 		}
 
 		if (journalStructurePersistence.countByG_P(
 				structure.getGroupId(), structure.getStructureId()) > 0) {
 
-			throw new RequiredStructureException();
+			throw new RequiredStructureException(
+				RequiredStructureException.REFERENCED_STRUCTURE);
 		}
 
 		if (journalTemplatePersistence.countByG_S(
 				structure.getGroupId(), structure.getStructureId()) > 0) {
 
-			throw new RequiredStructureException();
+			throw new RequiredStructureException(
+				RequiredStructureException.REFERENCED_TEMPLATE);
 		}
 
 		// WebDAVProps
@@ -294,10 +299,13 @@ public class JournalStructureLocalServiceImpl
 			long classNameId = PortalUtil.getClassNameId(
 				JournalStructure.class.getName());
 
-			JournalArticle article = journalArticlePersistence.findByG_C_C(
-				structure.getGroupId(), classNameId, structure.getId());
+			List<JournalArticle> articles =
+				journalArticlePersistence.findByG_C_C(
+					structure.getGroupId(), classNameId, structure.getId());
 
-			journalArticleLocalService.deleteArticle(article, null, null);
+			for (JournalArticle article : articles) {
+				journalArticleLocalService.deleteArticle(article, null, null);
+			}
 		}
 		catch (NoSuchArticleException nsae) {
 		}
@@ -424,8 +432,8 @@ public class JournalStructureLocalServiceImpl
 
 	public JournalStructure updateStructure(
 			long groupId, String structureId, String parentStructureId,
-			String name, String description, String xsd,
-			ServiceContext serviceContext)
+			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
+			String xsd, ServiceContext serviceContext)
 		throws PortalException, SystemException {
 
 		structureId = structureId.trim().toUpperCase();
@@ -438,15 +446,15 @@ public class JournalStructureLocalServiceImpl
 		}
 
 		validateParentStructureId(groupId, structureId, parentStructureId);
-		validate(groupId, parentStructureId, name, xsd);
+		validate(groupId, parentStructureId, nameMap, xsd);
 
 		JournalStructure structure = journalStructurePersistence.findByG_S(
 			groupId, structureId);
 
 		structure.setModifiedDate(serviceContext.getModifiedDate(null));
 		structure.setParentStructureId(parentStructureId);
-		structure.setName(name);
-		structure.setDescription(description);
+		structure.setNameMap(nameMap);
+		structure.setDescriptionMap(descriptionMap);
 		structure.setXsd(xsd);
 
 		journalStructurePersistence.update(structure, false);
@@ -541,7 +549,7 @@ public class JournalStructureLocalServiceImpl
 
 	protected void validate(
 			long groupId, String structureId, boolean autoStructureId,
-			String parentStructureId, String name, String xsd)
+			String parentStructureId, Map<Locale, String> nameMap, String xsd)
 		throws PortalException, SystemException {
 
 		if (!autoStructureId) {
@@ -556,14 +564,15 @@ public class JournalStructureLocalServiceImpl
 		}
 
 		validateParentStructureId(groupId, structureId, parentStructureId);
-		validate(groupId, parentStructureId, name, xsd);
+		validate(groupId, parentStructureId, nameMap, xsd);
 	}
 
 	protected void validate(
-			long groupId, String parentStructureId, String name, String xsd)
+			long groupId, String parentStructureId, Map<Locale, String> nameMap,
+			String xsd)
 		throws PortalException {
 
-		if (Validator.isNull(name)) {
+		 if (nameMap.entrySet().isEmpty()) {
 			throw new StructureNameException();
 		}
 

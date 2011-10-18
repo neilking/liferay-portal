@@ -14,7 +14,10 @@
 
 package com.liferay.portal.tools.deploy;
 
+import com.liferay.portal.kernel.plugin.PluginPackage;
+import com.liferay.portal.kernel.util.ServerDetector;
 import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.portal.model.Plugin;
 import com.liferay.portal.util.InitUtil;
 
 import java.io.File;
@@ -53,6 +56,18 @@ public class WebDeployer extends BaseDeployer {
 	}
 
 	@Override
+	public void copyXmls(
+			File srcFile, String displayName, PluginPackage pluginPackage)
+		throws Exception {
+
+		super.copyXmls(srcFile, displayName, pluginPackage);
+
+		if (appServerType.equals(ServerDetector.TOMCAT_ID)) {
+			copyDependencyXml("context.xml", srcFile + "/META-INF");
+		}
+	}
+
+	@Override
 	public String getExtraContent(
 			double webXmlVersion, File srcFile, String displayName)
 		throws Exception {
@@ -73,6 +88,11 @@ public class WebDeployer extends BaseDeployer {
 		sb.append("</listener>");
 
 		return sb.toString();
+	}
+
+	@Override
+	public String getPluginType() {
+		return Plugin.TYPE_WEB;
 	}
 
 }

@@ -30,7 +30,7 @@ public class AdvancedSearchWebContentIDTest extends BaseTestCase {
 				selenium.open("/web/guest/home/");
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
@@ -45,17 +45,12 @@ public class AdvancedSearchWebContentIDTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
 				selenium.clickAt("link=Control Panel",
-					RuntimeVariables.replace(""));
+					RuntimeVariables.replace("Control Panel"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
-				assertEquals(RuntimeVariables.replace("Web Content"),
-					selenium.getText("//div[2]/div[2]/div[2]/ul/li[3]/a"));
-				selenium.clickAt("//div[2]/div[2]/div[2]/ul/li[3]/a",
+				selenium.clickAt("link=Web Content",
 					RuntimeVariables.replace("Web Content"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
 
 				String webContentID = selenium.getText("//td[2]/a");
 				RuntimeVariables.setValue("webContentID", webContentID);
@@ -70,17 +65,18 @@ public class AdvancedSearchWebContentIDTest extends BaseTestCase {
 				}
 
 				selenium.clickAt("link=Advanced \u00bb",
-					RuntimeVariables.replace(""));
+					RuntimeVariables.replace("Advanced \u00bb"));
 
 			case 2:
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
 					try {
-						if (selenium.isVisible("_15_searchArticleId")) {
+						if (selenium.isVisible(
+									"//input[@id='_15_searchArticleId']")) {
 							break;
 						}
 					}
@@ -90,33 +86,26 @@ public class AdvancedSearchWebContentIDTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
-				selenium.type("_15_searchArticleId",
+				selenium.type("//input[@id='_15_searchArticleId']",
 					RuntimeVariables.replace(RuntimeVariables.getValue(
 							"webContentID")));
-				selenium.saveScreenShotAndSource();
 				selenium.clickAt("//div[2]/span[2]/span/input",
 					RuntimeVariables.replace("Search"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
-				selenium.type("_15_searchArticleId",
+				selenium.type("//input[@id='_15_searchArticleId']",
 					RuntimeVariables.replace(""));
-				selenium.saveScreenShotAndSource();
 				assertEquals(RuntimeVariables.replace("Web Content Name"),
 					selenium.getText("//td[3]/a"));
-				selenium.type("_15_searchArticleId",
+				selenium.type("//input[@id='_15_searchArticleId']",
 					RuntimeVariables.replace("11111"));
-				selenium.saveScreenShotAndSource();
 				selenium.clickAt("//div[2]/span[2]/span/input",
 					RuntimeVariables.replace("Search"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
-				selenium.type("_15_searchArticleId",
+				selenium.type("//input[@id='_15_searchArticleId']",
 					RuntimeVariables.replace(""));
-				selenium.saveScreenShotAndSource();
 				assertFalse(selenium.isElementPresent("link=Web Content Name"));
 				selenium.clickAt("link=\u00ab Basic",
-					RuntimeVariables.replace(""));
+					RuntimeVariables.replace("\u00ab Basic"));
 
 			case 100:
 				label = -1;

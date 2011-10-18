@@ -230,6 +230,20 @@ public interface AssetEntryModel extends AttachedModel, BaseModel<AssetEntry>,
 	public void setClassUuid(String classUuid);
 
 	/**
+	 * Returns the class type ID of this asset entry.
+	 *
+	 * @return the class type ID of this asset entry
+	 */
+	public long getClassTypeId();
+
+	/**
+	 * Sets the class type ID of this asset entry.
+	 *
+	 * @param classTypeId the class type ID of this asset entry
+	 */
+	public void setClassTypeId(long classTypeId);
+
+	/**
 	 * Returns the visible of this asset entry.
 	 *
 	 * @return the visible of this asset entry
@@ -334,6 +348,7 @@ public interface AssetEntryModel extends AttachedModel, BaseModel<AssetEntry>,
 	 * @param locale the locale of the language
 	 * @return the localized title of this asset entry
 	 */
+	@AutoEscape
 	public String getTitle(Locale locale);
 
 	/**
@@ -343,6 +358,7 @@ public interface AssetEntryModel extends AttachedModel, BaseModel<AssetEntry>,
 	 * @param useDefault whether to use the default language if no localization exists for the requested language
 	 * @return the localized title of this asset entry. If <code>useDefault</code> is <code>false</code> and no localization exists for the requested language, an empty string will be returned.
 	 */
+	@AutoEscape
 	public String getTitle(Locale locale, boolean useDefault);
 
 	/**
@@ -351,6 +367,7 @@ public interface AssetEntryModel extends AttachedModel, BaseModel<AssetEntry>,
 	 * @param languageId the ID of the language
 	 * @return the localized title of this asset entry
 	 */
+	@AutoEscape
 	public String getTitle(String languageId);
 
 	/**
@@ -360,7 +377,14 @@ public interface AssetEntryModel extends AttachedModel, BaseModel<AssetEntry>,
 	 * @param useDefault whether to use the default language if no localization exists for the requested language
 	 * @return the localized title of this asset entry
 	 */
+	@AutoEscape
 	public String getTitle(String languageId, boolean useDefault);
+
+	@AutoEscape
+	public String getTitleCurrentLanguageId();
+
+	@AutoEscape
+	public String getTitleCurrentValue();
 
 	/**
 	 * Returns a map of the locales and localized titles of this asset entry.
@@ -392,6 +416,8 @@ public interface AssetEntryModel extends AttachedModel, BaseModel<AssetEntry>,
 	 * @param defaultLocale the default locale
 	 */
 	public void setTitle(String title, Locale locale, Locale defaultLocale);
+
+	public void setTitleCurrentLanguageId(String languageId);
 
 	/**
 	 * Sets the localized titles of this asset entry from the map of locales and localized titles.
@@ -533,8 +559,6 @@ public interface AssetEntryModel extends AttachedModel, BaseModel<AssetEntry>,
 	public void setCachedModel(boolean cachedModel);
 
 	public boolean isEscapedModel();
-
-	public void setEscapedModel(boolean escapedModel);
 
 	public Serializable getPrimaryKeyObj();
 

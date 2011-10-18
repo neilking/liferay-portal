@@ -16,6 +16,7 @@ package com.liferay.portal.model.impl;
 
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.CacheModel;
@@ -27,8 +28,6 @@ import com.liferay.portlet.expando.model.ExpandoBridge;
 import com.liferay.portlet.expando.util.ExpandoBridgeFactoryUtil;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Proxy;
 
 import java.sql.Types;
 
@@ -72,15 +71,11 @@ public class ResourceActionModelImpl extends BaseModelImpl<ResourceAction>
 	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
 				"value.object.finder.cache.enabled.com.liferay.portal.model.ResourceAction"),
 			true);
-
-	public Class<?> getModelClass() {
-		return ResourceAction.class;
-	}
-
-	public String getModelClassName() {
-		return ResourceAction.class.getName();
-	}
-
+	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.column.bitmask.enabled.com.liferay.portal.model.ResourceAction"),
+			true);
+	public static long ACTIONID_COLUMN_BITMASK = 1L;
+	public static long NAME_COLUMN_BITMASK = 2L;
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(com.liferay.portal.util.PropsUtil.get(
 				"lock.expiration.time.com.liferay.portal.model.ResourceAction"));
 
@@ -103,6 +98,14 @@ public class ResourceActionModelImpl extends BaseModelImpl<ResourceAction>
 		setPrimaryKey(((Long)primaryKeyObj).longValue());
 	}
 
+	public Class<?> getModelClass() {
+		return ResourceAction.class;
+	}
+
+	public String getModelClassName() {
+		return ResourceAction.class.getName();
+	}
+
 	public long getResourceActionId() {
 		return _resourceActionId;
 	}
@@ -121,6 +124,8 @@ public class ResourceActionModelImpl extends BaseModelImpl<ResourceAction>
 	}
 
 	public void setName(String name) {
+		_columnBitmask |= NAME_COLUMN_BITMASK;
+
 		if (_originalName == null) {
 			_originalName = _name;
 		}
@@ -142,6 +147,8 @@ public class ResourceActionModelImpl extends BaseModelImpl<ResourceAction>
 	}
 
 	public void setActionId(String actionId) {
+		_columnBitmask |= ACTIONID_COLUMN_BITMASK;
+
 		if (_originalActionId == null) {
 			_originalActionId = _actionId;
 		}
@@ -161,20 +168,19 @@ public class ResourceActionModelImpl extends BaseModelImpl<ResourceAction>
 		_bitwiseValue = bitwiseValue;
 	}
 
+	public long getColumnBitmask() {
+		return _columnBitmask;
+	}
+
 	@Override
 	public ResourceAction toEscapedModel() {
-		if (isEscapedModel()) {
-			return (ResourceAction)this;
+		if (_escapedModelProxy == null) {
+			_escapedModelProxy = (ResourceAction)ProxyUtil.newProxyInstance(_classLoader,
+					_escapedModelProxyInterfaces,
+					new AutoEscapeBeanHandler(this));
 		}
-		else {
-			if (_escapedModelProxy == null) {
-				_escapedModelProxy = (ResourceAction)Proxy.newProxyInstance(_classLoader,
-						_escapedModelProxyInterfaces,
-						new AutoEscapeBeanHandler(this));
-			}
 
-			return _escapedModelProxy;
-		}
+		return _escapedModelProxy;
 	}
 
 	@Override
@@ -269,6 +275,8 @@ public class ResourceActionModelImpl extends BaseModelImpl<ResourceAction>
 		resourceActionModelImpl._originalName = resourceActionModelImpl._name;
 
 		resourceActionModelImpl._originalActionId = resourceActionModelImpl._actionId;
+
+		resourceActionModelImpl._columnBitmask = 0;
 	}
 
 	@Override
@@ -355,5 +363,6 @@ public class ResourceActionModelImpl extends BaseModelImpl<ResourceAction>
 	private String _originalActionId;
 	private long _bitwiseValue;
 	private transient ExpandoBridge _expandoBridge;
+	private long _columnBitmask;
 	private ResourceAction _escapedModelProxy;
 }

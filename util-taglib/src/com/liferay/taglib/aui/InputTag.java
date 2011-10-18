@@ -93,9 +93,11 @@ public class InputTag extends BaseInputTag {
 			String validatorName = (String)modelValidator.getObject(1);
 			String validatorErrorMessage = (String)modelValidator.getObject(2);
 			String validatorValue = (String)modelValidator.getObject(3);
+			boolean customValidator = (Boolean)modelValidator.getObject(4);
 
 			ValidatorTag validatorTag = new ValidatorTagImpl(
-				validatorName, validatorErrorMessage, validatorValue);
+				validatorName, validatorErrorMessage, validatorValue,
+				customValidator);
 
 			addValidatorTag(validatorName, validatorTag);
 		}
@@ -155,7 +157,9 @@ public class InputTag extends BaseInputTag {
 		String type = getType();
 
 		if (Validator.isNull(id)) {
-			if (!Validator.equals(type, "radio")) {
+			if (!Validator.equals(type, "assetTags") &&
+				!Validator.equals(type, "radio")) {
+
 				id = name;
 			}
 			else {
@@ -248,7 +252,7 @@ public class InputTag extends BaseInputTag {
 
 		List<ValidatorTag> validatorTags = ListUtil.fromMapValues(_validators);
 
-		validatorTagsMap.put(_forLabel, validatorTags);
+		validatorTagsMap.put(getName(), validatorTags);
 	}
 
 	private static final boolean _CLEAN_UP_SET_ATTRIBUTES = true;

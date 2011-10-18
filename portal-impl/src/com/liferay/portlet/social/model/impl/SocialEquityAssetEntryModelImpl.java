@@ -17,6 +17,7 @@ package com.liferay.portlet.social.model.impl;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.model.CacheModel;
 import com.liferay.portal.model.impl.BaseModelImpl;
@@ -29,8 +30,6 @@ import com.liferay.portlet.social.model.SocialEquityAssetEntry;
 import com.liferay.portlet.social.model.SocialEquityAssetEntryModel;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Proxy;
 
 import java.sql.Types;
 
@@ -75,15 +74,10 @@ public class SocialEquityAssetEntryModelImpl extends BaseModelImpl<SocialEquityA
 	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
 				"value.object.finder.cache.enabled.com.liferay.portlet.social.model.SocialEquityAssetEntry"),
 			true);
-
-	public Class<?> getModelClass() {
-		return SocialEquityAssetEntry.class;
-	}
-
-	public String getModelClassName() {
-		return SocialEquityAssetEntry.class.getName();
-	}
-
+	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.column.bitmask.enabled.com.liferay.portlet.social.model.SocialEquityAssetEntry"),
+			true);
+	public static long ASSETENTRYID_COLUMN_BITMASK = 1L;
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(com.liferay.portal.util.PropsUtil.get(
 				"lock.expiration.time.com.liferay.portlet.social.model.SocialEquityAssetEntry"));
 
@@ -104,6 +98,14 @@ public class SocialEquityAssetEntryModelImpl extends BaseModelImpl<SocialEquityA
 
 	public void setPrimaryKeyObj(Serializable primaryKeyObj) {
 		setPrimaryKey(((Long)primaryKeyObj).longValue());
+	}
+
+	public Class<?> getModelClass() {
+		return SocialEquityAssetEntry.class;
+	}
+
+	public String getModelClassName() {
+		return SocialEquityAssetEntry.class.getName();
 	}
 
 	public long getEquityAssetEntryId() {
@@ -151,6 +153,8 @@ public class SocialEquityAssetEntryModelImpl extends BaseModelImpl<SocialEquityA
 	}
 
 	public void setAssetEntryId(long assetEntryId) {
+		_columnBitmask |= ASSETENTRYID_COLUMN_BITMASK;
+
 		if (!_setOriginalAssetEntryId) {
 			_setOriginalAssetEntryId = true;
 
@@ -180,20 +184,19 @@ public class SocialEquityAssetEntryModelImpl extends BaseModelImpl<SocialEquityA
 		_informationB = informationB;
 	}
 
+	public long getColumnBitmask() {
+		return _columnBitmask;
+	}
+
 	@Override
 	public SocialEquityAssetEntry toEscapedModel() {
-		if (isEscapedModel()) {
-			return (SocialEquityAssetEntry)this;
+		if (_escapedModelProxy == null) {
+			_escapedModelProxy = (SocialEquityAssetEntry)ProxyUtil.newProxyInstance(_classLoader,
+					_escapedModelProxyInterfaces,
+					new AutoEscapeBeanHandler(this));
 		}
-		else {
-			if (_escapedModelProxy == null) {
-				_escapedModelProxy = (SocialEquityAssetEntry)Proxy.newProxyInstance(_classLoader,
-						_escapedModelProxyInterfaces,
-						new AutoEscapeBeanHandler(this));
-			}
 
-			return _escapedModelProxy;
-		}
+		return _escapedModelProxy;
 	}
 
 	@Override
@@ -279,6 +282,8 @@ public class SocialEquityAssetEntryModelImpl extends BaseModelImpl<SocialEquityA
 		socialEquityAssetEntryModelImpl._originalAssetEntryId = socialEquityAssetEntryModelImpl._assetEntryId;
 
 		socialEquityAssetEntryModelImpl._setOriginalAssetEntryId = false;
+
+		socialEquityAssetEntryModelImpl._columnBitmask = 0;
 	}
 
 	@Override
@@ -381,5 +386,6 @@ public class SocialEquityAssetEntryModelImpl extends BaseModelImpl<SocialEquityA
 	private double _informationK;
 	private double _informationB;
 	private transient ExpandoBridge _expandoBridge;
+	private long _columnBitmask;
 	private SocialEquityAssetEntry _escapedModelProxy;
 }

@@ -162,8 +162,8 @@ public class EditFeedAction extends PortletAction {
 		String contentField = ParamUtil.getString(
 			actionRequest, "contentField");
 
-		String feedType = RSSUtil.DEFAULT_TYPE;
-		double feedVersion = RSSUtil.DEFAULT_VERSION;
+		String feedType = RSSUtil.TYPE_DEFAULT;
+		double feedVersion = RSSUtil.VERSION_DEFAULT;
 
 		String feedTypeAndVersion = ParamUtil.getString(
 			actionRequest, "feedTypeAndVersion");

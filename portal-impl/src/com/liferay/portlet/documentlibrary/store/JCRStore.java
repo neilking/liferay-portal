@@ -25,7 +25,6 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.documentlibrary.DuplicateDirectoryException;
 import com.liferay.portlet.documentlibrary.DuplicateFileException;
@@ -59,6 +58,7 @@ import org.apache.commons.lang.StringUtils;
 /**
  * @author Michael Young
  * @author Brian Wing Shun Chan
+ * @author Edward Han
  */
 public class JCRStore extends BaseStore {
 
@@ -72,13 +72,14 @@ public class JCRStore extends BaseStore {
 			session = JCRFactoryUtil.createSession();
 
 			Node rootNode = getRootNode(session, companyId);
+
 			Node repositoryNode = getFolderNode(rootNode, repositoryId);
 
 			if (repositoryNode.hasNode(dirName)) {
 				throw new DuplicateDirectoryException(dirName);
 			}
 			else {
-				String[] dirNameArray = StringUtil.split(dirName, "/");
+				String[] dirNameArray = StringUtil.split(dirName, '/');
 
 				Node dirNode = repositoryNode;
 
@@ -109,8 +110,7 @@ public class JCRStore extends BaseStore {
 
 	@Override
 	public void addFile(
-			long companyId, String portletId, long groupId, long repositoryId,
-			String fileName, ServiceContext serviceContext, InputStream is)
+			long companyId, long repositoryId, String fileName, InputStream is)
 		throws PortalException, SystemException {
 
 		Session session = null;
@@ -123,6 +123,7 @@ public class JCRStore extends BaseStore {
 			VersionManager versionManager = workspace.getVersionManager();
 
 			Node rootNode = getRootNode(session, companyId);
+
 			Node repositoryNode = getFolderNode(rootNode, repositoryId);
 
 			if (repositoryNode.hasNode(fileName)) {
@@ -156,7 +157,7 @@ public class JCRStore extends BaseStore {
 					versionManager.getVersionHistory(contentNode.getPath());
 
 				versionHistory.addVersionLabel(
-					version.getName(), DEFAULT_VERSION, false);
+					version.getName(), VERSION_DEFAULT, false);
 			}
 		}
 		catch (RepositoryException re) {
@@ -192,7 +193,7 @@ public class JCRStore extends BaseStore {
 
 	@Override
 	public void deleteDirectory(
-			long companyId, String portletId, long repositoryId, String dirName)
+			long companyId, long repositoryId, String dirName)
 		throws PortalException {
 
 		Session session = null;
@@ -201,7 +202,9 @@ public class JCRStore extends BaseStore {
 			session = JCRFactoryUtil.createSession();
 
 			Node rootNode = getRootNode(session, companyId);
+
 			Node repositoryNode = getFolderNode(rootNode, repositoryId);
+
 			Node dirNode = repositoryNode.getNode(dirName);
 
 			dirNode.remove();
@@ -229,9 +232,7 @@ public class JCRStore extends BaseStore {
 	}
 
 	@Override
-	public void deleteFile(
-			long companyId, String portletId, long repositoryId,
-			String fileName)
+	public void deleteFile(long companyId, long repositoryId, String fileName)
 		throws PortalException, SystemException {
 
 		Session session = null;
@@ -249,8 +250,11 @@ public class JCRStore extends BaseStore {
 			VersionManager versionManager = workspace.getVersionManager();
 
 			Node rootNode = getRootNode(session, companyId);
+
 			Node repositoryNode = getFolderNode(rootNode, repositoryId);
+
 			Node fileNode = repositoryNode.getNode(fileName);
+
 			Node contentNode = fileNode.getNode(JCRConstants.JCR_CONTENT);
 
 			versionManager.checkout(contentNode.getPath());
@@ -291,8 +295,11 @@ public class JCRStore extends BaseStore {
 			VersionManager versionManager = workspace.getVersionManager();
 
 			Node rootNode = getRootNode(session, companyId);
+
 			Node repositoryNode = getFolderNode(rootNode, repositoryId);
+
 			Node fileNode = repositoryNode.getNode(fileName);
+
 			Node contentNode = fileNode.getNode(JCRConstants.JCR_CONTENT);
 
 			VersionHistory versionHistory = versionManager.getVersionHistory(
@@ -335,7 +342,9 @@ public class JCRStore extends BaseStore {
 			session = JCRFactoryUtil.createSession();
 
 			Node rootNode = getRootNode(session, companyId);
+
 			Node repositoryNode = getFolderNode(rootNode, repositoryId);
+
 			Node fileNode = repositoryNode.getNode(fileName);
 
 			fileNode.remove();
@@ -357,11 +366,9 @@ public class JCRStore extends BaseStore {
 
 	@Override
 	public void deleteFile(
-			long companyId, String portletId, long repositoryId,
-			String fileName, String versionNumber)
+			long companyId, long repositoryId, String fileName,
+			String versionLabel)
 		throws PortalException, SystemException {
-
-		String versionLabel = versionNumber;
 
 		Session session = null;
 
@@ -373,8 +380,11 @@ public class JCRStore extends BaseStore {
 			VersionManager versionManager = workspace.getVersionManager();
 
 			Node rootNode = getRootNode(session, companyId);
+
 			Node repositoryNode = getFolderNode(rootNode, repositoryId);
+
 			Node fileNode = repositoryNode.getNode(fileName);
+
 			Node contentNode = fileNode.getNode(JCRConstants.JCR_CONTENT);
 
 			VersionHistory versionHistory = versionManager.getVersionHistory(
@@ -412,7 +422,7 @@ public class JCRStore extends BaseStore {
 	@Override
 	public InputStream getFileAsStream(
 			long companyId, long repositoryId, String fileName,
-			String versionNumber)
+			String versionLabel)
 		throws PortalException, SystemException {
 
 		Session session = null;
@@ -421,7 +431,7 @@ public class JCRStore extends BaseStore {
 			session = JCRFactoryUtil.createSession();
 
 			Node contentNode = getFileContentNode(
-				session, companyId, repositoryId, fileName, versionNumber);
+				session, companyId, repositoryId, fileName, versionLabel);
 
 			Property property = contentNode.getProperty(JCRConstants.JCR_DATA);
 
@@ -452,6 +462,7 @@ public class JCRStore extends BaseStore {
 			session = JCRFactoryUtil.createSession();
 
 			Node rootNode = getRootNode(session, companyId);
+
 			Node repositoryNode = getFolderNode(rootNode, repositoryId);
 
 			NodeIterator itr = repositoryNode.getNodes();
@@ -498,7 +509,9 @@ public class JCRStore extends BaseStore {
 			session = JCRFactoryUtil.createSession();
 
 			Node rootNode = getRootNode(session, companyId);
+
 			Node repositoryNode = getFolderNode(rootNode, repositoryId);
+
 			Node dirNode = repositoryNode.getNode(dirName);
 
 			NodeIterator itr = dirNode.getNodes();
@@ -560,14 +573,45 @@ public class JCRStore extends BaseStore {
 	}
 
 	@Override
+	public boolean hasDirectory(
+			long companyId, long repositoryId, String dirName)
+		throws SystemException {
+
+		Session session = null;
+
+		try {
+			session = JCRFactoryUtil.createSession();
+
+			Node rootNode = getRootNode(session, companyId);
+
+			Node repositoryNode = getFolderNode(rootNode, repositoryId);
+
+			repositoryNode.getNode(dirName);
+
+			return true;
+		}
+		catch (PathNotFoundException pnfe) {
+			return false;
+		}
+		catch (RepositoryException re) {
+			throw new SystemException(re);
+		}
+		finally {
+			if (session != null) {
+				session.logout();
+			}
+		}
+	}
+
+	@Override
 	public boolean hasFile(
 			long companyId, long repositoryId, String fileName,
-			String versionNumber)
+			String versionLabel)
 		throws PortalException, SystemException {
 
 		try {
 			getFileContentNode(
-				companyId, repositoryId, fileName, versionNumber);
+				companyId, repositoryId, fileName, versionLabel);
 		}
 		catch (NoSuchFileException nsfe) {
 			return false;
@@ -599,8 +643,8 @@ public class JCRStore extends BaseStore {
 
 	@Override
 	public void updateFile(
-			long companyId, String portletId, long groupId, long repositoryId,
-			long newRepositoryId, String fileName)
+			long companyId, long repositoryId, long newRepositoryId,
+			String fileName)
 		throws PortalException, SystemException {
 
 		Session session = null;
@@ -613,8 +657,11 @@ public class JCRStore extends BaseStore {
 			VersionManager versionManager = workspace.getVersionManager();
 
 			Node rootNode = getRootNode(session, companyId);
+
 			Node repositoryNode = getFolderNode(rootNode, repositoryId);
+
 			Node fileNode = repositoryNode.getNode(fileName);
+
 			Node contentNode = fileNode.getNode(JCRConstants.JCR_CONTENT);
 
 			Node newRepositoryNode = getFolderNode(rootNode, newRepositoryId);
@@ -691,8 +738,8 @@ public class JCRStore extends BaseStore {
 	}
 
 	public void updateFile(
-			long companyId, String portletId, long groupId, long repositoryId,
-			String fileName, String newFileName)
+			long companyId, long repositoryId, String fileName,
+			String newFileName)
 		throws PortalException, SystemException {
 
 		Session session = null;
@@ -705,8 +752,11 @@ public class JCRStore extends BaseStore {
 			VersionManager versionManager = workspace.getVersionManager();
 
 			Node rootNode = getRootNode(session, companyId);
+
 			Node repositoryNode = getFolderNode(rootNode, repositoryId);
+
 			Node fileNode = repositoryNode.getNode(fileName);
+
 			Node contentNode = fileNode.getNode(JCRConstants.JCR_CONTENT);
 
 			Node newFileNode = repositoryNode.addNode(
@@ -776,12 +826,9 @@ public class JCRStore extends BaseStore {
 
 	@Override
 	public void updateFile(
-			long companyId, String portletId, long groupId, long repositoryId,
-			String fileName, String versionNumber, String sourceFileName,
-			ServiceContext serviceContext, InputStream is)
+			long companyId, long repositoryId, String fileName,
+			String versionLabel, InputStream is)
 		throws PortalException, SystemException {
-
-		String versionLabel = versionNumber;
 
 		Session session = null;
 
@@ -793,8 +840,11 @@ public class JCRStore extends BaseStore {
 			VersionManager versionManager = workspace.getVersionManager();
 
 			Node rootNode = getRootNode(session, companyId);
+
 			Node repositoryNode = getFolderNode(rootNode, repositoryId);
+
 			Node fileNode = repositoryNode.getNode(fileName);
+
 			Node contentNode = fileNode.getNode(JCRConstants.JCR_CONTENT);
 
 			versionManager.checkout(contentNode.getPath());
@@ -848,7 +898,7 @@ public class JCRStore extends BaseStore {
 
 	protected Node getFileContentNode(
 			long companyId, long repositoryId, String fileName,
-			String versionNumber)
+			String versionLabel)
 		throws PortalException, SystemException {
 
 		Node contentNode = null;
@@ -859,7 +909,7 @@ public class JCRStore extends BaseStore {
 			session = JCRFactoryUtil.createSession();
 
 			contentNode = getFileContentNode(
-				session, companyId, repositoryId, fileName, versionNumber);
+				session, companyId, repositoryId, fileName, versionLabel);
 		}
 		catch (RepositoryException re) {
 			throw new SystemException(re);
@@ -874,11 +924,9 @@ public class JCRStore extends BaseStore {
 	}
 
 	protected Node getFileContentNode(
-			Session session, long companyId, long repositoryId,
-			String fileName, String versionNumber)
+			Session session, long companyId, long repositoryId, String fileName,
+			String versionLabel)
 		throws PortalException, SystemException {
-
-		String versionLabel = versionNumber;
 
 		Node contentNode = null;
 
@@ -888,11 +936,14 @@ public class JCRStore extends BaseStore {
 			VersionManager versionManager = workspace.getVersionManager();
 
 			Node rootNode = getRootNode(session, companyId);
+
 			Node repositoryNode = getFolderNode(rootNode, repositoryId);
+
 			Node fileNode = repositoryNode.getNode(fileName);
+
 			contentNode = fileNode.getNode(JCRConstants.JCR_CONTENT);
 
-			if (Validator.isNotNull(versionNumber)) {
+			if (Validator.isNotNull(versionLabel)) {
 				VersionHistory versionHistory =
 					versionManager.getVersionHistory(contentNode.getPath());
 

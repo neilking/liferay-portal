@@ -3,7 +3,6 @@ AUI().add(
 	function(A) {
 		var AArray = A.Array;
 		var Lang = A.Lang;
-		var DataType = A.DataType;
 		var FormBuilderField = A.FormBuilderField;
 
 		var instanceOf = A.instanceOf;
@@ -14,46 +13,6 @@ AUI().add(
 		var LOCALIZABLE_FIELD_ATTRS = ['label', 'predefinedValue', 'tip'];
 
 		var STR_BLANK = '';
-
-		var MAP_ATTR_DISPLAY_CHILD_LABEL_AS_VALUE = {
-			name: 'displayChildLabelAsValue'
-		};
-
-		var MAP_ATTR_FIELD_CSS_CLASS = {
-			name: 'fieldCssClass'
-		};
-
-		var MAP_ATTR_LABEL = {
-			name: 'label'
-		};
-
-		var MAP_ATTR_MULTIPLE = {
-			name: 'multiple'
-		};
-
-		var MAP_ATTR_PREDEFINED_VALUE = {
-			name: 'predefinedValue'
-		};
-
-		var MAP_ATTR_REQUIRED = {
-			name: 'required'
-		};
-
-		var MAP_ATTR_SHOW_LABEL = {
-			name: 'showLabel'
-		};
-
-		var MAP_ATTR_STYLE = {
-			name: 'style'
-		};
-
-		var MAP_ATTR_TIP = {
-			name: 'tip'
-		};
-
-		var MAP_ATTR_WIDTH = {
-			name: 'width'
-		};
 
 		var MAP_ELEMENT_DATA = {
 			attributeList: STR_BLANK,
@@ -103,8 +62,6 @@ AUI().add(
 
 							var config = A.merge(
 								{
-									boundingBox: instance.get('settingsFormNode'),
-
 									rules: {
 										name: {
 											required: true,
@@ -115,13 +72,7 @@ AUI().add(
 										name: {
 											required: Liferay.Language.get('this-field-is-required')
 										}
-									},
-									on: {
-										errorField: function(event) {
-											instance._tabs.selectTab(1);
-										}
-									},
-									validateOnBlur: true
+									}
 								},
 								val
 							);
@@ -133,15 +84,34 @@ AUI().add(
 
 					strings: {
 						value: {
+							addNode: Liferay.Language.get('add-field'),
 							button: Liferay.Language.get('button'),
-							defaultMessage: Liferay.Language.get('drop-fields-here'),
-							emptySelection: Liferay.Language.get('no-field-selected'),
+							buttonType: Liferay.Language.get('button-type'),
+							cancel: Liferay.Language.get('cancel'),
+							deleteFieldsMessage: Liferay.Language.get('are-you-sure-you-want-to-delete-the-selected-entries'),
+							duplicateMessage: Liferay.Language.get('duplicate'),
+							editMessage: Liferay.Language.get('edit'),
+							label: Liferay.Language.get('field-label'),
 							large: Liferay.Language.get('large'),
 							medium: Liferay.Language.get('medium'),
-							reset: Liferay.Language.get('Reset'),
+							multiple: Liferay.Language.get('multiple'),
+							name: Liferay.Language.get('name'),
+							no: Liferay.Language.get('no'),
+							options: Liferay.Language.get('options'),
+							predefinedValue: Liferay.Language.get('predefined-value'),
+							propertyName: Liferay.Language.get('property-name'),
+							required: Liferay.Language.get('required'),
+							reset: Liferay.Language.get('reset'),
+							save: Liferay.Language.get('save'),
+							settings: Liferay.Language.get('settings'),
+							showLabel: Liferay.Language.get('show-label'),
 							small: Liferay.Language.get('small'),
-							submit: Liferay.Language.get('Submit'),
-							type: Liferay.Language.get('type')
+							submit: Liferay.Language.get('submit'),
+							tip: Liferay.Language.get('tip'),
+							type: Liferay.Language.get('type'),
+							value: Liferay.Language.get('value'),
+							width: Liferay.Language.get('width'),
+							yes: Liferay.Language.get('yes')
 						}
 					}
 				},
@@ -154,7 +124,7 @@ AUI().add(
 					initializer: function() {
 						var instance = this;
 
-						var translationManager = new Liferay.TranslationManager(instance.get('translationManager'));
+						var translationManager = instance.translationManager = new Liferay.TranslationManager(instance.get('translationManager'));
 
 						instance.after(
 							'render',
@@ -162,10 +132,6 @@ AUI().add(
 								translationManager.render();
 							}
 						);
-
-						instance.translationManager = translationManager;
-
-						instance.validator = new A.FormValidator(instance.get('validator'));
 
 						instance.addTarget(Liferay.Util.getOpener().Liferay);
 					},
@@ -178,14 +144,26 @@ AUI().add(
 						instance.translationManager.after('editingLocaleChange', instance._afterEditingLocaleChange, instance);
 					},
 
+					createField: function() {
+						var instance = this;
+
+						var field = LiferayFormBuilder.superclass.createField.apply(instance, arguments);
+
+						field.set('strings', instance.get('strings'));
+
+						return field;
+					},
+
 					getXSD: function() {
 						var instance = this;
 
 						var buffer = [];
 
-						var fields = instance.get('fields');
-
 						var translationManager = instance.translationManager;
+
+						var editingLocale = translationManager.get('editingLocale');
+
+						instance._updateFieldsLocalizationMap(editingLocale);
 
 						var root = instance._createDynamicNode(
 							'root',
@@ -197,8 +175,7 @@ AUI().add(
 
 						buffer.push(root.openTag);
 
-						AArray.each(
-							fields,
+						instance.get('fields').each(
 							function(item, index, collection) {
 								instance._appendStructureTypeElementAndMetaData(item, buffer);
 							}
@@ -240,21 +217,10 @@ AUI().add(
 						instance._syncFieldsLocaleUI(newVal);
 					},
 
-					_afterSelectedChange: function() {
-						var instance = this;
-
-						LiferayFormBuilder.superclass._afterSelectedChange.apply(instance, arguments);
-
-						instance.validator._uiSetValidateOnBlur(true);
-					},
-
 					_appendStructureChildren: function(field, buffer) {
 						var instance = this;
 
-						var children = field.get('fields');
-
-						AArray.each(
-							children,
+						field.get('fields').each(
 							function(item, index, collection) {
 								instance._appendStructureTypeElementAndMetaData(item, buffer);
 							}
@@ -264,7 +230,6 @@ AUI().add(
 					_appendStructureFieldOptionsBuffer: function(field, buffer) {
 						var instance = this;
 
-						var type = field.get('fieldType');
 						var options = field.get('options');
 
 						if (options) {
@@ -295,14 +260,20 @@ AUI().add(
 					_appendStructureOptionMetaData: function(option, buffer) {
 						var instance = this;
 
-						var label = instance._createDynamicNode('entry', MAP_ATTR_LABEL);
 						var localizationMap = option.localizationMap;
+
+						var labelTag = instance._createDynamicNode(
+							'entry',
+							{
+								name: 'label'
+							}
+						);
 
 						A.each(
 							localizationMap,
 							function(item, index, collection) {
 								if (isObject(item)) {
-									var metadata = instance._createDynamicNode(
+									var metadataTag = instance._createDynamicNode(
 										'meta-data',
 										{
 											locale: index
@@ -312,11 +283,11 @@ AUI().add(
 									var labelVal = instance.normalizeValue(item.label);
 
 									buffer.push(
-										metadata.openTag,
-										label.openTag,
+										metadataTag.openTag,
+										labelTag.openTag,
 										STR_CDATA_OPEN + labelVal + STR_CDATA_CLOSE,
-										label.closeTag,
-										metadata.closeTag
+										labelTag.closeTag,
+										metadataTag.closeTag
 									);
 								}
 							}
@@ -336,26 +307,6 @@ AUI().add(
 							}
 						);
 
-						var displayChildLabelAsValue = instance._createDynamicNode('entry', MAP_ATTR_DISPLAY_CHILD_LABEL_AS_VALUE);
-
-						var entryRequired = instance._createDynamicNode('entry', MAP_ATTR_REQUIRED);
-
-						var fieldCssClass = instance._createDynamicNode('entry', MAP_ATTR_FIELD_CSS_CLASS);
-
-						var label = instance._createDynamicNode('entry', MAP_ATTR_LABEL);
-
-						var multiple = instance._createDynamicNode('entry', MAP_ATTR_MULTIPLE);
-
-						var predefinedValue = instance._createDynamicNode('entry', MAP_ATTR_PREDEFINED_VALUE);
-
-						var showLabel = instance._createDynamicNode('entry', MAP_ATTR_SHOW_LABEL);
-
-						var style = instance._createDynamicNode('entry', MAP_ATTR_STYLE);
-
-						var tip = instance._createDynamicNode('entry', MAP_ATTR_TIP);
-
-						var width = instance._createDynamicNode('entry', MAP_ATTR_WIDTH);
-
 						buffer.push(typeElement.openTag);
 
 						instance._appendStructureFieldOptionsBuffer(field, buffer);
@@ -366,94 +317,72 @@ AUI().add(
 
 						AArray.each(
 							availableLocales,
-							function(item, index, collection) {
+							function(item1, index1, collection1) {
 								var metadata = instance._createDynamicNode(
 									'meta-data',
 									{
-										locale: item
+										locale: item1
 									}
 								);
 
 								buffer.push(metadata.openTag);
 
-								var requiredVal = instance.getFieldLocalizedValue(field, 'required', item);
+								AArray.each(
+									field.getProperties(),
+									function(item2, index2, collection2) {
+										var attributeName = item2.attributeName;
 
-								buffer.push(
-										entryRequired.openTag,
-										STR_CDATA_OPEN + requiredVal + STR_CDATA_CLOSE,
-										entryRequired.closeTag
-								);
+										var attributeTag = instance._createDynamicNode(
+											'entry',
+											{
+												name: attributeName
+											}
+										);
 
-								var fieldLabelVal = instance.getFieldLocalizedValue(field, 'label', item);
+										var attributeValue = instance.getFieldLocalizedValue(field, attributeName, item1);
 
-								buffer.push(
-										label.openTag,
-										STR_CDATA_OPEN + fieldLabelVal + STR_CDATA_CLOSE,
-										label.closeTag
+										if (attributeName === 'folder') {
+											attributeValue = A.JSON.stringify(attributeValue);
+										}
+
+										buffer.push(
+											attributeTag.openTag,
+											STR_CDATA_OPEN + attributeValue + STR_CDATA_CLOSE,
+											attributeTag.closeTag
+										);
+									}
 								);
 
 								if (instanceOf(field, A.FormBuilderMultipleChoiceField)) {
-									var multipleVal = instance.getFieldLocalizedValue(field, 'multiple', item);
-
-									buffer.push(
-											multiple.openTag,
-											STR_CDATA_OPEN + multipleVal + STR_CDATA_CLOSE,
-											multiple.closeTag
+									var displayChildLabelAsValueTag = instance._createDynamicNode(
+										'entry',
+										{
+											name: 'displayChildLabelAsValue'
+										}
 									);
 
 									buffer.push(
-											displayChildLabelAsValue.openTag,
-											STR_CDATA_OPEN + true + STR_CDATA_CLOSE,
-											displayChildLabelAsValue.closeTag
+										displayChildLabelAsValueTag.openTag,
+										STR_CDATA_OPEN + true + STR_CDATA_CLOSE,
+										displayChildLabelAsValueTag.closeTag
 									);
 								}
 
-								var predefinedValueVal = instance.getFieldLocalizedValue(field, 'predefinedValue', item);
-
-								buffer.push(
-										predefinedValue.openTag,
-										STR_CDATA_OPEN + predefinedValueVal + STR_CDATA_CLOSE,
-										predefinedValue.closeTag
-								);
-
-								var showLabelVal = instance.getFieldLocalizedValue(field, 'showLabel', item);
-
-								buffer.push(
-										showLabel.openTag,
-										STR_CDATA_OPEN + showLabelVal + STR_CDATA_CLOSE,
-										showLabel.closeTag
-								);
-
-								var styleVal = instance.getFieldLocalizedValue(field, 'style', item);
-
-								buffer.push(
-									style.openTag,
-									STR_CDATA_OPEN + styleVal + STR_CDATA_CLOSE,
-									style.closeTag
-								);
-
-								var tipVal = instance.getFieldLocalizedValue(field, 'tip', item);
-
-								buffer.push(
-										tip.openTag,
-										STR_CDATA_OPEN + tipVal + STR_CDATA_CLOSE,
-										tip.closeTag
-								);
-
 								if (instanceOf(field, A.FormBuilderTextField)) {
-									var widthVal = instance.getFieldLocalizedValue(field, 'width', item);
+									var fieldCssClassTag = instance._createDynamicNode(
+										'entry',
+										{
+											name: 'fieldCssClass'
+										}
+									);
+
+									var widthVal = field.get('width');
 									var widthCssClassVal = A.getClassName('w' + widthVal);
 
 									buffer.push(
-											fieldCssClass.openTag,
-											STR_CDATA_OPEN + widthCssClassVal + STR_CDATA_CLOSE,
-											fieldCssClass.closeTag
-									);
-
-									buffer.push(
-											width.openTag,
-											STR_CDATA_OPEN + widthVal + STR_CDATA_CLOSE,
-											width.closeTag
+										fieldCssClassTag.openTag,
+										STR_CDATA_OPEN + widthCssClassVal + STR_CDATA_CLOSE,
+										fieldCssClassTag.closeTag
 									);
 								}
 
@@ -504,19 +433,16 @@ AUI().add(
 
 						str = A.Text.AccentFold.fold(str);
 
-						return str.replace(/\W+/g, STR_SPACE).replace(/^\W+|\W+$/g, STR_BLANK).replace(/ /g, '_');
-					},
+						A.each(
+							str,
+							function(item, index, collection) {
+								if (!A.Text.Unicode.test(item, 'L') && !A.Text.Unicode.test(item, 'N')) {
+									str = str.replace(item, STR_SPACE);
+								}
+							}
+						);
 
-					_onClickSettingsButton: function(event) {
-						var instance = this;
-
-						var target = event.currentTarget;
-
-						LiferayFormBuilder.superclass._onClickSettingsButton.apply(instance, arguments);
-
-						if (target.hasClass('aui-form-builder-button-save')) {
-							instance.validator.validate();
-						}
+						return str.replace(/ /g, '_');
 					},
 
 					_syncFieldOptionsLocaleUI: function(field, locale) {
@@ -542,10 +468,12 @@ AUI().add(
 						field.set('options', options);
 					},
 
-					_syncFieldsLocaleUI: function(locale) {
+					_syncFieldsLocaleUI: function(locale, fields) {
 						var instance = this;
 
-						instance.eachField(
+						fields = fields || instance.get('fields');
+
+						fields.each(
 							function(field, index, fields) {
 								if (instanceOf(field, A.FormBuilderMultipleChoiceField)) {
 									instance._syncFieldOptionsLocaleUI(field, locale);
@@ -559,17 +487,18 @@ AUI().add(
 										LOCALIZABLE_FIELD_ATTRS,
 										function(item, index, collection) {
 											field.set(item, localeMap[item]);
-
-											var settingNode = field.settingsNodesMap[item + 'SettingNode'];
-
-											if (settingNode && field.get('selected')) {
-												settingNode.val(localeMap[item]);
-											}
 										}
 									);
+
+									instance._syncUniqueField(field);
 								}
-							},
-							true
+
+								if (instance.editingField === field) {
+									instance.propertyList.set('recordset', field.getProperties());
+								}
+
+								instance._syncFieldsLocaleUI(locale, field.get('fields'));
+							}
 						);
 					},
 
@@ -598,10 +527,12 @@ AUI().add(
 						field.set('options', options);
 					},
 
-					_updateFieldsLocalizationMap: function(locale) {
+					_updateFieldsLocalizationMap: function(locale, fields) {
 						var instance = this;
 
-						instance.eachField(
+						fields = fields || instance.get('fields');
+
+						fields.each(
 							function(field, index, fields) {
 								var localizationMap = field.get('localizationMap');
 
@@ -623,13 +554,16 @@ AUI().add(
 								);
 
 								field.set('localizationMap', localizationMap);
-							},
-							true
+
+								instance._updateFieldsLocalizationMap(locale, field.get('fields'));
+							}
 						);
 					}
 				}
 			}
 		);
+
+		LiferayFormBuilder.DEFAULT_ICON_CLASS = 'aui-form-builder-field-icon aui-form-builder-field-icon-text';
 
 		LiferayFormBuilder.AVAILABLE_FIELDS = {
 			DEFAULT: [
@@ -659,7 +593,7 @@ AUI().add(
 				},
 				{
 					fieldLabel: Liferay.Language.get('text-box'),
-					iconClass: 'aui-form-builder-field-icon aui-form-builder-field-icon-text',
+					iconClass: LiferayFormBuilder.DEFAULT_ICON_CLASS,
 					label: Liferay.Language.get('text-box'),
 					type: 'text'
 				},
@@ -685,51 +619,62 @@ AUI().add(
 
 			DDM_STRUCTURE: [
 				{
-					fieldLabel: Liferay.Language.get('boolean'),
 					iconClass: 'aui-form-builder-field-icon aui-form-builder-field-icon-checkbox',
 					label: Liferay.Language.get('boolean'),
 					type: 'checkbox'
 				},
 				{
-					fieldLabel: Liferay.Language.get('date'),
-					iconClass: 'aui-form-builder-field-icon aui-icon aui-icon-calendar',
+					iconClass: LiferayFormBuilder.DEFAULT_ICON_CLASS,
 					label: Liferay.Language.get('date'),
 					type: 'ddm-date'
 				},
 				{
-					fieldLabel: Liferay.Language.get('decimal'),
+					iconClass: LiferayFormBuilder.DEFAULT_ICON_CLASS,
 					label: Liferay.Language.get('decimal'),
 					type: 'ddm-decimal'
 				},
 				{
-					fieldLabel: Liferay.Language.get('integer'),
+					iconClass: LiferayFormBuilder.DEFAULT_ICON_CLASS,
+					label: Liferay.Language.get('document-library'),
+					type: 'ddm-documentlibrary'
+				},
+				{
+					iconClass: LiferayFormBuilder.DEFAULT_ICON_CLASS,
+					label: Liferay.Language.get('file-upload'),
+					type: 'ddm-fileupload'
+				},
+				{
+					iconClass: LiferayFormBuilder.DEFAULT_ICON_CLASS,
 					label: Liferay.Language.get('integer'),
 					type: 'ddm-integer'
 				},
 				{
-					fieldLabel: Liferay.Language.get('number'),
+					iconClass: LiferayFormBuilder.DEFAULT_ICON_CLASS,
 					label: Liferay.Language.get('number'),
 					type: 'ddm-number'
 				},
 				{
-					fieldLabel: Liferay.Language.get('radio'),
+					iconClass: LiferayFormBuilder.DEFAULT_ICON_CLASS,
+					label: Liferay.Language.get('password'),
+					type: 'ddm-password'
+				},
+				{
 					iconClass: 'aui-form-builder-field-icon aui-form-builder-field-icon-radio',
 					label: Liferay.Language.get('radio'),
 					type: 'radio'
 				},
 				{
-					fieldLabel: Liferay.Language.get('select'),
 					iconClass: 'aui-form-builder-field-icon aui-form-builder-field-icon-select',
 					label: Liferay.Language.get('select'),
 					type: 'select'
 				},
 				{
-					fieldLabel: Liferay.Language.get('text'),
+					iconClass: LiferayFormBuilder.DEFAULT_ICON_CLASS,
 					label: Liferay.Language.get('text'),
 					type: 'text'
 				},
 				{
-					fieldLabel: Liferay.Language.get('text-box'),
+					iconClass: LiferayFormBuilder.DEFAULT_ICON_CLASS,
 					label: Liferay.Language.get('text-box'),
 					type: 'textarea'
 				}
@@ -737,19 +682,16 @@ AUI().add(
 
 			DDM_TEMPLATE: [
 				{
-					fieldLabel: Liferay.Language.get('paragraph'),
-					iconClass: 'aui-form-builder-field-icon aui-form-builder-field-icon-paragraph',
+					iconClass: LiferayFormBuilder.DEFAULT_ICON_CLASS,
 					label: Liferay.Language.get('paragraph'),
 					type: 'ddm-paragraph'
 				},
 				{
-					fieldLabel: Liferay.Language.get('separator'),
 					iconClass: 'aui-form-builder-field-icon ddm-field-icon-separator',
 					label: Liferay.Language.get('separator'),
 					type: 'ddm-separator'
 				},
 				{
-					fieldLabel: Liferay.Language.get('fieldset'),
 					iconClass: 'aui-form-builder-field-icon aui-form-builder-field-icon-fieldset',
 					label: Liferay.Language.get('fieldset'),
 					type: 'fieldset'
@@ -761,6 +703,6 @@ AUI().add(
 	},
 	'',
 	{
-		requires: ['aui-form-builder', 'aui-form-validator', 'liferay-translation-manager', 'text']
+		requires: ['aui-form-builder', 'aui-form-validator', 'aui-text', 'json', 'liferay-translation-manager']
 	}
 );

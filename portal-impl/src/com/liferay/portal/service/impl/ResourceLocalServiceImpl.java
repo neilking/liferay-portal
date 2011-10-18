@@ -20,10 +20,15 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.search.SearchEngineUtil;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.model.AuditedModel;
+import com.liferay.portal.model.ClassedModel;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.model.GroupConstants;
+import com.liferay.portal.model.GroupedModel;
 import com.liferay.portal.model.Permission;
+import com.liferay.portal.model.PermissionedModel;
 import com.liferay.portal.model.Resource;
 import com.liferay.portal.model.ResourceCode;
 import com.liferay.portal.model.ResourceConstants;
@@ -31,15 +36,18 @@ import com.liferay.portal.model.ResourcePermission;
 import com.liferay.portal.model.Role;
 import com.liferay.portal.model.RoleConstants;
 import com.liferay.portal.model.impl.ResourceImpl;
+import com.liferay.portal.security.permission.PermissionCacheUtil;
 import com.liferay.portal.security.permission.PermissionThreadLocal;
 import com.liferay.portal.security.permission.PermissionsListFilter;
 import com.liferay.portal.security.permission.PermissionsListFilterFactory;
 import com.liferay.portal.security.permission.ResourceActionsUtil;
+import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.service.base.ResourceLocalServiceBaseImpl;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.util.ResourcePermissionsThreadLocal;
 import com.liferay.portal.util.comparator.ResourceComparator;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -48,8 +56,37 @@ import java.util.List;
  * @author Wilson S. Man
  * @author Raymond Augé
  * @author Julio Camarero
+ * @author Connor McKay
  */
 public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
+
+	public void addModelResources(
+			AuditedModel auditedModel, ServiceContext serviceContext)
+		throws PortalException, SystemException {
+
+		ClassedModel classedModel = (ClassedModel)auditedModel;
+
+		if (serviceContext.getAddGroupPermissions() ||
+			serviceContext.getAddGuestPermissions()) {
+
+			addResources(
+				auditedModel.getCompanyId(), getGroupId(auditedModel),
+				auditedModel.getUserId(), classedModel.getModelClassName(),
+				String.valueOf(classedModel.getPrimaryKeyObj()), false,
+				serviceContext.getAddGroupPermissions(),
+				serviceContext.getAddGuestPermissions(),
+				getPermissionedModel(auditedModel));
+		}
+		else {
+			addModelResources(
+				auditedModel.getCompanyId(), getGroupId(auditedModel),
+				auditedModel.getUserId(), classedModel.getModelClassName(),
+				String.valueOf(classedModel.getPrimaryKeyObj()),
+				serviceContext.getGroupPermissions(),
+				serviceContext.getGuestPermissions(),
+				getPermissionedModel(auditedModel));
+		}
+	}
 
 	public void addModelResources(
 			long companyId, long groupId, long userId, String name,
@@ -58,7 +95,7 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 
 		addModelResources(
 			companyId, groupId, userId, name, String.valueOf(primKey),
-			groupPermissions, guestPermissions);
+			groupPermissions, guestPermissions, null);
 	}
 
 	public void addModelResources(
@@ -67,56 +104,9 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 			String[] guestPermissions)
 		throws PortalException, SystemException {
 
-		if (!PermissionThreadLocal.isAddResource()) {
-			return;
-		}
-
-		validate(name, false);
-
-		// Company
-
-		addResource(
-			companyId, name, ResourceConstants.SCOPE_COMPANY,
-			String.valueOf(companyId));
-
-		// Guest
-
-		Group guestGroup = groupLocalService.getGroup(
-			companyId, GroupConstants.GUEST);
-
-		addResource(
-			companyId, name, ResourceConstants.SCOPE_GROUP,
-			String.valueOf(guestGroup.getGroupId()));
-
-		// Group
-
-		if ((groupId > 0) && (guestGroup.getGroupId() != groupId)) {
-			addResource(
-				companyId, name, ResourceConstants.SCOPE_GROUP,
-				String.valueOf(groupId));
-		}
-
-		if (primKey == null) {
-			return;
-		}
-
-		// Individual
-
-		Resource resource = addResource(
-			companyId, name, ResourceConstants.SCOPE_INDIVIDUAL, primKey);
-
-		// Permissions
-
-		if (PropsValues.PERMISSIONS_USER_CHECK_ALGORITHM == 6) {
-			addModelResources_6(
-				companyId, groupId, userId, resource, groupPermissions,
-				guestPermissions);
-		}
-		else {
-			addModelResources_1to5(
-				companyId, groupId, userId, resource, groupPermissions,
-				guestPermissions);
-		}
+		addModelResources(
+			companyId, groupId, userId, name, primKey, groupPermissions,
+			guestPermissions, null);
 	}
 
 	public Resource addResource(
@@ -136,14 +126,6 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 	}
 
 	public void addResources(
-			long companyId, long groupId, String name, boolean portletActions)
-		throws PortalException, SystemException {
-
-		addResources(
-			companyId, groupId, 0, name, null, portletActions, false, false);
-	}
-
-	public void addResources(
 			long companyId, long groupId, long userId, String name,
 			long primKey, boolean portletActions,
 			boolean addGroupPermissions, boolean addGuestPermissions)
@@ -151,7 +133,7 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 
 		addResources(
 			companyId, groupId, userId, name, String.valueOf(primKey),
-			portletActions, addGroupPermissions, addGuestPermissions);
+			portletActions, addGroupPermissions, addGuestPermissions, null);
 	}
 
 	public void addResources(
@@ -160,73 +142,28 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 			boolean addGroupPermissions, boolean addGuestPermissions)
 		throws PortalException, SystemException {
 
-		if (!PermissionThreadLocal.isAddResource()) {
-			return;
-		}
+		addResources(
+			companyId, groupId, userId, name, primKey, portletActions,
+			addGroupPermissions, addGuestPermissions, null);
+	}
 
-		validate(name, portletActions);
+	public void addResources(
+			long companyId, long groupId, String name, boolean portletActions)
+		throws PortalException, SystemException {
 
-		// Company
+		addResources(
+			companyId, groupId, 0, name, null, portletActions, false, false);
+	}
 
-		addResource(
-			companyId, name, ResourceConstants.SCOPE_COMPANY,
-			String.valueOf(companyId));
+	public void deleteResource(AuditedModel auditedModel, int scope)
+		throws PortalException, SystemException {
 
-		if (groupId > 0) {
-			addResource(
-				companyId, name, ResourceConstants.SCOPE_GROUP,
-				String.valueOf(groupId));
-		}
+		ClassedModel classedModel = (ClassedModel)auditedModel;
 
-		if (primKey == null) {
-			return;
-		}
-
-		// Individual
-
-		Resource resource = addResource(
-			companyId, name, ResourceConstants.SCOPE_INDIVIDUAL, primKey);
-
-		// Permissions
-
-		List<ResourcePermission> resourcePermissions =
-			resourcePermissionPersistence.findByC_N_S_P(
-				companyId, name, ResourceConstants.SCOPE_INDIVIDUAL, primKey);
-
-		ResourcePermissionsThreadLocal.setResourcePermissions(
-			resourcePermissions);
-
-		try {
-			if (PropsValues.PERMISSIONS_USER_CHECK_ALGORITHM == 6) {
-				addResources_6(
-					companyId, groupId, userId, resource, portletActions);
-			}
-			else {
-				addResources_1to5(
-					companyId, groupId, userId, resource, portletActions);
-			}
-
-			// Group permissions
-
-			if ((groupId > 0) && addGroupPermissions) {
-				addGroupPermissions(
-					companyId, groupId, userId, name, resource, portletActions);
-			}
-
-			// Guest permissions
-
-			if (addGuestPermissions) {
-
-				// Don't add guest permissions when you've already added group
-				// permissions and the given group is the guest group.
-
-				addGuestPermissions(
-					companyId, groupId, userId, name, resource, portletActions);
-			}
-		}
-		finally {
-			ResourcePermissionsThreadLocal.setResourcePermissions(null);
-		}
+		deleteResource(
+			auditedModel.getCompanyId(), classedModel.getModelClassName(),
+			scope, String.valueOf(classedModel.getPrimaryKeyObj()),
+			getPermissionedModel(auditedModel));
 	}
 
 	@Override
@@ -242,6 +179,20 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 				_log.warn(nsre);
 			}
 		}
+	}
+
+	public void deleteResource(
+			long companyId, String name, int scope, long primKey)
+		throws PortalException, SystemException {
+
+		deleteResource(companyId, name, scope, String.valueOf(primKey), null);
+	}
+
+	public void deleteResource(
+			long companyId, String name, int scope, String primKey)
+		throws PortalException, SystemException {
+
+		deleteResource(companyId, name, scope, primKey, null);
 	}
 
 	@Override
@@ -264,41 +215,23 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 		resourcePersistence.remove(resource);
 	}
 
-	public void deleteResource(
-			long companyId, String name, int scope, long primKey)
-		throws PortalException, SystemException {
-
-		deleteResource(companyId, name, scope, String.valueOf(primKey));
-	}
-
-	public void deleteResource(
-			long companyId, String name, int scope, String primKey)
-		throws PortalException, SystemException {
-
-		if (PropsValues.PERMISSIONS_USER_CHECK_ALGORITHM == 6) {
-			resourcePermissionLocalService.deleteResourcePermissions(
-				companyId, name, scope, primKey);
-
-			return;
-		}
-
-		try {
-			Resource resource = getResource(companyId, name, scope, primKey);
-
-			deleteResource(resource.getResourceId());
-		}
-		catch (NoSuchResourceException nsre) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(nsre);
-			}
-		}
-	}
-
 	public void deleteResources(String name) throws SystemException {
 		List<Resource> resources = resourceFinder.findByName(name);
 
 		for (Resource resource : resources) {
 			deleteResource(resource);
+		}
+	}
+
+	public Resource fetchResource(
+			long companyId, String name, int scope, String primKey)
+		throws SystemException {
+
+		if (PropsValues.PERMISSIONS_USER_CHECK_ALGORITHM == 6) {
+			return getResource_6(companyId, name, scope, primKey);
+		}
+		else {
+			return fetchResource_1to5(companyId, name, scope, primKey);
 		}
 	}
 
@@ -339,18 +272,19 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 		return resourcePersistence.findAll();
 	}
 
-	public void updateResources(
-			long companyId, String name, int scope, String primKey,
-			String newPrimKey)
+	public void updateModelResources(
+			AuditedModel auditedModel, ServiceContext serviceContext)
 		throws PortalException, SystemException {
 
-		if (PropsValues.PERMISSIONS_USER_CHECK_ALGORITHM == 6) {
-			updateResources_6(companyId, name, scope, primKey, newPrimKey);
-		}
-		else {
-			updateResources_1to5(
-				companyId, name, scope, primKey, newPrimKey);
-		}
+		ClassedModel classedModel = (ClassedModel)auditedModel;
+
+		updateResources(
+			auditedModel.getCompanyId(), getGroupId(auditedModel),
+			classedModel.getModelClassName(),
+			String.valueOf(classedModel.getPrimaryKeyObj()),
+			serviceContext.getGroupPermissions(),
+			serviceContext.getGuestPermissions(),
+			getPermissionedModel(auditedModel));
 	}
 
 	public void updateResources(
@@ -360,7 +294,7 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 
 		updateResources(
 			companyId, groupId, name, String.valueOf(primKey), groupPermissions,
-			guestPermissions);
+			guestPermissions, null);
 	}
 
 	public void updateResources(
@@ -368,32 +302,38 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 			String[] groupPermissions, String[] guestPermissions)
 		throws PortalException, SystemException {
 
-		Resource resource = getResource(
-			companyId, name, ResourceConstants.SCOPE_INDIVIDUAL, primKey);
+		updateResources(
+			companyId, groupId, name, primKey, groupPermissions,
+			guestPermissions, null);
+	}
 
-		if (groupPermissions == null) {
-			groupPermissions = new String[0];
-		}
-
-		if (guestPermissions == null) {
-			guestPermissions = new String[0];
-		}
+	public void updateResources(
+			long companyId, String name, int scope, String primKey,
+			String newPrimKey)
+		throws PortalException, SystemException {
 
 		if (PropsValues.PERMISSIONS_USER_CHECK_ALGORITHM == 6) {
-			updateResources_6(
-				companyId, groupId, resource, groupPermissions,
-				guestPermissions);
+			if (resourceBlockLocalService.isSupported(name)) {
+
+				// Assuming that this method is used when the primary key of an
+				// existing record is changed, then nothing needs to happen
+				// here, as it should still have its resource block ID.
+
+			}
+			else {
+				updateResources_6(companyId, name, scope, primKey, newPrimKey);
+			}
 		}
 		else {
 			updateResources_1to5(
-				companyId, groupId, resource, groupPermissions,
-				guestPermissions);
+				companyId, name, scope, primKey, newPrimKey);
 		}
 	}
 
 	protected void addGroupPermissions(
 			long companyId, long groupId, long userId, String name,
-			Resource resource, boolean portletActions)
+			Resource resource, boolean portletActions,
+			PermissionedModel permissionedModel)
 		throws PortalException, SystemException {
 
 		List<String> actions = null;
@@ -410,7 +350,13 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 		String[] actionIds = actions.toArray(new String[actions.size()]);
 
 		if (PropsValues.PERMISSIONS_USER_CHECK_ALGORITHM == 6) {
-			addGroupPermissions_6(groupId, resource, actionIds);
+			if (resourceBlockLocalService.isSupported(name)) {
+				addGroupPermissions_6Blocks(
+					groupId, resource, actions, permissionedModel);
+			}
+			else {
+				addGroupPermissions_6(groupId, resource, actionIds);
+			}
 		}
 		else {
 			addGroupPermissions_1to5(
@@ -461,9 +407,28 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 			resource.getPrimKey(), role.getRoleId(), actionIds);
 	}
 
+	protected void addGroupPermissions_6Blocks(
+			long groupId, Resource resource, List<String> actionIds,
+			PermissionedModel permissionedModel)
+		throws PortalException, SystemException {
+
+		if (permissionedModel == null) {
+			throw new IllegalArgumentException("Permissioned model is null");
+		}
+
+		// Scope is assumed to always be individual
+
+		Role role = roleLocalService.getDefaultGroupRole(groupId);
+
+		resourceBlockLocalService.setIndividualScopePermissions(
+			resource.getCompanyId(), groupId, resource.getName(),
+			permissionedModel, role.getRoleId(), actionIds);
+	}
+
 	protected void addGuestPermissions(
 			long companyId, long groupId, long userId, String name,
-			Resource resource, boolean portletActions)
+			Resource resource, boolean portletActions,
+			PermissionedModel permissionedModel)
 		throws PortalException, SystemException {
 
 		List<String> actions = null;
@@ -480,7 +445,13 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 		String[] actionIds = actions.toArray(new String[actions.size()]);
 
 		if (PropsValues.PERMISSIONS_USER_CHECK_ALGORITHM == 6) {
-			addGuestPermissions_6(companyId, resource, actionIds);
+			if (resourceBlockLocalService.isSupported(name)) {
+				addGuestPermissions_6Blocks(
+					companyId, groupId, resource, actions, permissionedModel);
+			}
+			else {
+				addGuestPermissions_6(companyId, resource, actionIds);
+			}
 		}
 		else {
 			addGuestPermissions_1to5(
@@ -530,6 +501,96 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 		resourcePermissionLocalService.setResourcePermissions(
 			resource.getCompanyId(), resource.getName(), resource.getScope(),
 			resource.getPrimKey(), guestRole.getRoleId(), actionIds);
+	}
+
+	protected void addGuestPermissions_6Blocks(
+			long companyId, long groupId, Resource resource,
+			List<String> actionIds, PermissionedModel permissionedModel)
+		throws PortalException, SystemException {
+
+		if (permissionedModel == null) {
+			throw new IllegalArgumentException("Permissioned model is null");
+		}
+
+		// Scope is assumed to always be individual
+
+		Role guestRole = roleLocalService.getRole(
+			companyId, RoleConstants.GUEST);
+
+		resourceBlockLocalService.setIndividualScopePermissions(
+			resource.getCompanyId(), groupId, resource.getName(),
+			permissionedModel, guestRole.getRoleId(), actionIds);
+	}
+
+	protected void addModelResources(
+			long companyId, long groupId, long userId, String name,
+			String primKey, String[] groupPermissions,
+			String[] guestPermissions, PermissionedModel permissionedModel)
+		throws PortalException, SystemException {
+
+		if (!PermissionThreadLocal.isAddResource()) {
+			return;
+		}
+
+		validate(name, false);
+
+		// Company
+
+		addResource(
+			companyId, name, ResourceConstants.SCOPE_COMPANY,
+			String.valueOf(companyId));
+
+		// Guest
+
+		Group guestGroup = groupLocalService.getGroup(
+			companyId, GroupConstants.GUEST);
+
+		addResource(
+			companyId, name, ResourceConstants.SCOPE_GROUP,
+			String.valueOf(guestGroup.getGroupId()));
+
+		// Group
+
+		if ((groupId > 0) && (guestGroup.getGroupId() != groupId)) {
+			addResource(
+				companyId, name, ResourceConstants.SCOPE_GROUP,
+				String.valueOf(groupId));
+		}
+
+		if (primKey == null) {
+			return;
+		}
+
+		// Individual
+
+		Resource resource = addResource(
+			companyId, name, ResourceConstants.SCOPE_INDIVIDUAL, primKey);
+
+		// Permissions
+
+		boolean flushEnabled = PermissionThreadLocal.isFlushEnabled();
+
+		PermissionThreadLocal.setIndexEnabled(false);
+
+		try {
+			if (PropsValues.PERMISSIONS_USER_CHECK_ALGORITHM == 6) {
+				addModelResources_6(
+					companyId, groupId, userId, resource, groupPermissions,
+					guestPermissions, permissionedModel);
+			}
+			else {
+				addModelResources_1to5(
+					companyId, groupId, userId, resource, groupPermissions,
+					guestPermissions);
+			}
+		}
+		finally {
+			PermissionThreadLocal.setIndexEnabled(flushEnabled);
+
+			PermissionCacheUtil.clearCache();
+
+			SearchEngineUtil.updatePermissionFields(name, primKey);
+		}
 	}
 
 	protected void addModelResources_1to5(
@@ -628,7 +689,8 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 
 	protected void addModelResources_6(
 			long companyId, long groupId, long userId, Resource resource,
-			String[] groupPermissions, String[] guestPermissions)
+			String[] groupPermissions, String[] guestPermissions,
+			PermissionedModel permissionedModel)
 		throws PortalException, SystemException {
 
 		// Owner permissions
@@ -636,31 +698,26 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 		Role ownerRole = roleLocalService.getRole(
 			companyId, RoleConstants.OWNER);
 
-		List<String> actionIds = ResourceActionsUtil.getModelResourceActions(
-			resource.getName());
+		List<String> ownerActionIds =
+			ResourceActionsUtil.getModelResourceActions(resource.getName());
 
-		actionIds = ListUtil.copy(actionIds);
+		ownerActionIds = ListUtil.copy(ownerActionIds);
 
-		filterOwnerActions(resource.getName(), actionIds);
+		filterOwnerActions(resource.getName(), ownerActionIds);
 
-		resourcePermissionLocalService.setOwnerResourcePermissions(
-			resource.getCompanyId(), resource.getName(), resource.getScope(),
-			resource.getPrimKey(), ownerRole.getRoleId(), userId,
-			actionIds.toArray(new String[actionIds.size()]));
+		String[] ownerPermissions =
+			ownerActionIds.toArray(new String[ownerActionIds.size()]);
 
 		// Group permissions
 
+		Role defaultGroupRole = null;
+
 		if (groupId > 0) {
-			Role role = roleLocalService.getDefaultGroupRole(groupId);
+			defaultGroupRole = roleLocalService.getDefaultGroupRole(groupId);
 
 			if (groupPermissions == null) {
 				groupPermissions = new String[0];
 			}
-
-			resourcePermissionLocalService.setResourcePermissions(
-				resource.getCompanyId(), resource.getName(),
-				resource.getScope(), resource.getPrimKey(), role.getRoleId(),
-				groupPermissions);
 		}
 
 		// Guest permissions
@@ -672,9 +729,49 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 			guestPermissions = new String[0];
 		}
 
-		resourcePermissionLocalService.setResourcePermissions(
-			resource.getCompanyId(), resource.getName(), resource.getScope(),
-			resource.getPrimKey(), guestRole.getRoleId(), guestPermissions);
+		if (resourceBlockLocalService.isSupported(resource.getName())) {
+
+			if (permissionedModel == null) {
+				throw new IllegalArgumentException(
+					"Permissioned model is null");
+			}
+
+			// Scope is assumed to always be individual
+
+			resourceBlockLocalService.setIndividualScopePermissions(
+				resource.getCompanyId(), groupId, resource.getName(),
+				permissionedModel, ownerRole.getRoleId(), ownerActionIds);
+
+			if (groupId > 0) {
+				resourceBlockLocalService.setIndividualScopePermissions(
+					resource.getCompanyId(), groupId, resource.getName(),
+					permissionedModel, defaultGroupRole.getRoleId(),
+					Arrays.asList(groupPermissions));
+			}
+
+			resourceBlockLocalService.setIndividualScopePermissions(
+				resource.getCompanyId(), groupId, resource.getName(),
+				permissionedModel, guestRole.getRoleId(),
+				Arrays.asList(guestPermissions));
+		}
+		else {
+			resourcePermissionLocalService.setOwnerResourcePermissions(
+				resource.getCompanyId(), resource.getName(),
+				resource.getScope(), resource.getPrimKey(),
+				ownerRole.getRoleId(), userId, ownerPermissions);
+
+			if (groupId > 0) {
+				resourcePermissionLocalService.setResourcePermissions(
+					resource.getCompanyId(), resource.getName(),
+					resource.getScope(), resource.getPrimKey(),
+					defaultGroupRole.getRoleId(), groupPermissions);
+			}
+
+			resourcePermissionLocalService.setResourcePermissions(
+				resource.getCompanyId(), resource.getName(),
+				resource.getScope(), resource.getPrimKey(),
+				guestRole.getRoleId(), guestPermissions);
+		}
 	}
 
 	protected Resource addResource_1to5(
@@ -732,6 +829,94 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 		return resource;
 	}
 
+	protected void addResources(
+			long companyId, long groupId, long userId, String name,
+			String primKey, boolean portletActions, boolean addGroupPermissions,
+			boolean addGuestPermissions, PermissionedModel permissionedModel)
+		throws PortalException, SystemException {
+
+		if (!PermissionThreadLocal.isAddResource()) {
+			return;
+		}
+
+		validate(name, portletActions);
+
+		// Company
+
+		addResource(
+			companyId, name, ResourceConstants.SCOPE_COMPANY,
+			String.valueOf(companyId));
+
+		if (groupId > 0) {
+			addResource(
+				companyId, name, ResourceConstants.SCOPE_GROUP,
+				String.valueOf(groupId));
+		}
+
+		if (primKey == null) {
+			return;
+		}
+
+		// Individual
+
+		Resource resource = addResource(
+			companyId, name, ResourceConstants.SCOPE_INDIVIDUAL, primKey);
+
+		// Permissions
+
+		boolean flushEnabled = PermissionThreadLocal.isFlushEnabled();
+
+		PermissionThreadLocal.setIndexEnabled(false);
+
+		List<ResourcePermission> resourcePermissions =
+			resourcePermissionPersistence.findByC_N_S_P(
+				companyId, name, ResourceConstants.SCOPE_INDIVIDUAL, primKey);
+
+		ResourcePermissionsThreadLocal.setResourcePermissions(
+			resourcePermissions);
+
+		try {
+			if (PropsValues.PERMISSIONS_USER_CHECK_ALGORITHM == 6) {
+				addResources_6(
+					companyId, groupId, userId, resource, portletActions,
+					permissionedModel);
+			}
+			else {
+				addResources_1to5(
+					companyId, groupId, userId, resource, portletActions);
+			}
+
+			// Group permissions
+
+			if ((groupId > 0) && addGroupPermissions) {
+				addGroupPermissions(
+					companyId, groupId, userId, name, resource, portletActions,
+					permissionedModel);
+			}
+
+			// Guest permissions
+
+			if (addGuestPermissions) {
+
+				// Don't add guest permissions when you've already added group
+				// permissions and the given group is the guest group.
+
+				addGuestPermissions(
+					companyId, groupId, userId, name, resource, portletActions,
+					permissionedModel);
+			}
+		}
+		finally {
+			ResourcePermissionsThreadLocal.setResourcePermissions(null);
+
+			PermissionThreadLocal.setIndexEnabled(flushEnabled);
+
+			PermissionCacheUtil.clearCache();
+
+			SearchEngineUtil.updatePermissionFields(name, primKey);
+		}
+	}
+
 	protected void addResources_1to5(
 			long companyId, long groupId, long userId, Resource resource,
 			boolean portletActions)
@@ -776,7 +961,7 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 
 	protected void addResources_6(
 			long companyId, long groupId, long userId, Resource resource,
-			boolean portletActions)
+			boolean portletActions, PermissionedModel permissionedModel)
 		throws PortalException, SystemException {
 
 		List<String> actionIds = null;
@@ -796,10 +981,72 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 
 		Role role = roleLocalService.getRole(companyId, RoleConstants.OWNER);
 
-		resourcePermissionLocalService.setOwnerResourcePermissions(
-			resource.getCompanyId(), resource.getName(), resource.getScope(),
-			resource.getPrimKey(), role.getRoleId(), userId,
-			actionIds.toArray(new String[actionIds.size()]));
+		if (resourceBlockLocalService.isSupported(resource.getName())) {
+			if (permissionedModel == null) {
+				throw new IllegalArgumentException(
+					"Permissioned model is null");
+			}
+
+			// Scope is assumed to always be individual
+
+			resourceBlockLocalService.setIndividualScopePermissions(
+				resource.getCompanyId(), groupId, resource.getName(),
+				permissionedModel, role.getRoleId(), actionIds);
+		}
+		else {
+			resourcePermissionLocalService.setOwnerResourcePermissions(
+				resource.getCompanyId(), resource.getName(),
+				resource.getScope(), resource.getPrimKey(), role.getRoleId(),
+				userId, actionIds.toArray(new String[actionIds.size()]));
+		}
+	}
+
+	protected void deleteResource(
+			long companyId, String name, int scope, String primKey,
+			PermissionedModel permissionedModel)
+		throws PortalException, SystemException{
+
+		if (PropsValues.PERMISSIONS_USER_CHECK_ALGORITHM == 6) {
+			if (resourceBlockLocalService.isSupported(name)) {
+				if (permissionedModel == null) {
+					throw new IllegalArgumentException(
+						"Permissioned model is null");
+				}
+
+				resourceBlockLocalService.releasePermissionedModelResourceBlock(
+					permissionedModel);
+
+				return;
+			}
+			else {
+				resourcePermissionLocalService.deleteResourcePermissions(
+					companyId, name, scope, primKey);
+
+				return;
+			}
+		}
+
+		try {
+			Resource resource = getResource(companyId, name, scope, primKey);
+
+			deleteResource(resource.getResourceId());
+		}
+		catch (NoSuchResourceException nsre) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(nsre);
+			}
+		}
+	}
+
+	protected Resource fetchResource_1to5(
+			long companyId, String name, int scope, String primKey)
+		throws SystemException {
+
+		ResourceCode resourceCode = resourceCodeLocalService.getResourceCode(
+			companyId, name, scope);
+
+		return resourcePersistence.fetchByC_P(
+			resourceCode.getCodeId(), primKey);
 	}
 
 	protected void filterOwnerActions(String name, List<String> actionIds) {
@@ -844,6 +1091,30 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 		}
 	}
 
+	protected long getGroupId(AuditedModel auditedModel) {
+		long groupId = 0;
+
+		if (auditedModel instanceof GroupedModel) {
+			GroupedModel groupedModel = (GroupedModel)auditedModel;
+
+			groupId = groupedModel.getGroupId();
+		}
+
+		return groupId;
+	}
+
+	protected PermissionedModel getPermissionedModel(
+		AuditedModel auditedModel) {
+
+		PermissionedModel permissionedModel = null;
+
+		if (auditedModel instanceof PermissionedModel) {
+			permissionedModel = (PermissionedModel)auditedModel;
+		}
+
+		return permissionedModel;
+	}
+
 	protected Resource getResource_1to5(
 			long companyId, String name, int scope, String primKey)
 		throws PortalException, SystemException {
@@ -867,16 +1138,40 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 		return resource;
 	}
 
-	protected void updateResources_1to5(
-			long companyId, String name, int scope, String primKey,
-			String newPrimKey)
+	protected void updateResources(
+			long companyId, long groupId, String name, String primKey,
+			String[] groupPermissions, String[] guestPermissions,
+			PermissionedModel permissionedModel)
 		throws PortalException, SystemException {
 
-		Resource resource = getResource(companyId, name, scope, primKey);
+		Resource resource = getResource(
+			companyId, name, ResourceConstants.SCOPE_INDIVIDUAL, primKey);
 
-		resource.setPrimKey(newPrimKey);
+		if (groupPermissions == null) {
+			groupPermissions = new String[0];
+		}
 
-		resourcePersistence.update(resource, false);
+		if (guestPermissions == null) {
+			guestPermissions = new String[0];
+		}
+
+		if (PropsValues.PERMISSIONS_USER_CHECK_ALGORITHM == 6) {
+			if (resourceBlockLocalService.isSupported(name)) {
+				updateResources_6Blocks(
+					companyId, groupId, resource, groupPermissions,
+					guestPermissions, permissionedModel);
+			}
+			else {
+				updateResources_6(
+					companyId, groupId, resource, groupPermissions,
+					guestPermissions);
+			}
+		}
+		else {
+			updateResources_1to5(
+				companyId, groupId, resource, groupPermissions,
+				guestPermissions);
+		}
 	}
 
 	protected void updateResources_1to5(
@@ -895,20 +1190,16 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 			role.getRoleId(), guestPermissions, resource.getResourceId());
 	}
 
-	protected void updateResources_6(
+	protected void updateResources_1to5(
 			long companyId, String name, int scope, String primKey,
 			String newPrimKey)
-		throws SystemException {
+		throws PortalException, SystemException {
 
-		List<ResourcePermission> resourcePermissions =
-			resourcePermissionLocalService.getResourcePermissions(
-				companyId, name, scope, primKey);
+		Resource resource = getResource(companyId, name, scope, primKey);
 
-		for (ResourcePermission resourcePermission : resourcePermissions) {
-			resourcePermission.setPrimKey(newPrimKey);
+		resource.setPrimKey(newPrimKey);
 
-			resourcePermissionPersistence.update(resourcePermission, false);
-		}
+		resourcePersistence.update(resource, false);
 	}
 
 	protected void updateResources_6(
@@ -927,6 +1218,47 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 		resourcePermissionLocalService.setResourcePermissions(
 			resource.getCompanyId(), resource.getName(), resource.getScope(),
 			resource.getPrimKey(), role.getRoleId(), guestPermissions);
+	}
+
+	protected void updateResources_6(
+			long companyId, String name, int scope, String primKey,
+			String newPrimKey)
+		throws SystemException {
+
+		List<ResourcePermission> resourcePermissions =
+			resourcePermissionLocalService.getResourcePermissions(
+				companyId, name, scope, primKey);
+
+		for (ResourcePermission resourcePermission : resourcePermissions) {
+			resourcePermission.setPrimKey(newPrimKey);
+
+			resourcePermissionPersistence.update(resourcePermission, false);
+		}
+	}
+
+	protected void updateResources_6Blocks(
+			long companyId, long groupId, Resource resource,
+			String[] groupPermissions, String[] guestPermissions,
+			PermissionedModel permissionedModel)
+		throws PortalException, SystemException {
+
+		if (permissionedModel == null) {
+			throw new IllegalArgumentException("Permissioned model is null");
+		}
+
+		// Scope is assumed to always be individual
+
+		Role role = roleLocalService.getDefaultGroupRole(groupId);
+
+		resourceBlockLocalService.setIndividualScopePermissions(
+			companyId, groupId, resource.getName(), permissionedModel,
+			role.getRoleId(), Arrays.asList(groupPermissions));
+
+		role = roleLocalService.getRole(companyId, RoleConstants.GUEST);
+
+		resourceBlockLocalService.setIndividualScopePermissions(
+			companyId, groupId, resource.getName(), permissionedModel,
+			role.getRoleId(), Arrays.asList(guestPermissions));
 	}
 
 	protected void validate(String name, boolean portletActions)

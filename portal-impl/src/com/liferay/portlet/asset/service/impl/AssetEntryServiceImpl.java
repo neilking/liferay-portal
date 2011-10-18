@@ -14,10 +14,15 @@
 
 package com.liferay.portlet.asset.service.impl;
 
+import com.liferay.portal.kernel.cache.Lifecycle;
+import com.liferay.portal.kernel.cache.ThreadLocalCache;
+import com.liferay.portal.kernel.cache.ThreadLocalCacheManager;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.model.User;
 import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portal.security.permission.PermissionChecker;
 import com.liferay.portal.util.PropsValues;
@@ -29,6 +34,7 @@ import com.liferay.portlet.asset.service.base.AssetEntryServiceBaseImpl;
 import com.liferay.portlet.asset.service.permission.AssetCategoryPermission;
 import com.liferay.portlet.asset.service.permission.AssetTagPermission;
 import com.liferay.portlet.asset.service.persistence.AssetEntryQuery;
+import com.liferay.portlet.social.model.SocialActivityConstants;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -95,11 +101,28 @@ public class AssetEntryServiceImpl extends AssetEntryServiceBaseImpl {
 		return assetEntryLocalService.getEntry(entryId);
 	}
 
-	public void incrementViewCounter(String className, long classPK)
+	public AssetEntry incrementViewCounter(String className, long classPK)
 		throws PortalException, SystemException {
 
+		if (!PropsValues.ASSET_ENTRY_INCREMENT_VIEW_COUNTER_ENABLED) {
+			return null;
+		}
+
+		User user = getGuestOrUser();
+
 		assetEntryLocalService.incrementViewCounter(
-			getGuestOrUserId(), className, classPK);
+			user.getUserId(), className, classPK, 1);
+
+		AssetEntry assetEntry = assetEntryLocalService.getEntry(
+			className, classPK);
+
+		if (!user.isDefaultUser()) {
+			socialActivityLocalService.addActivity(
+				user.getUserId(), assetEntry.getGroupId(), className, classPK,
+				SocialActivityConstants.TYPE_VIEW, StringPool.BLANK, 0);
+		}
+
+		return assetEntry;
 	}
 
 	public AssetEntryDisplay[] searchEntryDisplays(
@@ -122,18 +145,18 @@ public class AssetEntryServiceImpl extends AssetEntryServiceBaseImpl {
 
 	public AssetEntry updateEntry(
 			long groupId, String className, long classPK, String classUuid,
-			long[] categoryIds, String[] tagNames, boolean visible,
-			Date startDate, Date endDate, Date publishDate, Date expirationDate,
-			String mimeType, String title, String description, String summary,
-			String url, String layoutUuid, int height, int width,
-			Integer priority, boolean sync)
+			long classTypeId, long[] categoryIds, String[] tagNames,
+			boolean visible, Date startDate, Date endDate, Date publishDate,
+			Date expirationDate, String mimeType, String title,
+			String description, String summary, String url, String layoutUuid,
+			int height, int width, Integer priority, boolean sync)
 		throws PortalException, SystemException {
 
 		return assetEntryLocalService.updateEntry(
-			getUserId(), groupId, className, classPK, classUuid, categoryIds,
-			tagNames, visible, startDate, endDate, publishDate, expirationDate,
-			mimeType, title, description, summary, url, layoutUuid, height,
-			width, priority, sync);
+			getUserId(), groupId, className, classPK, classUuid, classTypeId,
+			categoryIds, tagNames, visible, startDate, endDate, publishDate,
+			expirationDate, mimeType, title, description, summary, url,
+			layoutUuid, height, width, priority, sync);
 	}
 
 	protected long[] filterCategoryIds(long[] categoryIds)
@@ -172,6 +195,18 @@ public class AssetEntryServiceImpl extends AssetEntryServiceBaseImpl {
 
 	protected Object[] filterQuery(AssetEntryQuery entryQuery)
 		throws PortalException, SystemException {
+
+		ThreadLocalCache<Object[]> threadLocalCache =
+			ThreadLocalCacheManager.getThreadLocalCache(
+				Lifecycle.REQUEST, AssetEntryServiceImpl.class.getName());
+
+		String key = entryQuery.toString();
+
+		Object[] results = threadLocalCache.get(key);
+
+		if (results != null) {
+			return results;
+		}
 
 		int end = entryQuery.getEnd();
 		int start = entryQuery.getStart();
@@ -222,7 +257,11 @@ public class AssetEntryServiceImpl extends AssetEntryServiceBaseImpl {
 		entryQuery.setEnd(end);
 		entryQuery.setStart(start);
 
-		return new Object[] {filteredEntries, length};
+		results = new Object[] {filteredEntries, length};
+
+		threadLocalCache.put(key, results);
+
+		return results;
 	}
 
 	protected boolean isRemovedFilters (

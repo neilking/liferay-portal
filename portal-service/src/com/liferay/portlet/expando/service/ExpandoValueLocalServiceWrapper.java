@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.expando.service;
 
+import com.liferay.portal.service.ServiceWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link ExpandoValueLocalService}.
@@ -23,7 +25,8 @@ package com.liferay.portlet.expando.service;
  * @see       ExpandoValueLocalService
  * @generated
  */
-public class ExpandoValueLocalServiceWrapper implements ExpandoValueLocalService {
+public class ExpandoValueLocalServiceWrapper implements ExpandoValueLocalService,
+	ServiceWrapper<ExpandoValueLocalService> {
 	public ExpandoValueLocalServiceWrapper(
 		ExpandoValueLocalService expandoValueLocalService) {
 		_expandoValueLocalService = expandoValueLocalService;
@@ -631,6 +634,24 @@ public class ExpandoValueLocalServiceWrapper implements ExpandoValueLocalService
 			classPK, data);
 	}
 
+	public void addValues(long companyId, long classNameId,
+		java.lang.String tableName, long classPK,
+		java.util.Map<java.lang.String, java.io.Serializable> attributes)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		_expandoValueLocalService.addValues(companyId, classNameId, tableName,
+			classPK, attributes);
+	}
+
+	public void addValues(long companyId, java.lang.String className,
+		java.lang.String tableName, long classPK,
+		java.util.Map<java.lang.String, java.io.Serializable> attributes)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		_expandoValueLocalService.addValues(companyId, className, tableName,
+			classPK, attributes);
+	}
+
 	public void deleteColumnValues(long columnId)
 		throws com.liferay.portal.kernel.exception.SystemException {
 		_expandoValueLocalService.deleteColumnValues(columnId);
@@ -785,6 +806,15 @@ public class ExpandoValueLocalServiceWrapper implements ExpandoValueLocalService
 		throws com.liferay.portal.kernel.exception.SystemException {
 		return _expandoValueLocalService.getColumnValuesCount(className,
 			tableName, columnName, data);
+	}
+
+	public java.util.Map<java.lang.String, java.io.Serializable> getData(
+		long companyId, java.lang.String className, java.lang.String tableName,
+		java.util.Collection<java.lang.String> columnNames, long classPK)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return _expandoValueLocalService.getData(companyId, className,
+			tableName, columnNames, classPK);
 	}
 
 	public java.io.Serializable getData(long companyId,
@@ -1281,11 +1311,26 @@ public class ExpandoValueLocalServiceWrapper implements ExpandoValueLocalService
 			columnName, classPK);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public ExpandoValueLocalService getWrappedExpandoValueLocalService() {
 		return _expandoValueLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedExpandoValueLocalService(
+		ExpandoValueLocalService expandoValueLocalService) {
+		_expandoValueLocalService = expandoValueLocalService;
+	}
+
+	public ExpandoValueLocalService getWrappedService() {
+		return _expandoValueLocalService;
+	}
+
+	public void setWrappedService(
 		ExpandoValueLocalService expandoValueLocalService) {
 		_expandoValueLocalService = expandoValueLocalService;
 	}

@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.lar.PortletDataHandlerBoolean;
 import com.liferay.portal.kernel.lar.PortletDataHandlerControl;
 import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.StreamUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -77,6 +78,8 @@ public class WikiPortletDataHandlerImpl extends BasePortletDataHandler {
 			}
 		}
 
+		Element dlFileEntryTypesElement = pagesElement.addElement(
+			"dl-file-entry-types");
 		Element dlFoldersElement = pagesElement.addElement("dl-folders");
 		Element dlFileEntriesElement = pagesElement.addElement(
 			"dl-file-entries");
@@ -92,8 +95,9 @@ public class WikiPortletDataHandlerImpl extends BasePortletDataHandler {
 		for (WikiPage page : pages) {
 			exportPage(
 				portletDataContext, nodesElement, pagesElement,
-				dlFoldersElement, dlFileEntriesElement, dlFileRanksElement,
-				igFoldersElement, igImagesElement, page, true);
+				dlFileEntryTypesElement, dlFoldersElement, dlFileEntriesElement,
+				dlFileRanksElement, igFoldersElement, igImagesElement, page,
+				true);
 		}
 	}
 
@@ -211,14 +215,14 @@ public class WikiPortletDataHandlerImpl extends BasePortletDataHandler {
 
 			importedPage = WikiPageLocalServiceUtil.addPage(
 				userId, nodeId, page.getTitle(), page.getVersion(),
-				page.getContent(), page.getSummary(), true, page.getFormat(),
-				page.getHead(), page.getParentTitle(), page.getRedirectTitle(),
-				serviceContext);
+				page.getContent(), page.getSummary(), page.isMinorEdit(),
+				page.getFormat(), page.getHead(), page.getParentTitle(),
+				page.getRedirectTitle(), serviceContext);
 		}
 		else {
 			importedPage = WikiPageLocalServiceUtil.updatePage(
 				userId, nodeId, existingPage.getTitle(), 0, page.getContent(),
-				page.getSummary(), true, page.getFormat(),
+				page.getSummary(), page.isMinorEdit(), page.getFormat(),
 				page.getParentTitle(), page.getRedirectTitle(), serviceContext);
 		}
 
@@ -231,13 +235,20 @@ public class WikiPortletDataHandlerImpl extends BasePortletDataHandler {
 				String name = attachmentElement.attributeValue("name");
 				String binPath = attachmentElement.attributeValue("bin-path");
 
-				InputStream inputStream =
-					portletDataContext.getZipEntryAsInputStream(binPath);
+				InputStream inputStream = null;
 
-				WikiPageLocalServiceUtil.addPageAttachment(
-					importedPage.getCompanyId(),
-					importedPage.getAttachmentsDir(),
-					importedPage.getModifiedDate(), name, inputStream);
+				try {
+					inputStream = portletDataContext.getZipEntryAsInputStream(
+						binPath);
+
+					WikiPageLocalServiceUtil.addPageAttachment(
+						importedPage.getCompanyId(),
+						importedPage.getAttachmentsDir(),
+						importedPage.getModifiedDate(), name, inputStream);
+				}
+				finally {
+					StreamUtil.cleanUp(inputStream);
+				}
 			}
 		}
 
@@ -301,10 +312,10 @@ public class WikiPortletDataHandlerImpl extends BasePortletDataHandler {
 
 	protected static void exportPage(
 			PortletDataContext portletDataContext, Element nodesElement,
-			Element pagesElement, Element dlFoldersElement,
-			Element dlFileEntriesElement, Element dlFileRanksElement,
-			Element igFoldersElement, Element igImagesElement,
-			WikiPage page, boolean checkDateRange)
+			Element pagesElement, Element dlFileEntryTypesElement,
+			Element dlFoldersElement, Element dlFileEntriesElement,
+			Element dlFileRanksElement, Element igFoldersElement,
+			Element igImagesElement, WikiPage page, boolean checkDateRange)
 		throws Exception {
 
 		if (!portletDataContext.isWithinDateRange(page.getModifiedDate())) {
@@ -328,9 +339,10 @@ public class WikiPortletDataHandlerImpl extends BasePortletDataHandler {
 
 			String content =
 				JournalPortletDataHandlerImpl.exportReferencedContent(
-					portletDataContext, dlFoldersElement, dlFileEntriesElement,
-					dlFileRanksElement, igFoldersElement, igImagesElement,
-					pageElement, page.getContent(), checkDateRange);
+					portletDataContext, dlFileEntryTypesElement,
+					dlFoldersElement, dlFileEntriesElement, dlFileRanksElement,
+					igFoldersElement, igImagesElement, pageElement,
+					page.getContent(), checkDateRange);
 
 			page.setContent(content);
 
@@ -354,7 +366,7 @@ public class WikiPortletDataHandlerImpl extends BasePortletDataHandler {
 					attachmentEl.addAttribute("name", name);
 					attachmentEl.addAttribute("bin-path", binPath);
 
-					byte[] bytes = DLStoreUtil.getFile(
+					byte[] bytes = DLStoreUtil.getFileAsBytes(
 						portletDataContext.getCompanyId(),
 						CompanyConstants.SYSTEM, attachment);
 

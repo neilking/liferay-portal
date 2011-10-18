@@ -17,11 +17,14 @@
 <%@ include file="/html/portlet/document_library/init.jsp" %>
 
 <%
+long repositoryId = GetterUtil.getLong((String)request.getAttribute("view.jsp-repositoryId"));
+
 long folderId = GetterUtil.getLong((String)request.getAttribute("view.jsp-folderId"));
 %>
 
 <liferay-portlet:resourceURL var="searchURL">
 	<portlet:param name="struts_action" value="/document_library/search" />
+	<portlet:param name="repositoryId" value="<%= String.valueOf(repositoryId) %>" />
 	<portlet:param name="folderId" value="<%= String.valueOf(folderId) %>" />
 	<portlet:param name="searchFolderId" value="<%= String.valueOf(folderId) %>" />
 </liferay-portlet:resourceURL>
@@ -39,48 +42,20 @@ long folderId = GetterUtil.getLong((String)request.getAttribute("view.jsp-folder
 	</aui:form>
 </div>
 
-<aui:script use="aui-io-plugin">
-	var entriesContainer = A.one('#<portlet:namespace />documentContainer');
-
-	Liferay.provide(
-		window,
-		'<portlet:namespace />searchFileEntry',
-		function() {
-			entriesContainer.plug(A.LoadingMask);
-
-			entriesContainer.loadingmask.toggle();
-
-			A.io.request(
-				document.<portlet:namespace />fm1.action,
-				{
-					form: {
-						id: document.<portlet:namespace />fm1
-					},
-					after: {
-						success: function(event, id, obj) {
-							entriesContainer.unplug(A.LoadingMask);
-
-							var responseData = this.get('responseData');
-
-							var content = A.Node.create(responseData);
-
-							A.one('#<portlet:namespace />displayStyleToolbar').empty();
-
-							var displayStyleButtonsContainer = A.one('#<portlet:namespace />displayStyleButtonsContainer');
-							var displayStyleButtons = content.one('#<portlet:namespace />displayStyleButtons');
-
-							displayStyleButtonsContainer.plug(A.Plugin.ParseContent);
-							displayStyleButtonsContainer.setContent(displayStyleButtons);
-
-							var entries = content.one('#<portlet:namespace />entries');
-
-							entriesContainer.plug(A.Plugin.ParseContent);
-							entriesContainer.setContent(entries);
-						}
-					}
+<aui:script>
+	function <portlet:namespace />searchFileEntry() {
+		Liferay.fire(
+			'<portlet:namespace />dataRequest',
+			{
+				requestParams: {
+					'<portlet:namespace />struts_action': '/document_library/search',
+					'<portlet:namespace />repositoryId': '<%= String.valueOf(repositoryId) %>',
+					'<portlet:namespace />folderId': '<%= String.valueOf(folderId) %>',
+					'<portlet:namespace />searchFolderId': '<%= String.valueOf(folderId) %>',
+					'<portlet:namespace />keywords': document.<portlet:namespace />fm1.<portlet:namespace />keywords.value,
+					'<portlet:namespace />viewDisplayStyleButtons': <%= Boolean.TRUE.toString() %>
 				}
-			);
-		},
-		[]
-	);
+			}
+		);
+	}
 </aui:script>

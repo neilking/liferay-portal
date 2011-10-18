@@ -15,19 +15,30 @@
 package com.liferay.portal.upgrade.v6_1_0;
 
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
+import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.upgrade.util.UpgradeTable;
 import com.liferay.portal.kernel.upgrade.util.UpgradeTableFactoryUtil;
+import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.repository.liferayrepository.model.LiferayFileVersion;
 import com.liferay.portal.upgrade.v6_1_0.util.DLFileVersionTable;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.documentlibrary.model.DLFileEntry;
+import com.liferay.portlet.documentlibrary.model.DLFileVersion;
+import com.liferay.portlet.documentlibrary.model.impl.DLFileVersionImpl;
+import com.liferay.portlet.documentlibrary.util.ImageProcessor;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+
+import java.util.Set;
 
 /**
  * @author Brian Wing Shun Chan
@@ -37,6 +48,40 @@ import java.sql.ResultSet;
  */
 public class UpgradeDocumentLibrary extends UpgradeProcess {
 
+	protected void addDLSync(
+			long syncId, long companyId, Date createDate, Date modifiedDate,
+			long fileId, long repositoryId, long parentFolderId, String event,
+			String type)
+		throws Exception {
+
+		Connection con = null;
+		PreparedStatement ps = null;
+
+		try {
+			con = DataAccess.getConnection();
+
+			ps = con.prepareStatement(
+				"insert into DLSync (syncId, companyId, createDate, " +
+					"modifiedDate, fileId, repositoryId, parentFolderId, " +
+						"event, type_) values (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+			ps.setLong(1, syncId);
+			ps.setLong(2, companyId);
+			ps.setDate(3, createDate);
+			ps.setDate(4, createDate);
+			ps.setLong(5, fileId);
+			ps.setLong(6, repositoryId);
+			ps.setLong(7, parentFolderId);
+			ps.setString(8, event);
+			ps.setString(9, type);
+
+			ps.executeUpdate();
+		}
+		finally {
+			DataAccess.cleanUp(con, ps);
+		}
+	}
+
 	@Override
 	protected void doUpgrade() throws Exception {
 		updateFileEntries();
@@ -44,6 +89,8 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 		updateFileShortcuts();
 		updateFileVersions();
 		updateLocks();
+		updateThumbnails();
+		//updateSyncs();
 	}
 
 	protected long getFileEntryId(long groupId, long folderId, String name)
@@ -281,7 +328,7 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 				long lockId = rs.getLong("lockId");
 				String key = rs.getString("key_");
 
-				String[] keyArray = StringUtil.split(key, StringPool.POUND);
+				String[] keyArray = StringUtil.split(key, CharPool.POUND);
 
 				if (keyArray.length != 3) {
 					continue;
@@ -304,5 +351,121 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 			DataAccess.cleanUp(con, ps, rs);
 		}
 	}
+
+	protected void updateSyncs() throws Exception {
+		Connection con = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+
+		try {
+			con = DataAccess.getConnection();
+
+			StringBundler sb = new StringBundler(10);
+
+			sb.append("select DLFileEntry.fileEntryId as fileId, ");
+			sb.append("DLFileEntry.groupId as groupId, DLFileEntry.companyId");
+			sb.append(" as companyId, DLFileEntry.createDate as createDate, ");
+			sb.append("DLFileEntry.folderId as parentFolderId, 'file' as ");
+			sb.append("type from DLFileEntry union all select ");
+			sb.append("DLFolder.folderId as fileId, DLFolder.groupId as ");
+			sb.append("groupId, DLFolder.companyId as companyId, ");
+			sb.append("DLFolder.createDate as createDate, ");
+			sb.append("DLFolder.parentFolderId as parentFolderId, 'folder' ");
+			sb.append("as type  from DLFolder");
+
+			String sql = sb.toString();
+
+			ps = con.prepareStatement(sql);
+
+			rs = ps.executeQuery();
+
+			while (rs.next()) {
+				long fileId = rs.getLong("fileId");
+				long groupId = rs.getLong("groupId");
+				long companyId = rs.getLong("companyId");
+				Date createDate = rs.getDate("createDate");
+				long parentFolderId = rs.getLong("parentFolderId");
+				String type = rs.getString("type");
+
+				addDLSync(
+					increment(), companyId, createDate, createDate, fileId,
+					groupId, parentFolderId, "add", type);
+			}
+		}
+		finally {
+			DataAccess.cleanUp(con, ps, rs);
+		}
+	}
+
+	protected void updateThumbnails() throws Exception {
+		Connection con = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+
+		try {
+			con = DataAccess.getConnection();
+
+			ps = con.prepareStatement("select fileEntryId from DLFileEntry");
+
+			rs = ps.executeQuery();
+
+			while (rs.next()) {
+				long fileEntryId = rs.getLong("fileEntryId");
+
+				updateThumbnails(fileEntryId);
+			}
+		}
+		finally {
+			DataAccess.cleanUp(con, ps, rs);
+		}
+	}
+
+	protected void updateThumbnails(long fileEntryId) throws Exception {
+		Connection con = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+
+		try {
+			con = DataAccess.getConnection();
+
+			ps = con.prepareStatement(
+				"select fileVersionId, userId, extension, version from " +
+					"DLFileVersion where fileEntryId = " + fileEntryId +
+						" order by version asc");
+
+			rs = ps.executeQuery();
+
+			while (rs.next()) {
+				long fileVersionId = rs.getLong("fileVersionId");
+				long userId = rs.getLong("userId");
+				String extension = rs.getString("extension");
+				String version = rs.getString("version");
+
+				String mimeType = MimeTypesUtil.getContentType(
+					"A." + extension);
+
+				DLFileVersion dlFileVersion = new DLFileVersionImpl();
+
+				dlFileVersion.setFileVersionId(fileVersionId);
+				dlFileVersion.setUserId(userId);
+				dlFileVersion.setFileEntryId(fileEntryId);
+				dlFileVersion.setMimeType(mimeType);
+				dlFileVersion.setVersion(version);
+
+				if (_imageMimeTypes.contains(mimeType)) {
+					FileVersion fileVersion = new LiferayFileVersion(
+						dlFileVersion);
+
+					ImageProcessor.generateImages(fileVersion);
+				}
+			}
+		}
+		finally {
+			DataAccess.cleanUp(con, ps, rs);
+		}
+	}
+
+	private static Set<String> _imageMimeTypes = SetUtil.fromArray(
+		PropsValues.IG_IMAGE_THUMBNAIL_MIME_TYPES);
 
 }

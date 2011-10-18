@@ -25,7 +25,7 @@ public class SaveSettingsStatusMessageTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -40,23 +40,23 @@ public class SaveSettingsStatusMessageTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Test CLP Test Page", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Test CLP Test Page",
+			RuntimeVariables.replace("Test CLP Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace(""),
 			selenium.getText(
 				"//div[@class='portlet-body']/table/tbody/tr[2]/td[7]"));
 		selenium.clickAt("//ul[@class='chat-tabs']/li[2]/div[1]/span",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Settings"));
+		Thread.sleep(5000);
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isVisible("statusMessage")) {
+				if (selenium.isVisible("//input[@id='statusMessage']")) {
 					break;
 				}
 			}
@@ -66,14 +66,13 @@ public class SaveSettingsStatusMessageTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		selenium.type("statusMessage",
 			RuntimeVariables.replace("status message."));
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("saveSettings", RuntimeVariables.replace(""));
+		selenium.clickAt("//input[@id='saveSettings']",
+			RuntimeVariables.replace("Save Settings"));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -89,13 +88,12 @@ public class SaveSettingsStatusMessageTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		assertFalse(selenium.isElementPresent(
 				"//li[@class='chat-settings saved']"));
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -110,10 +108,9 @@ public class SaveSettingsStatusMessageTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Test CLP Test Page", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Test CLP Test Page",
+			RuntimeVariables.replace("Test CLP Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace("status message."),
 			selenium.getText(
 				"//div[@class='portlet-body']/table/tbody/tr[2]/td[7]"));

@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.portlet.LiferayPortletSession;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.servlet.BrowserSnifferUtil;
 import com.liferay.portal.kernel.servlet.ProtectedPrincipal;
+import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -70,6 +71,7 @@ import javax.portlet.PortletResponse;
 import javax.portlet.PortletSession;
 import javax.portlet.WindowState;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
@@ -177,8 +179,20 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 	}
 
 	public String getContextPath() {
-		//return StringPool.SLASH + _req.getContextPath();
-		return StringPool.SLASH + _portletContext.getPortletContextName();
+		PortletContextImpl portletContextImpl =
+			(PortletContextImpl)_portletContext;
+
+		ServletContext servletContext = portletContextImpl.getServletContext();
+
+		String servletContextName = servletContext.getServletContextName();
+
+		if (ServletContextPool.containsKey(servletContextName)) {
+			servletContext = ServletContextPool.get(servletContextName);
+
+			return servletContext.getContextPath();
+		}
+
+		return StringPool.SLASH.concat(_portletContext.getPortletContextName());
 	}
 
 	public Cookie[] getCookies() {
@@ -631,16 +645,16 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 					request, plid, _portletName, renderParameters);
 			}
 
-			Enumeration<String> enu = request.getParameterNames();
+			Map<String, String[]> parameters = request.getParameterMap();
 
-			while (enu.hasMoreElements()) {
-				String name = enu.nextElement();
+			for (Map.Entry<String, String[]> entry : parameters.entrySet()) {
+				String name = entry.getKey();
 
 				if (isInvalidParameter(name)) {
 					continue;
 				}
 
-				String[] values = request.getParameterValues(name);
+				String[] values = entry.getValue();
 
 				if (themeDisplay.isLifecycleRender()) {
 					renderParameters.put(name, values);
@@ -685,7 +699,6 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 		_session = new PortletSessionImpl(
 			_request, _portletName, _portletContext, _portalSessionId, plid);
 
-		long userId = PortalUtil.getUserId(request);
 		String remoteUser = request.getRemoteUser();
 
 		String userPrincipalStrategy = portlet.getUserPrincipalStrategy();
@@ -707,6 +720,8 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 			}
 		}
 		else {
+			long userId = PortalUtil.getUserId(request);
+
 			if ((userId > 0) && (remoteUser == null)) {
 				_remoteUser = String.valueOf(userId);
 				_remoteUserId = userId;

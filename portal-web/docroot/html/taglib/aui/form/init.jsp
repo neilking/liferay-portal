@@ -25,8 +25,13 @@ CustomAttributes customAttributes = (CustomAttributes)request.getAttribute("aui:
 
 Map<String, Object> _options = new HashMap<String, Object>();
 
-_options.putAll(scopedAttributes);
-_options.putAll(dynamicAttributes);
+if ((scopedAttributes != null) && !scopedAttributes.isEmpty()) {
+	_options.putAll(scopedAttributes);
+}
+
+if ((dynamicAttributes != null) && !dynamicAttributes.isEmpty()) {
+	_options.putAll(dynamicAttributes);
+}
 
 java.lang.String action = GetterUtil.getString((java.lang.String)request.getAttribute("aui:form:action"));
 java.lang.String cssClass = GetterUtil.getString((java.lang.String)request.getAttribute("aui:form:cssClass"));
@@ -45,7 +50,7 @@ _updateOptions(_options, "onSubmit", onSubmit);
 _updateOptions(_options, "useNamespace", useNamespace);
 %>
 
-<%@ include file="init-ext.jspf" %>
+<%@ include file="/html/taglib/aui/form/init-ext.jspf" %>
 
 <%!
 private static final String _NAMESPACE = "aui:form:";

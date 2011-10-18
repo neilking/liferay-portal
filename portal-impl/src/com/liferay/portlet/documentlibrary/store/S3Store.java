@@ -23,12 +23,11 @@ import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
-import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.util.PropsUtil;
 import com.liferay.portlet.documentlibrary.NoSuchFileException;
-import com.liferay.util.SystemProperties;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -49,6 +48,7 @@ import org.jets3t.service.security.AWSCredentials;
 /**
  * @author Brian Wing Shun Chan
  * @author Sten Martinez
+ * @author Edward Han
  */
 public class S3Store extends BaseStore {
 
@@ -69,14 +69,13 @@ public class S3Store extends BaseStore {
 
 	@Override
 	public void addFile(
-			long companyId, String portletId, long groupId, long repositoryId,
-			String fileName, ServiceContext serviceContext, InputStream is)
+			long companyId, long repositoryId, String fileName, InputStream is)
 		throws SystemException {
 
 		try {
 			S3Object s3Object = new S3Object(
 				_s3Bucket,
-				getKey(companyId, repositoryId, fileName, DEFAULT_VERSION));
+				getKey(companyId, repositoryId, fileName, VERSION_DEFAULT));
 
 			s3Object.setDataInputStream(is);
 
@@ -93,7 +92,7 @@ public class S3Store extends BaseStore {
 
 	@Override
 	public void deleteDirectory(
-			long companyId, String portletId, long repositoryId, String dirName)
+			long companyId, long repositoryId, String dirName)
 		throws SystemException {
 
 		try {
@@ -113,8 +112,7 @@ public class S3Store extends BaseStore {
 
 	@Override
 	public void deleteFile(
-			long companyId, String portletId, long repositoryId,
-			String fileName)
+			long companyId, long repositoryId, String fileName)
 		throws SystemException {
 
 		try {
@@ -134,14 +132,14 @@ public class S3Store extends BaseStore {
 
 	@Override
 	public void deleteFile(
-			long companyId, String portletId, long repositoryId,
-			String fileName, String versionNumber)
+			long companyId, long repositoryId, String fileName,
+			String versionLabel)
 		throws SystemException {
 
 		try {
 			_s3Service.deleteObject(
 				_s3Bucket,
-				getKey(companyId, repositoryId, fileName, versionNumber));
+				getKey(companyId, repositoryId, fileName, versionLabel));
 		}
 		catch (S3ServiceException s3se) {
 			throw new SystemException(s3se);
@@ -151,18 +149,18 @@ public class S3Store extends BaseStore {
 	@Override
 	public InputStream getFileAsStream(
 			long companyId, long repositoryId, String fileName,
-			String versionNumber)
+			String versionLabel)
 		throws PortalException, SystemException {
 
 		try {
-			if (Validator.isNull(versionNumber)) {
-				versionNumber = getHeadVersionNumber(
+			if (Validator.isNull(versionLabel)) {
+				versionLabel = getHeadVersionLabel(
 					companyId, repositoryId, fileName);
 			}
 
 			S3Object s3Object = _s3Service.getObject(
 				_s3Bucket,
-				getKey(companyId, repositoryId, fileName, versionNumber));
+				getKey(companyId, repositoryId, fileName, versionLabel));
 
 			return s3Object.getDataInputStream();
 		}
@@ -210,7 +208,7 @@ public class S3Store extends BaseStore {
 				S3Object s3Object = s3Objects[i];
 
 				// Convert /${companyId}/${repositoryId}/${dirName}/${fileName}
-				// /${versionNumber} to /${dirName}/${fileName}
+				// /${versionLabel} to /${dirName}/${fileName}
 
 				String key = s3Object.getKey();
 
@@ -236,12 +234,12 @@ public class S3Store extends BaseStore {
 		throws PortalException, SystemException {
 
 		try {
-			String versionNumber = getHeadVersionNumber(
+			String versionLabel = getHeadVersionLabel(
 				companyId, repositoryId, fileName);
 
 			S3Object objectDetails = _s3Service.getObjectDetails(
 				_s3Bucket,
-				getKey(companyId, repositoryId, fileName, versionNumber));
+				getKey(companyId, repositoryId, fileName, versionLabel));
 
 			return objectDetails.getContentLength();
 		}
@@ -251,15 +249,22 @@ public class S3Store extends BaseStore {
 	}
 
 	@Override
+	public boolean hasDirectory(
+		long companyId, long repositoryId, String dirName) {
+
+		return true;
+	}
+
+	@Override
 	public boolean hasFile(
 			long companyId, long repositoryId, String fileName,
-			String versionNumber)
+			String versionLabel)
 		throws SystemException {
 
 		try {
 			S3Object[] s3Objects = _s3Service.listObjects(
 				_s3Bucket,
-				getKey(companyId, repositoryId, fileName, versionNumber), null);
+				getKey(companyId, repositoryId, fileName, versionLabel), null);
 
 			if (s3Objects.length == 0) {
 				return false;
@@ -279,8 +284,8 @@ public class S3Store extends BaseStore {
 
 	@Override
 	public void updateFile(
-			long companyId, String portletId, long groupId, long repositoryId,
-			long newRepositoryId, String fileName)
+			long companyId, long repositoryId, long newRepositoryId,
+			String fileName)
 		throws SystemException {
 
 		try {
@@ -331,8 +336,8 @@ public class S3Store extends BaseStore {
 	}
 
 	public void updateFile(
-			long companyId, String portletId, long groupId, long repositoryId,
-			String fileName, String newFileName)
+			long companyId, long repositoryId, String fileName,
+			String newFileName)
 		throws SystemException {
 
 		try {
@@ -386,15 +391,14 @@ public class S3Store extends BaseStore {
 
 	@Override
 	public void updateFile(
-			long companyId, String portletId, long groupId, long repositoryId,
-			String fileName, String versionNumber, String sourceFileName,
-			ServiceContext serviceContext, InputStream is)
+			long companyId, long repositoryId, String fileName,
+			String versionLabel, InputStream is)
 		throws SystemException {
 
 		try {
 			S3Object s3Object = new S3Object(
 				_s3Bucket,
-				getKey(companyId, repositoryId, fileName, versionNumber));
+				getKey(companyId, repositoryId, fileName, versionLabel));
 
 			s3Object.setDataInputStream(is);
 
@@ -425,7 +429,7 @@ public class S3Store extends BaseStore {
 		return key.substring(x + 1, y);
 	}
 
-	protected String getHeadVersionNumber(
+	protected String getHeadVersionLabel(
 			long companyId, long repositoryId, String fileName)
 		throws PortalException, S3ServiceException {
 
@@ -482,7 +486,7 @@ public class S3Store extends BaseStore {
 
 	protected String getKey(
 		long companyId, long repositoryId, String fileName,
-		String versionNumber) {
+		String versionLabel) {
 
 		StringBundler sb = new StringBundler(7);
 
@@ -492,7 +496,7 @@ public class S3Store extends BaseStore {
 		sb.append(StringPool.SLASH);
 		sb.append(fileName);
 		sb.append(StringPool.SLASH);
-		sb.append(versionNumber);
+		sb.append(versionLabel);
 
 		return sb.toString();
 	}

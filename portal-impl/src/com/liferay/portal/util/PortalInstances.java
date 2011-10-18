@@ -112,6 +112,10 @@ public class PortalInstances {
 		return _instance._isVirtualHostsIgnorePath(path);
 	}
 
+	public static void reload(ServletContext servletContext) {
+		_instance._reload(servletContext);
+	}
+
 	private PortalInstances() {
 		_companyIds = new long[0];
 		_autoLoginIgnoreHosts = SetUtil.fromArray(
@@ -388,9 +392,8 @@ public class PortalInstances {
 			String xml = HttpUtil.URLtoString(servletContext.getResource(
 				"/WEB-INF/liferay-display.xml"));
 
-			PortletCategory portletCategory =
-				(PortletCategory)WebAppPool.get(
-					String.valueOf(companyId), WebKeys.PORTLET_CATEGORY);
+			PortletCategory portletCategory = (PortletCategory)WebAppPool.get(
+				companyId, WebKeys.PORTLET_CATEGORY);
 
 			if (portletCategory == null) {
 				portletCategory = new PortletCategory();
@@ -406,8 +409,7 @@ public class PortalInstances {
 
 				PortletCategory currentPortletCategory =
 					(PortletCategory)WebAppPool.get(
-						String.valueOf(currentCompanyId),
-						WebKeys.PORTLET_CATEGORY);
+						currentCompanyId, WebKeys.PORTLET_CATEGORY);
 
 				if (currentPortletCategory != null) {
 					portletCategory.merge(currentPortletCategory);
@@ -415,8 +417,7 @@ public class PortalInstances {
 			}
 
 			WebAppPool.put(
-				String.valueOf(companyId), WebKeys.PORTLET_CATEGORY,
-				portletCategory);
+				companyId, WebKeys.PORTLET_CATEGORY, portletCategory);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -509,6 +510,16 @@ public class PortalInstances {
 
 	private boolean _isVirtualHostsIgnorePath(String path) {
 		return _virtualHostsIgnorePaths.contains(path);
+	}
+
+	private void _reload(ServletContext servletContext) {
+		_companyIds = new long[0];
+
+		String[] webIds = _getWebIds();
+
+		for (String webId : webIds) {
+			PortalInstances.initCompany(servletContext, webId);
+		}
 	}
 
 	private static final String _GET_COMPANY_IDS =

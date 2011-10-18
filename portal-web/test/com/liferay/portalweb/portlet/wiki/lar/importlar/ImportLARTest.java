@@ -30,12 +30,12 @@ public class ImportLARTest extends BaseTestCase {
 				selenium.open("/web/guest/home/");
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
 					try {
-						if (selenium.isElementPresent("link=Wiki Test Page")) {
+						if (selenium.isVisible("link=Wiki Test Page")) {
 							break;
 						}
 					}
@@ -45,20 +45,19 @@ public class ImportLARTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
 				selenium.clickAt("link=Wiki Test Page",
-					RuntimeVariables.replace(""));
+					RuntimeVariables.replace("Wiki Test Page"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
 				selenium.clickAt("//strong/a", RuntimeVariables.replace(""));
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
 					try {
-						if (selenium.isElementPresent("link=Export / Import")) {
+						if (selenium.isVisible(
+									"//div[@class='lfr-component lfr-menu-list']/ul/li[3]/a")) {
 							break;
 						}
 					}
@@ -68,18 +67,15 @@ public class ImportLARTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
-				selenium.clickAt("link=Export / Import",
-					RuntimeVariables.replace(""));
+				selenium.clickAt("//div[@class='lfr-component lfr-menu-list']/ul/li[3]/a",
+					RuntimeVariables.replace("Export / Import"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
-				selenium.clickAt("link=Import", RuntimeVariables.replace(""));
+				selenium.clickAt("link=Import",
+					RuntimeVariables.replace("Import"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
-				selenium.type("_86_importFileName",
+				selenium.type("//input[@id='_86_importFileName']",
 					RuntimeVariables.replace(
 						"L:\\portal\\build\\portal-web\\test\\com\\liferay\\portalweb\\portlet\\wiki\\lar\\importlar\\dependencies\\Wiki-Selenium.portlet.lar"));
-				selenium.saveScreenShotAndSource();
 
 				boolean deleteBeforeChecked = selenium.isChecked(
 						"_86_DELETE_PORTLET_DATACheckbox");
@@ -110,11 +106,11 @@ public class ImportLARTest extends BaseTestCase {
 
 			case 3:
 				selenium.clickAt("//input[@value='Import']",
-					RuntimeVariables.replace(""));
+					RuntimeVariables.replace("Import"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
-				assertTrue(selenium.isTextPresent(
-						"Your request completed successfully."));
+				assertEquals(RuntimeVariables.replace(
+						"Your request completed successfully."),
+					selenium.getText("//div[@class='portlet-msg-success']"));
 
 			case 100:
 				label = -1;

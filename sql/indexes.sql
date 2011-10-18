@@ -17,6 +17,7 @@ create index IX_9C7EB9F on AnnouncementsFlag (entryId);
 create unique index IX_4539A99C on AnnouncementsFlag (userId, entryId, value);
 
 create index IX_E639E2F6 on AssetCategory (groupId);
+create index IX_2008FACB on AssetCategory (groupId, vocabularyId);
 create index IX_D61ABE08 on AssetCategory (name, vocabularyId);
 create index IX_7BB1826B on AssetCategory (parentCategoryId);
 create index IX_9DDD15EA on AssetCategory (parentCategoryId, name);
@@ -40,7 +41,10 @@ create index IX_B2A61B55 on AssetEntries_AssetTags (tagId);
 create unique index IX_1E9D371D on AssetEntry (classNameId, classPK);
 create index IX_FC1F9C7B on AssetEntry (classUuid);
 create index IX_7306C60 on AssetEntry (companyId);
+create index IX_75D42FF9 on AssetEntry (expirationDate);
 create index IX_1EBA6821 on AssetEntry (groupId, classUuid);
+create index IX_2E4E3885 on AssetEntry (publishDate);
+create index IX_9029E15A on AssetEntry (visible);
 
 create index IX_128516C8 on AssetLink (entryId1);
 create index IX_56E0AB21 on AssetLink (entryId1, entryId2);
@@ -93,12 +97,14 @@ create index IX_507BA031 on BlogsStatsUser (userId, lastPostDate);
 create index IX_E52FF7EF on BookmarksEntry (groupId);
 create index IX_5200100C on BookmarksEntry (groupId, folderId);
 create index IX_E2E9F129 on BookmarksEntry (groupId, userId);
+create index IX_E848278F on BookmarksEntry (resourceBlockId);
 create index IX_B670BA39 on BookmarksEntry (uuid_);
 create unique index IX_EAA02A91 on BookmarksEntry (uuid_, groupId);
 
 create index IX_2ABA25D7 on BookmarksFolder (companyId);
 create index IX_7F703619 on BookmarksFolder (groupId);
 create index IX_967799C0 on BookmarksFolder (groupId, parentFolderId);
+create index IX_28A49BB9 on BookmarksFolder (resourceBlockId);
 create index IX_451E7AE3 on BookmarksFolder (uuid_);
 create unique index IX_DC2F8927 on BookmarksFolder (uuid_, groupId);
 
@@ -163,13 +169,14 @@ create index IX_17692B58 on DDMStructureLink (structureId);
 create index IX_DB24DDDD on DDMTemplate (groupId);
 create index IX_33BEF579 on DDMTemplate (language);
 create index IX_C9757A51 on DDMTemplate (structureId);
-create index IX_5BC0E264 on DDMTemplate (structureId, type_);
+create index IX_5B019FE8 on DDMTemplate (structureId, type_, mode_);
 create index IX_C4F283C8 on DDMTemplate (type_);
 create index IX_F2A243A7 on DDMTemplate (uuid_);
 create unique index IX_1AA75CE3 on DDMTemplate (uuid_, groupId);
 
-create index IX_9B3F8F9D on DLContent (companyId, portletId, repositoryId, path_);
-create unique index IX_19EC270B on DLContent (companyId, portletId, repositoryId, path_, version);
+create index IX_6A83A66A on DLContent (companyId, repositoryId);
+create index IX_EB531760 on DLContent (companyId, repositoryId, path_);
+create unique index IX_FDD1AAA8 on DLContent (companyId, repositoryId, path_, version);
 
 create index IX_4CB1B2B4 on DLFileEntry (companyId);
 create index IX_F4AF5636 on DLFileEntry (groupId);
@@ -184,11 +191,15 @@ create unique index IX_BC2E7E6A on DLFileEntry (uuid_, groupId);
 
 create unique index IX_7332B44F on DLFileEntryMetadata (DDMStructureId, fileVersionId);
 create index IX_4F40FE5E on DLFileEntryMetadata (fileEntryId);
+create index IX_A44636C9 on DLFileEntryMetadata (fileEntryId, fileVersionId);
 create index IX_F8E90438 on DLFileEntryMetadata (fileEntryTypeId);
 create index IX_1FE9C04 on DLFileEntryMetadata (fileVersionId);
 create index IX_D49AB5D1 on DLFileEntryMetadata (uuid_);
 
 create index IX_4501FD9C on DLFileEntryType (groupId);
+create unique index IX_E9B6A85B on DLFileEntryType (groupId, name);
+create index IX_90724726 on DLFileEntryType (uuid_);
+create unique index IX_1399D844 on DLFileEntryType (uuid_, groupId);
 
 create index IX_8373EC7C on DLFileEntryTypes_DDMStructures (fileEntryTypeId);
 create index IX_F147CF3F on DLFileEntryTypes_DDMStructures (structureId);
@@ -270,24 +281,6 @@ create index IX_3103EF3D on Groups_Roles (roleId);
 create index IX_31FB749A on Groups_UserGroups (groupId);
 create index IX_3B69160F on Groups_UserGroups (userGroupId);
 
-create index IX_60214CF6 on IGFolder (companyId);
-create index IX_206498F8 on IGFolder (groupId);
-create index IX_1A605E9F on IGFolder (groupId, parentFolderId);
-create unique index IX_9BBAFB1E on IGFolder (groupId, parentFolderId, name);
-create index IX_F73C0982 on IGFolder (uuid_);
-create unique index IX_B10EFD68 on IGFolder (uuid_, groupId);
-
-create index IX_E597322D on IGImage (custom1ImageId);
-create index IX_D9E0A34C on IGImage (custom2ImageId);
-create index IX_63820A7 on IGImage (groupId);
-create index IX_8956B2C4 on IGImage (groupId, folderId);
-create index IX_AAE8DF83 on IGImage (groupId, folderId, name);
-create index IX_BE79E1E1 on IGImage (groupId, userId);
-create index IX_64F0B572 on IGImage (largeImageId);
-create index IX_D3D32126 on IGImage (smallImageId);
-create index IX_265BB0F1 on IGImage (uuid_);
-create unique index IX_E97342D9 on IGImage (uuid_, groupId);
-
 create index IX_6A925A4D on Image (size_);
 
 create index IX_DFF98523 on JournalArticle (companyId);
@@ -359,15 +352,20 @@ create index IX_705F5AA3 on Layout (groupId, privateLayout);
 create unique index IX_BC2C4231 on Layout (groupId, privateLayout, friendlyURL);
 create unique index IX_7162C27C on Layout (groupId, privateLayout, layoutId);
 create index IX_6DE88B06 on Layout (groupId, privateLayout, parentLayoutId);
+create index IX_D18D85F6 on Layout (groupId, privateLayout, templateLayoutUuid);
 create index IX_1A1B61D2 on Layout (groupId, privateLayout, type_);
 create index IX_23922F7D on Layout (iconImageId);
 create index IX_D0822724 on Layout (uuid_);
 create unique index IX_CED31606 on Layout (uuid_, groupId);
 
-create unique index IX_A705FF94 on LayoutBranch (layoutSetBranchId, plid, master);
+create index IX_6C226433 on LayoutBranch (layoutSetBranchId);
+create index IX_2C42603E on LayoutBranch (layoutSetBranchId, plid);
+create index IX_A705FF94 on LayoutBranch (layoutSetBranchId, plid, master);
+create unique index IX_FD57097D on LayoutBranch (layoutSetBranchId, plid, name);
 
 create index IX_30616AAA on LayoutPrototype (companyId);
 create index IX_557A639F on LayoutPrototype (companyId, active_);
+create index IX_CEF72136 on LayoutPrototype (uuid_);
 
 create index IX_314B621A on LayoutRevision (layoutSetBranchId);
 create index IX_A9AC086E on LayoutRevision (layoutSetBranchId, head);
@@ -381,6 +379,7 @@ create index IX_9329C9D6 on LayoutRevision (plid);
 
 create index IX_A40B8BEC on LayoutSet (groupId);
 create unique index IX_48550691 on LayoutSet (groupId, privateLayout);
+create index IX_72BBA8B7 on LayoutSet (layoutSetPrototypeUuid);
 
 create index IX_8FF5D6EA on LayoutSetBranch (groupId);
 create index IX_C4079FD3 on LayoutSetBranch (groupId, privateLayout);
@@ -424,28 +423,26 @@ create index IX_5B153FB2 on MBMessage (groupId);
 create index IX_1073AB9F on MBMessage (groupId, categoryId);
 create index IX_4257DB85 on MBMessage (groupId, categoryId, status);
 create index IX_B674AB58 on MBMessage (groupId, categoryId, threadId);
+create index IX_CBFDBF0A on MBMessage (groupId, categoryId, threadId, answer);
 create index IX_385E123E on MBMessage (groupId, categoryId, threadId, status);
 create index IX_ED39AC98 on MBMessage (groupId, status);
 create index IX_8EB8C5EC on MBMessage (groupId, userId);
 create index IX_377858D2 on MBMessage (groupId, userId, status);
 create index IX_75B95071 on MBMessage (threadId);
+create index IX_9D7C3B23 on MBMessage (threadId, answer);
 create index IX_A7038CD7 on MBMessage (threadId, parentMessageId);
 create index IX_9DC8E57 on MBMessage (threadId, status);
 create index IX_7A040C32 on MBMessage (userId);
+create index IX_59F9CE5C on MBMessage (userId, classNameId);
+create index IX_ABEB6D07 on MBMessage (userId, classNameId, classPK);
+create index IX_4A4BB4ED on MBMessage (userId, classNameId, classPK, status);
+create index IX_3321F142 on MBMessage (userId, classNameId, status);
 create index IX_C57B16BC on MBMessage (uuid_);
 create unique index IX_8D12316E on MBMessage (uuid_, groupId);
 
-create index IX_D180D4AE on MBMessageFlag (messageId);
-create index IX_A6973A8E on MBMessageFlag (messageId, flag);
-create index IX_C1C9A8FD on MBMessageFlag (threadId);
-create index IX_3CFD579D on MBMessageFlag (threadId, flag);
-create index IX_7B2917BE on MBMessageFlag (userId);
-create unique index IX_E9EB6194 on MBMessageFlag (userId, messageId, flag);
-create index IX_2EA537D7 on MBMessageFlag (userId, threadId, flag);
-
 create index IX_A00A898F on MBStatsUser (groupId);
-create index IX_FAB5A88B on MBStatsUser (groupId, messageCount);
 create unique index IX_9168E2C9 on MBStatsUser (groupId, userId);
+create index IX_D33A5445 on MBStatsUser (groupId, userId, messageCount);
 create index IX_847F92B5 on MBStatsUser (userId);
 
 create index IX_41F6DC8A on MBThread (categoryId, priority);
@@ -456,6 +453,29 @@ create index IX_485F7E98 on MBThread (groupId, categoryId, status);
 create index IX_E1E7142B on MBThread (groupId, status);
 create index IX_AEDD9CB5 on MBThread (lastPostDate, priority);
 create index IX_CC993ECB on MBThread (rootMessageId);
+
+create index IX_8CB0A24A on MBThreadFlag (threadId);
+create index IX_A28004B on MBThreadFlag (userId);
+create index IX_33781904 on MBThreadFlag (userId, threadId);
+
+create index IX_FD90786C on MDRAction (ruleGroupInstanceId);
+create index IX_77BB5E9D on MDRAction (uuid_);
+create unique index IX_75BE36AD on MDRAction (uuid_, groupId);
+
+create index IX_4F4293F1 on MDRRule (ruleGroupId);
+create index IX_EA63B9D7 on MDRRule (uuid_);
+create unique index IX_F3EFDCB3 on MDRRule (uuid_, groupId);
+
+create index IX_5849891C on MDRRuleGroup (groupId);
+create index IX_7F26B2A6 on MDRRuleGroup (uuid_);
+create unique index IX_46665CC4 on MDRRuleGroup (uuid_, groupId);
+
+create index IX_C95A08D8 on MDRRuleGroupInstance (classNameId, classPK);
+create unique index IX_808A0036 on MDRRuleGroupInstance (classNameId, classPK, ruleGroupId);
+create index IX_22DAB85C on MDRRuleGroupInstance (groupId, classNameId, classPK);
+create index IX_BF3E642B on MDRRuleGroupInstance (ruleGroupId);
+create index IX_B6A6BD91 on MDRRuleGroupInstance (uuid_);
+create unique index IX_9CBC6A39 on MDRRuleGroupInstance (uuid_, groupId);
 
 create index IX_8A1CC4B on MembershipRequest (groupId);
 create index IX_C28C72EC on MembershipRequest (groupId, statusId);
@@ -546,6 +566,13 @@ create unique index IX_354AA664 on RepositoryEntry (uuid_, groupId);
 create index IX_81F2DB09 on ResourceAction (name);
 create unique index IX_EDB9986E on ResourceAction (name, actionId);
 
+create index IX_DA30B086 on ResourceBlock (companyId, groupId, name);
+create unique index IX_AEEA209C on ResourceBlock (companyId, groupId, name, permissionsHash);
+create index IX_2D4CC782 on ResourceBlock (companyId, name);
+
+create index IX_4AB3756 on ResourceBlockPermission (resourceBlockId);
+create unique index IX_D63D20BB on ResourceBlockPermission (resourceBlockId, roleId);
+
 create index IX_717FDD47 on ResourceCode (companyId);
 create unique index IX_A32C097E on ResourceCode (companyId, name, scope);
 create index IX_AACAFF40 on ResourceCode (name);
@@ -554,9 +581,15 @@ create index IX_88705859 on ResourcePermission (companyId, name, primKey, ownerI
 create index IX_C94C7708 on ResourcePermission (companyId, name, primKey, roleId, actionIds);
 create index IX_60B99860 on ResourcePermission (companyId, name, scope);
 create index IX_2200AA69 on ResourcePermission (companyId, name, scope, primKey);
-create unique index IX_8D83D0CE on ResourcePermission (companyId, name, scope, primKey, roleId);
-create unique index IX_4A1F4402 on ResourcePermission (companyId, name, scope, primKey, roleId, ownerId, actionIds);
+create index IX_8D83D0CE on ResourcePermission (companyId, name, scope, primKey, roleId);
+create index IX_D2E2B644 on ResourcePermission (companyId, name, scope, primKey, roleId, actionIds);
+create index IX_4A1F4402 on ResourcePermission (companyId, name, scope, primKey, roleId, ownerId, actionIds);
 create index IX_A37A0588 on ResourcePermission (roleId);
+create index IX_F4555981 on ResourcePermission (scope);
+
+create unique index IX_BA497163 on ResourceTypePermission (companyId, groupId, name, roleId);
+create index IX_7D81F66F on ResourceTypePermission (companyId, name, roleId);
+create index IX_A82690E2 on ResourceTypePermission (roleId);
 
 create index IX_2578FBD3 on Resource_ (codeId);
 create unique index IX_67DE7856 on Resource_ (codeId, primKey);
@@ -634,11 +667,30 @@ create index IX_82E39A0C on SocialActivity (classNameId);
 create index IX_A853C757 on SocialActivity (classNameId, classPK);
 create index IX_64B1BC66 on SocialActivity (companyId);
 create index IX_2A2468 on SocialActivity (groupId);
+create index IX_FB604DC7 on SocialActivity (groupId, userId, classNameId, classPK, type_, receiverUserId);
 create unique index IX_8F32DEC9 on SocialActivity (groupId, userId, createDate, classNameId, classPK, type_, receiverUserId);
 create index IX_1271F25F on SocialActivity (mirrorActivityId);
 create index IX_1F00C374 on SocialActivity (mirrorActivityId, classNameId, classPK);
 create index IX_121CA3CB on SocialActivity (receiverUserId);
 create index IX_3504B8BC on SocialActivity (userId);
+
+create index IX_83E16F2F on SocialActivityAchievement (groupId, firstInGroup);
+create index IX_8F6408F0 on SocialActivityAchievement (groupId, name);
+create index IX_C8FD892B on SocialActivityAchievement (groupId, userId);
+create index IX_AABC18E9 on SocialActivityAchievement (groupId, userId, firstInGroup);
+create unique index IX_D4390CAA on SocialActivityAchievement (groupId, userId, name);
+
+create index IX_A4B9A23B on SocialActivityCounter (classNameId, classPK);
+create unique index IX_1B7E3B67 on SocialActivityCounter (groupId, classNameId, classPK, name, ownerType, endPeriod);
+create unique index IX_374B35AE on SocialActivityCounter (groupId, classNameId, classPK, name, ownerType, startPeriod);
+create index IX_926CDD04 on SocialActivityCounter (groupId, classNameId, classPK, ownerType);
+
+create index IX_B15863FA on SocialActivityLimit (classNameId, classPK);
+create unique index IX_F1C1A617 on SocialActivityLimit (groupId, userId, classNameId, classPK, activityType, activityCounterName);
+
+create index IX_384788CD on SocialActivitySetting (groupId, activityType);
+create index IX_1E9CF33B on SocialActivitySetting (groupId, classNameId, activityType);
+create index IX_D984AABA on SocialActivitySetting (groupId, classNameId, activityType, name);
 
 create unique index IX_22F6B5CB on SocialEquityAssetEntry (assetEntryId);
 
@@ -688,17 +740,6 @@ create unique index IX_2E1A92D4 on Subscription (companyId, userId, classNameId,
 create index IX_54243AFD on Subscription (userId);
 create index IX_E8F34171 on Subscription (userId, classNameId);
 
-create unique index IX_181A4A1B on TasksProposal (classNameId, classPK);
-create index IX_7FB27324 on TasksProposal (groupId);
-create index IX_6EEC675E on TasksProposal (groupId, userId);
-
-create index IX_4D0C7F8D on TasksReview (proposalId);
-create index IX_70AFEA01 on TasksReview (proposalId, stage);
-create index IX_1894B29A on TasksReview (proposalId, stage, completed);
-create index IX_41AFC20C on TasksReview (proposalId, stage, completed, rejected);
-create index IX_36F512E6 on TasksReview (userId);
-create unique index IX_5C6BE4C7 on TasksReview (userId, proposalId);
-
 create index IX_AE6E9907 on Team (groupId);
 create unique index IX_143DC786 on Team (groupId, name);
 
@@ -728,6 +769,7 @@ create index IX_E60EA987 on UserIdMapper (userId);
 create unique index IX_D1C44A6E on UserIdMapper (userId, type_);
 
 create index IX_3E5D78C4 on UserNotificationEvent (userId);
+create index IX_3DBB361A on UserNotificationEvent (userId, archived);
 create index IX_ECD8CFEA on UserNotificationEvent (uuid_);
 
 create index IX_29BA1CF5 on UserTracker (companyId);

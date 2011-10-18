@@ -151,7 +151,7 @@ Element contentEl = (Element)request.getAttribute(WebKeys.JOURNAL_ARTICLE_CONTEN
 
 							<aui:input name="journalImageDelete" type="hidden" value="" />
 
-							<aui:input name="journalImageDeleteButton" value="Delete" />
+							<aui:button name="journalImageDeleteButton" value="delete" />
 
 							<br /><br />
 
@@ -160,31 +160,6 @@ Element contentEl = (Element)request.getAttribute(WebKeys.JOURNAL_ARTICLE_CONTEN
 							</div>
 						</div>
 					</c:if>
-				</c:if>
-
-				<c:if test='<%= elType.equals("image_gallery") %>'>
-					<aui:input cssClass="lfr-input-text-container" inlineField="<%= true %>" label="" name="journalImagegallery" size="55" type="text" value="<%= elContent %>" />
-
-					<%
-					long igScopeGroupId = groupId;
-
-					if (liveGroup.isStaged() && !liveGroup.isStagedRemotely() && !liveGroup.isStagedPortlet(PortletKeys.IMAGE_GALLERY)) {
-						igScopeGroupId = liveGroup.getGroupId();
-					}
-					%>
-
-					<portlet:renderURL windowState="<%= LiferayWindowState.POP_UP.toString() %>" var="selectIGURL">
-						<portlet:param name="struts_action" value="/journal/select_image_gallery" />
-						<portlet:param name="groupId" value="<%= String.valueOf(igScopeGroupId) %>" />
-					</portlet:renderURL>
-
-					<%
-					Map<String,Object> data = new HashMap<String,Object>();
-
-					data.put("ImagegalleryUrl", selectIGURL);
-					%>
-
-					<aui:button cssClass="journal-imagegallery-button" data="<%= data %>" value="select" />
 				</c:if>
 
 				<c:if test='<%= elType.equals("document_library") %>'>

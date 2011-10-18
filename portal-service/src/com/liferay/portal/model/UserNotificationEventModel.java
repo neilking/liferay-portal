@@ -186,6 +186,27 @@ public interface UserNotificationEventModel extends BaseModel<UserNotificationEv
 	 */
 	public void setPayload(String payload);
 
+	/**
+	 * Returns the archived of this user notification event.
+	 *
+	 * @return the archived of this user notification event
+	 */
+	public boolean getArchived();
+
+	/**
+	 * Returns <code>true</code> if this user notification event is archived.
+	 *
+	 * @return <code>true</code> if this user notification event is archived; <code>false</code> otherwise
+	 */
+	public boolean isArchived();
+
+	/**
+	 * Sets whether this user notification event is archived.
+	 *
+	 * @param archived the archived of this user notification event
+	 */
+	public void setArchived(boolean archived);
+
 	public boolean isNew();
 
 	public void setNew(boolean n);
@@ -195,8 +216,6 @@ public interface UserNotificationEventModel extends BaseModel<UserNotificationEv
 	public void setCachedModel(boolean cachedModel);
 
 	public boolean isEscapedModel();
-
-	public void setEscapedModel(boolean escapedModel);
 
 	public Serializable getPrimaryKeyObj();
 

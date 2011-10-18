@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.CacheModel;
@@ -32,8 +33,6 @@ import com.liferay.portlet.expando.model.ExpandoBridge;
 import com.liferay.portlet.expando.util.ExpandoBridgeFactoryUtil;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Proxy;
 
 import java.sql.Types;
 
@@ -87,6 +86,12 @@ public class AssetTagPropertyModelImpl extends BaseModelImpl<AssetTagProperty>
 	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
 				"value.object.finder.cache.enabled.com.liferay.portlet.asset.model.AssetTagProperty"),
 			true);
+	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.column.bitmask.enabled.com.liferay.portlet.asset.model.AssetTagProperty"),
+			true);
+	public static long COMPANYID_COLUMN_BITMASK = 1L;
+	public static long KEY_COLUMN_BITMASK = 2L;
+	public static long TAGID_COLUMN_BITMASK = 4L;
 
 	/**
 	 * Converts the soap model instance into a normal model instance.
@@ -127,14 +132,6 @@ public class AssetTagPropertyModelImpl extends BaseModelImpl<AssetTagProperty>
 		return models;
 	}
 
-	public Class<?> getModelClass() {
-		return AssetTagProperty.class;
-	}
-
-	public String getModelClassName() {
-		return AssetTagProperty.class.getName();
-	}
-
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(com.liferay.portal.util.PropsUtil.get(
 				"lock.expiration.time.com.liferay.portlet.asset.model.AssetTagProperty"));
 
@@ -157,6 +154,14 @@ public class AssetTagPropertyModelImpl extends BaseModelImpl<AssetTagProperty>
 		setPrimaryKey(((Long)primaryKeyObj).longValue());
 	}
 
+	public Class<?> getModelClass() {
+		return AssetTagProperty.class;
+	}
+
+	public String getModelClassName() {
+		return AssetTagProperty.class.getName();
+	}
+
 	@JSON
 	public long getTagPropertyId() {
 		return _tagPropertyId;
@@ -172,7 +177,19 @@ public class AssetTagPropertyModelImpl extends BaseModelImpl<AssetTagProperty>
 	}
 
 	public void setCompanyId(long companyId) {
+		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
+
+		if (!_setOriginalCompanyId) {
+			_setOriginalCompanyId = true;
+
+			_originalCompanyId = _companyId;
+		}
+
 		_companyId = companyId;
+	}
+
+	public long getOriginalCompanyId() {
+		return _originalCompanyId;
 	}
 
 	@JSON
@@ -230,6 +247,8 @@ public class AssetTagPropertyModelImpl extends BaseModelImpl<AssetTagProperty>
 	}
 
 	public void setTagId(long tagId) {
+		_columnBitmask |= TAGID_COLUMN_BITMASK;
+
 		if (!_setOriginalTagId) {
 			_setOriginalTagId = true;
 
@@ -254,6 +273,8 @@ public class AssetTagPropertyModelImpl extends BaseModelImpl<AssetTagProperty>
 	}
 
 	public void setKey(String key) {
+		_columnBitmask |= KEY_COLUMN_BITMASK;
+
 		if (_originalKey == null) {
 			_originalKey = _key;
 		}
@@ -279,20 +300,19 @@ public class AssetTagPropertyModelImpl extends BaseModelImpl<AssetTagProperty>
 		_value = value;
 	}
 
+	public long getColumnBitmask() {
+		return _columnBitmask;
+	}
+
 	@Override
 	public AssetTagProperty toEscapedModel() {
-		if (isEscapedModel()) {
-			return (AssetTagProperty)this;
+		if (_escapedModelProxy == null) {
+			_escapedModelProxy = (AssetTagProperty)ProxyUtil.newProxyInstance(_classLoader,
+					_escapedModelProxyInterfaces,
+					new AutoEscapeBeanHandler(this));
 		}
-		else {
-			if (_escapedModelProxy == null) {
-				_escapedModelProxy = (AssetTagProperty)Proxy.newProxyInstance(_classLoader,
-						_escapedModelProxyInterfaces,
-						new AutoEscapeBeanHandler(this));
-			}
 
-			return _escapedModelProxy;
-		}
+		return _escapedModelProxy;
 	}
 
 	@Override
@@ -375,11 +395,17 @@ public class AssetTagPropertyModelImpl extends BaseModelImpl<AssetTagProperty>
 	public void resetOriginalValues() {
 		AssetTagPropertyModelImpl assetTagPropertyModelImpl = this;
 
+		assetTagPropertyModelImpl._originalCompanyId = assetTagPropertyModelImpl._companyId;
+
+		assetTagPropertyModelImpl._setOriginalCompanyId = false;
+
 		assetTagPropertyModelImpl._originalTagId = assetTagPropertyModelImpl._tagId;
 
 		assetTagPropertyModelImpl._setOriginalTagId = false;
 
 		assetTagPropertyModelImpl._originalKey = assetTagPropertyModelImpl._key;
+
+		assetTagPropertyModelImpl._columnBitmask = 0;
 	}
 
 	@Override
@@ -521,6 +547,8 @@ public class AssetTagPropertyModelImpl extends BaseModelImpl<AssetTagProperty>
 		};
 	private long _tagPropertyId;
 	private long _companyId;
+	private long _originalCompanyId;
+	private boolean _setOriginalCompanyId;
 	private long _userId;
 	private String _userUuid;
 	private String _userName;
@@ -533,5 +561,6 @@ public class AssetTagPropertyModelImpl extends BaseModelImpl<AssetTagProperty>
 	private String _originalKey;
 	private String _value;
 	private transient ExpandoBridge _expandoBridge;
+	private long _columnBitmask;
 	private AssetTagProperty _escapedModelProxy;
 }

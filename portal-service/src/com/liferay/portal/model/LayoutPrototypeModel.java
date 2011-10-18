@@ -59,6 +59,21 @@ public interface LayoutPrototypeModel extends BaseModel<LayoutPrototype> {
 	public void setPrimaryKey(long primaryKey);
 
 	/**
+	 * Returns the uuid of this layout prototype.
+	 *
+	 * @return the uuid of this layout prototype
+	 */
+	@AutoEscape
+	public String getUuid();
+
+	/**
+	 * Sets the uuid of this layout prototype.
+	 *
+	 * @param uuid the uuid of this layout prototype
+	 */
+	public void setUuid(String uuid);
+
+	/**
 	 * Returns the layout prototype ID of this layout prototype.
 	 *
 	 * @return the layout prototype ID of this layout prototype
@@ -99,6 +114,7 @@ public interface LayoutPrototypeModel extends BaseModel<LayoutPrototype> {
 	 * @param locale the locale of the language
 	 * @return the localized name of this layout prototype
 	 */
+	@AutoEscape
 	public String getName(Locale locale);
 
 	/**
@@ -108,6 +124,7 @@ public interface LayoutPrototypeModel extends BaseModel<LayoutPrototype> {
 	 * @param useDefault whether to use the default language if no localization exists for the requested language
 	 * @return the localized name of this layout prototype. If <code>useDefault</code> is <code>false</code> and no localization exists for the requested language, an empty string will be returned.
 	 */
+	@AutoEscape
 	public String getName(Locale locale, boolean useDefault);
 
 	/**
@@ -116,6 +133,7 @@ public interface LayoutPrototypeModel extends BaseModel<LayoutPrototype> {
 	 * @param languageId the ID of the language
 	 * @return the localized name of this layout prototype
 	 */
+	@AutoEscape
 	public String getName(String languageId);
 
 	/**
@@ -125,7 +143,14 @@ public interface LayoutPrototypeModel extends BaseModel<LayoutPrototype> {
 	 * @param useDefault whether to use the default language if no localization exists for the requested language
 	 * @return the localized name of this layout prototype
 	 */
+	@AutoEscape
 	public String getName(String languageId, boolean useDefault);
+
+	@AutoEscape
+	public String getNameCurrentLanguageId();
+
+	@AutoEscape
+	public String getNameCurrentValue();
 
 	/**
 	 * Returns a map of the locales and localized names of this layout prototype.
@@ -157,6 +182,8 @@ public interface LayoutPrototypeModel extends BaseModel<LayoutPrototype> {
 	 * @param defaultLocale the default locale
 	 */
 	public void setName(String name, Locale locale, Locale defaultLocale);
+
+	public void setNameCurrentLanguageId(String languageId);
 
 	/**
 	 * Sets the localized names of this layout prototype from the map of locales and localized names.
@@ -233,8 +260,6 @@ public interface LayoutPrototypeModel extends BaseModel<LayoutPrototype> {
 	public void setCachedModel(boolean cachedModel);
 
 	public boolean isEscapedModel();
-
-	public void setEscapedModel(boolean escapedModel);
 
 	public Serializable getPrimaryKeyObj();
 

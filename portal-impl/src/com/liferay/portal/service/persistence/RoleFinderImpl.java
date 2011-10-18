@@ -215,6 +215,7 @@ public class RoleFinderImpl
 			QueryPos qPos = QueryPos.getInstance(q);
 
 			setJoin(qPos, params);
+
 			qPos.add(companyId);
 			qPos.add(names, 2);
 			qPos.add(descriptions, 2);
@@ -285,7 +286,7 @@ public class RoleFinderImpl
 
 			qPos.add(companyId);
 
-			return q.list();
+			return q.list(true);
 		}
 		catch (Exception e) {
 			throw new SystemException(e);
@@ -314,7 +315,7 @@ public class RoleFinderImpl
 			qPos.add(userId);
 			qPos.add(groupId);
 
-			return q.list();
+			return q.list(true);
 		}
 		catch (Exception e) {
 			throw new SystemException(e);
@@ -343,7 +344,7 @@ public class RoleFinderImpl
 			qPos.add(userId);
 			qPos.add(groupId);
 
-			return q.list();
+			return q.list(true);
 		}
 		catch (Exception e) {
 			throw new SystemException(e);
@@ -426,7 +427,7 @@ public class RoleFinderImpl
 			qPos.add(userId);
 			qPos.add(groupIds);
 
-			return q.list();
+			return q.list(true);
 		}
 		catch (Exception e) {
 			throw new SystemException(e);
@@ -502,6 +503,7 @@ public class RoleFinderImpl
 			QueryPos qPos = QueryPos.getInstance(q);
 
 			setJoin(qPos, params);
+
 			qPos.add(companyId);
 			qPos.add(names, 2);
 			qPos.add(descriptions, 2);
@@ -596,7 +598,7 @@ public class RoleFinderImpl
 			qPos.add(primKey);
 			qPos.add(actionId);
 
-			return q.list();
+			return q.list(true);
 		}
 		catch (Exception e) {
 			throw new SystemException(e);
@@ -798,28 +800,25 @@ public class RoleFinderImpl
 	protected void setJoin(
 		QueryPos qPos, LinkedHashMap<String, Object> params) {
 
-		if (params != null) {
-			Iterator<Map.Entry<String, Object>> itr =
-				params.entrySet().iterator();
+		if (params == null) {
+			return;
+		}
 
-			while (itr.hasNext()) {
-				Map.Entry<String, Object> entry = itr.next();
+		for (Map.Entry<String, Object> entry : params.entrySet()) {
+			Object value = entry.getValue();
 
-				Object value = entry.getValue();
+			if (value instanceof Long) {
+				Long valueLong = (Long)value;
 
-				if (value instanceof Long) {
-					Long valueLong = (Long)value;
-
-					if (Validator.isNotNull(valueLong)) {
-						qPos.add(valueLong);
-					}
+				if (Validator.isNotNull(valueLong)) {
+					qPos.add(valueLong);
 				}
-				else if (value instanceof String) {
-					String valueString = (String)value;
+			}
+			else if (value instanceof String) {
+				String valueString = (String)value;
 
-					if (Validator.isNotNull(valueString)) {
-						qPos.add(valueString);
-					}
+				if (Validator.isNotNull(valueString)) {
+					qPos.add(valueString);
 				}
 			}
 		}

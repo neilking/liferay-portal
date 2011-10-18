@@ -15,13 +15,13 @@
 package com.liferay.portlet.documentlibrary.store;
 
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.repository.cmis.CMISRepositoryUtil;
-import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.documentlibrary.DuplicateFileException;
 import com.liferay.portlet.documentlibrary.NoSuchFileException;
@@ -55,6 +55,7 @@ import org.apache.chemistry.opencmis.commons.impl.dataobjects.ContentStreamImpl;
 
 /**
  * @author Alexander Chow
+ * @author Edward Han
  */
 public class CMISStore extends BaseStore {
 
@@ -76,7 +77,7 @@ public class CMISStore extends BaseStore {
 
 		Folder folder = getRepositoryFolder(companyId, repositoryId);
 
-		String[] dirNames = StringUtil.split(dirName, StringPool.SLASH);
+		String[] dirNames = StringUtil.split(dirName, CharPool.SLASH);
 
 		for (String curDirName : dirNames) {
 			Folder subFolder = getFolder(folder, curDirName);
@@ -91,13 +92,11 @@ public class CMISStore extends BaseStore {
 
 	@Override
 	public void addFile(
-			long companyId, String portletId, long groupId, long repositoryId,
-			String fileName, ServiceContext serviceContext, InputStream is)
+			long companyId, long repositoryId, String fileName, InputStream is)
 		throws PortalException {
 
 		updateFile(
-			companyId, portletId, groupId, repositoryId, fileName,
-			DEFAULT_VERSION, null, serviceContext, is);
+			companyId, repositoryId, fileName, VERSION_DEFAULT, is);
 	}
 
 	@Override
@@ -106,9 +105,8 @@ public class CMISStore extends BaseStore {
 
 	@Override
 	public void copyFileVersion(
-			long companyId, String portletId, long groupId, long repositoryId,
-			String fileName, String fromVersionNumber, String toVersionNumber,
-			String sourceFileName, ServiceContext serviceContext)
+			long companyId, long repositoryId, String fileName,
+			String fromVersionLabel, String toVersionLabel)
 		throws PortalException {
 
 		Folder versioningFolder = getVersioningFolder(
@@ -119,7 +117,7 @@ public class CMISStore extends BaseStore {
 
 		Map<String, Object> documentProperties = new HashMap<String, Object>();
 
-		String title = String.valueOf(toVersionNumber);
+		String title = String.valueOf(toVersionLabel);
 
 		documentProperties.put(PropertyIds.NAME, title);
 
@@ -127,7 +125,7 @@ public class CMISStore extends BaseStore {
 			PropertyIds.OBJECT_TYPE_ID, BaseTypeId.CMIS_DOCUMENT.value());
 
 		Document document = getVersionedDocument(
-			companyId, repositoryId, fileName, fromVersionNumber);
+			companyId, repositoryId, fileName, fromVersionLabel);
 
 		document.copy(
 			versioningFolderObjectId, documentProperties, null,
@@ -136,7 +134,7 @@ public class CMISStore extends BaseStore {
 
 	@Override
 	public void deleteDirectory(
-		long companyId, String portletId, long repositoryId, String dirName) {
+		long companyId, long repositoryId, String dirName) {
 
 		Folder repositoryFolder = getRepositoryFolder(companyId, repositoryId);
 
@@ -148,9 +146,7 @@ public class CMISStore extends BaseStore {
 	}
 
 	@Override
-	public void deleteFile(
-			long companyId, String portletId, long repositoryId,
-			String fileName)
+	public void deleteFile(long companyId, long repositoryId, String fileName)
 		throws PortalException {
 
 		Folder versioningFolder = getVersioningFolder(
@@ -165,12 +161,12 @@ public class CMISStore extends BaseStore {
 
 	@Override
 	public void deleteFile(
-			long companyId, String portletId, long repositoryId,
-			String fileName, String versionNumber)
+			long companyId, long repositoryId, String fileName,
+			String versionLabel)
 		throws PortalException {
 
 		Document document = getVersionedDocument(
-			companyId, repositoryId, fileName, versionNumber);
+			companyId, repositoryId, fileName, versionLabel);
 
 		document.delete(true);
 	}
@@ -178,16 +174,16 @@ public class CMISStore extends BaseStore {
 	@Override
 	public InputStream getFileAsStream(
 			long companyId, long repositoryId, String fileName,
-			String versionNumber)
+			String versionLabel)
 		throws PortalException {
 
-		if (Validator.isNull(versionNumber)) {
-			versionNumber = getHeadVersionNumber(
+		if (Validator.isNull(versionLabel)) {
+			versionLabel = getHeadVersionLabel(
 				companyId, repositoryId, fileName);
 		}
 
 		Document document = getVersionedDocument(
-			companyId, repositoryId, fileName, versionNumber);
+			companyId, repositoryId, fileName, versionLabel);
 
 		return document.getContentStream().getStream();
 	}
@@ -214,7 +210,7 @@ public class CMISStore extends BaseStore {
 
 		Folder folder = getRepositoryFolder(companyId, repositoryId);
 
-		String[] dirNames = StringUtil.split(dirName, StringPool.SLASH);
+		String[] dirNames = StringUtil.split(dirName, CharPool.SLASH);
 
 		for (String curDirName : dirNames) {
 			Folder subFolder = getFolder(folder, curDirName);
@@ -242,20 +238,38 @@ public class CMISStore extends BaseStore {
 	}
 
 	@Override
-	public long getFileSize(
-			long companyId, long repositoryId, String fileName)
+	public long getFileSize(long companyId, long repositoryId, String fileName)
 		throws PortalException {
 
-		String versionNumber = getHeadVersionNumber(
+		String versionLabel = getHeadVersionLabel(
 			companyId, repositoryId, fileName);
 
 		Document document = getVersionedDocument(
-			companyId, repositoryId, fileName, versionNumber);
+			companyId, repositoryId, fileName, versionLabel);
 
 		return document.getContentStreamLength();
 	}
 
-	public String getHeadVersionNumber(
+	@Override
+	public boolean hasDirectory(
+		long companyId, long repositoryId, String dirName) {
+
+		Folder folder = getRepositoryFolder(companyId, repositoryId);
+
+		String[] dirNames = StringUtil.split(dirName, CharPool.SLASH);
+
+		for (String subdirName : dirNames) {
+			Folder subfolder = getFolder(folder, subdirName);
+
+			if (subfolder == null) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	public String getHeadVersionLabel(
 			long companyId, long repositoryId, String dirName)
 		throws NoSuchFileException {
 
@@ -268,28 +282,28 @@ public class CMISStore extends BaseStore {
 
 		List<Folder> folders = getFolders(versioningFolder);
 
-		String headVersionNumber = DEFAULT_VERSION;
+		String headVersionLabel = VERSION_DEFAULT;
 
 		for (Folder folder : folders) {
-			String versionNumber = folder.getName();
+			String versionLabel = folder.getName();
 
-			if (DLUtil.compareVersions(versionNumber, headVersionNumber) > 0) {
-				headVersionNumber = versionNumber;
+			if (DLUtil.compareVersions(versionLabel, headVersionLabel) > 0) {
+				headVersionLabel = versionLabel;
 			}
 		}
 
-		return headVersionNumber;
+		return headVersionLabel;
 	}
 
 	@Override
 	public boolean hasFile(
 		long companyId, long repositoryId, String fileName,
-		String versionNumber) {
+		String versionLabel) {
 
 		Folder versioningFolder = getVersioningFolder(
 			companyId, repositoryId, fileName, true);
 
-		Document document = getDocument(versioningFolder, versionNumber);
+		Document document = getDocument(versioningFolder, versionLabel);
 
 		if (document == null) {
 			return false;
@@ -305,8 +319,8 @@ public class CMISStore extends BaseStore {
 
 	@Override
 	public void updateFile(
-		long companyId, String portletId, long groupId, long repositoryId,
-		long newRepositoryId, String fileName) {
+		long companyId, long repositoryId, long newRepositoryId,
+		String fileName) {
 
 		Folder oldVersioningFolderEntry = getVersioningFolder(
 			companyId, repositoryId, fileName, true);
@@ -330,8 +344,8 @@ public class CMISStore extends BaseStore {
 	}
 
 	public void updateFile(
-		long companyId, String portletId, long groupId, long repositoryId,
-		String fileName, String newFileName) {
+		long companyId, long repositoryId, String fileName,
+		String newFileName) {
 
 		Folder oldVersioningFolderEntry = getVersioningFolder(
 			companyId, repositoryId, fileName, true);
@@ -356,15 +370,14 @@ public class CMISStore extends BaseStore {
 
 	@Override
 	public void updateFile(
-			long companyId, String portletId, long groupId, long repositoryId,
-			String fileName, String versionNumber, String sourceFileName,
-			ServiceContext serviceContext, InputStream is)
+			long companyId, long repositoryId, String fileName,
+			String versionLabel, InputStream is)
 		throws PortalException {
 
 		Folder versioningFolder = getVersioningFolder(
 			companyId, repositoryId, fileName, true);
 
-		String title = String.valueOf(versionNumber);
+		String title = String.valueOf(versionLabel);
 
 		Document document = getDocument(versioningFolder, title);
 
@@ -372,20 +385,19 @@ public class CMISStore extends BaseStore {
 			throw new DuplicateFileException();
 		}
 
-		createDocument(versioningFolder, title, is, serviceContext);
+		createDocument(versioningFolder, title, is);
 	}
 
 	@Override
 	public void updateFileVersion(
-			long companyId, String portletId, long groupId, long repositoryId,
-			String fileName, String fromVersionNumber, String toVersionNumber,
-			String sourceFileName, ServiceContext serviceContext)
+			long companyId, long repositoryId, String fileName,
+			String fromVersionLabel, String toVersionLabel)
 		throws PortalException {
 
 		Folder versioningFolder = getVersioningFolder(
 			companyId, repositoryId, fileName, false);
 
-		String title = String.valueOf(toVersionNumber);
+		String title = String.valueOf(toVersionLabel);
 
 		Document document = getDocument(versioningFolder, title);
 
@@ -394,7 +406,7 @@ public class CMISStore extends BaseStore {
 		}
 
 		document = getVersionedDocument(
-			companyId, repositoryId, fileName, fromVersionNumber);
+			companyId, repositoryId, fileName, fromVersionLabel);
 
 		Map<String, Object> documentProperties = new HashMap<String, Object>();
 
@@ -405,13 +417,6 @@ public class CMISStore extends BaseStore {
 
 	protected Document createDocument(
 		Folder versioningFolder, String title, InputStream is) {
-
-		return createDocument(versioningFolder, title, is, null);
-	}
-
-	protected Document createDocument(
-		Folder versioningFolder, String title, InputStream is,
-		ServiceContext serviceContext) {
 
 		Map<String, Object> documentProperties = new HashMap<String, Object>();
 
@@ -520,7 +525,7 @@ public class CMISStore extends BaseStore {
 
 	protected Document getVersionedDocument(
 			long companyId, long repositoryId, String fileName,
-			String versionNumber)
+			String versionLabel)
 		throws NoSuchFileException {
 
 		Folder versioningFolder = getVersioningFolder(
@@ -530,7 +535,7 @@ public class CMISStore extends BaseStore {
 			throw new NoSuchFileException();
 		}
 
-		Document document = getDocument(versioningFolder, versionNumber);
+		Document document = getDocument(versioningFolder, versionLabel);
 
 		if (document == null) {
 			throw new NoSuchFileException();
@@ -546,7 +551,7 @@ public class CMISStore extends BaseStore {
 
 		Folder versioningFolder = repositoryFolder;
 
-		String[] dirNames = StringUtil.split(fileName, StringPool.SLASH);
+		String[] dirNames = StringUtil.split(fileName, CharPool.SLASH);
 
 		for (String dirName : dirNames) {
 			Folder subFolder = getFolder(versioningFolder, dirName);

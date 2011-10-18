@@ -19,9 +19,9 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
@@ -37,8 +37,6 @@ import com.liferay.portlet.expando.model.ExpandoBridge;
 import com.liferay.portlet.expando.util.ExpandoBridgeFactoryUtil;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Proxy;
 
 import java.sql.Types;
 
@@ -81,6 +79,7 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 			{ "classNameId", Types.BIGINT },
 			{ "classPK", Types.BIGINT },
 			{ "classUuid", Types.VARCHAR },
+			{ "classTypeId", Types.BIGINT },
 			{ "visible", Types.BOOLEAN },
 			{ "startDate", Types.TIMESTAMP },
 			{ "endDate", Types.TIMESTAMP },
@@ -97,7 +96,7 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 			{ "priority", Types.DOUBLE },
 			{ "viewCount", Types.INTEGER }
 		};
-	public static final String TABLE_SQL_CREATE = "create table AssetEntry (entryId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,classNameId LONG,classPK LONG,classUuid VARCHAR(75) null,visible BOOLEAN,startDate DATE null,endDate DATE null,publishDate DATE null,expirationDate DATE null,mimeType VARCHAR(75) null,title STRING null,description STRING null,summary STRING null,url STRING null,layoutUuid VARCHAR(75) null,height INTEGER,width INTEGER,priority DOUBLE,viewCount INTEGER)";
+	public static final String TABLE_SQL_CREATE = "create table AssetEntry (entryId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,classNameId LONG,classPK LONG,classUuid VARCHAR(75) null,classTypeId LONG,visible BOOLEAN,startDate DATE null,endDate DATE null,publishDate DATE null,expirationDate DATE null,mimeType VARCHAR(75) null,title STRING null,description STRING null,summary STRING null,url STRING null,layoutUuid VARCHAR(75) null,height INTEGER,width INTEGER,priority DOUBLE,viewCount INTEGER)";
 	public static final String TABLE_SQL_DROP = "drop table AssetEntry";
 	public static final String DATA_SOURCE = "liferayDataSource";
 	public static final String SESSION_FACTORY = "liferaySessionFactory";
@@ -108,6 +107,17 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
 				"value.object.finder.cache.enabled.com.liferay.portlet.asset.model.AssetEntry"),
 			true);
+	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.column.bitmask.enabled.com.liferay.portlet.asset.model.AssetEntry"),
+			true);
+	public static long CLASSNAMEID_COLUMN_BITMASK = 1L;
+	public static long CLASSPK_COLUMN_BITMASK = 2L;
+	public static long CLASSUUID_COLUMN_BITMASK = 4L;
+	public static long COMPANYID_COLUMN_BITMASK = 8L;
+	public static long EXPIRATIONDATE_COLUMN_BITMASK = 16L;
+	public static long GROUPID_COLUMN_BITMASK = 32L;
+	public static long PUBLISHDATE_COLUMN_BITMASK = 64L;
+	public static long VISIBLE_COLUMN_BITMASK = 128L;
 
 	/**
 	 * Converts the soap model instance into a normal model instance.
@@ -128,6 +138,7 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 		model.setClassNameId(soapModel.getClassNameId());
 		model.setClassPK(soapModel.getClassPK());
 		model.setClassUuid(soapModel.getClassUuid());
+		model.setClassTypeId(soapModel.getClassTypeId());
 		model.setVisible(soapModel.getVisible());
 		model.setStartDate(soapModel.getStartDate());
 		model.setEndDate(soapModel.getEndDate());
@@ -161,14 +172,6 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 		}
 
 		return models;
-	}
-
-	public Class<?> getModelClass() {
-		return AssetEntry.class;
-	}
-
-	public String getModelClassName() {
-		return AssetEntry.class.getName();
 	}
 
 	public static final String MAPPING_TABLE_ASSETENTRIES_ASSETCATEGORIES_NAME = "AssetEntries_AssetCategories";
@@ -214,6 +217,14 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 		setPrimaryKey(((Long)primaryKeyObj).longValue());
 	}
 
+	public Class<?> getModelClass() {
+		return AssetEntry.class;
+	}
+
+	public String getModelClassName() {
+		return AssetEntry.class.getName();
+	}
+
 	@JSON
 	public long getEntryId() {
 		return _entryId;
@@ -229,6 +240,8 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 	}
 
 	public void setGroupId(long groupId) {
+		_columnBitmask |= GROUPID_COLUMN_BITMASK;
+
 		if (!_setOriginalGroupId) {
 			_setOriginalGroupId = true;
 
@@ -248,7 +261,19 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 	}
 
 	public void setCompanyId(long companyId) {
+		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
+
+		if (!_setOriginalCompanyId) {
+			_setOriginalCompanyId = true;
+
+			_originalCompanyId = _companyId;
+		}
+
 		_companyId = companyId;
+	}
+
+	public long getOriginalCompanyId() {
+		return _originalCompanyId;
 	}
 
 	@JSON
@@ -314,6 +339,8 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 	}
 
 	public void setClassNameId(long classNameId) {
+		_columnBitmask |= CLASSNAMEID_COLUMN_BITMASK;
+
 		if (!_setOriginalClassNameId) {
 			_setOriginalClassNameId = true;
 
@@ -333,6 +360,8 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 	}
 
 	public void setClassPK(long classPK) {
+		_columnBitmask |= CLASSPK_COLUMN_BITMASK;
+
 		if (!_setOriginalClassPK) {
 			_setOriginalClassPK = true;
 
@@ -357,6 +386,8 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 	}
 
 	public void setClassUuid(String classUuid) {
+		_columnBitmask |= CLASSUUID_COLUMN_BITMASK;
+
 		if (_originalClassUuid == null) {
 			_originalClassUuid = _classUuid;
 		}
@@ -369,6 +400,15 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 	}
 
 	@JSON
+	public long getClassTypeId() {
+		return _classTypeId;
+	}
+
+	public void setClassTypeId(long classTypeId) {
+		_classTypeId = classTypeId;
+	}
+
+	@JSON
 	public boolean getVisible() {
 		return _visible;
 	}
@@ -378,7 +418,19 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 	}
 
 	public void setVisible(boolean visible) {
+		_columnBitmask |= VISIBLE_COLUMN_BITMASK;
+
+		if (!_setOriginalVisible) {
+			_setOriginalVisible = true;
+
+			_originalVisible = _visible;
+		}
+
 		_visible = visible;
+	}
+
+	public boolean getOriginalVisible() {
+		return _originalVisible;
 	}
 
 	@JSON
@@ -405,7 +457,17 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 	}
 
 	public void setPublishDate(Date publishDate) {
+		_columnBitmask |= PUBLISHDATE_COLUMN_BITMASK;
+
+		if (_originalPublishDate == null) {
+			_originalPublishDate = _publishDate;
+		}
+
 		_publishDate = publishDate;
+	}
+
+	public Date getOriginalPublishDate() {
+		return _originalPublishDate;
 	}
 
 	@JSON
@@ -414,7 +476,17 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 	}
 
 	public void setExpirationDate(Date expirationDate) {
+		_columnBitmask |= EXPIRATIONDATE_COLUMN_BITMASK;
+
+		if (_originalExpirationDate == null) {
+			_originalExpirationDate = _expirationDate;
+		}
+
 		_expirationDate = expirationDate;
+	}
+
+	public Date getOriginalExpirationDate() {
+		return _originalExpirationDate;
 	}
 
 	@JSON
@@ -454,26 +526,23 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 	}
 
 	public String getTitle(String languageId) {
-		String value = LocalizationUtil.getLocalization(getTitle(), languageId);
-
-		if (isEscapedModel()) {
-			return HtmlUtil.escape(value);
-		}
-		else {
-			return value;
-		}
+		return LocalizationUtil.getLocalization(getTitle(), languageId);
 	}
 
 	public String getTitle(String languageId, boolean useDefault) {
-		String value = LocalizationUtil.getLocalization(getTitle(), languageId,
-				useDefault);
+		return LocalizationUtil.getLocalization(getTitle(), languageId,
+			useDefault);
+	}
 
-		if (isEscapedModel()) {
-			return HtmlUtil.escape(value);
-		}
-		else {
-			return value;
-		}
+	public String getTitleCurrentLanguageId() {
+		return _titleCurrentLanguageId;
+	}
+
+	@JSON
+	public String getTitleCurrentValue() {
+		Locale locale = getLocale(_titleCurrentLanguageId);
+
+		return getTitle(locale);
 	}
 
 	public Map<Locale, String> getTitleMap() {
@@ -500,6 +569,10 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 			setTitle(LocalizationUtil.removeLocalization(getTitle(), "Title",
 					languageId));
 		}
+	}
+
+	public void setTitleCurrentLanguageId(String languageId) {
+		_titleCurrentLanguageId = languageId;
 	}
 
 	public void setTitleMap(Map<Locale, String> titleMap) {
@@ -612,20 +685,19 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 		_viewCount = viewCount;
 	}
 
+	public long getColumnBitmask() {
+		return _columnBitmask;
+	}
+
 	@Override
 	public AssetEntry toEscapedModel() {
-		if (isEscapedModel()) {
-			return (AssetEntry)this;
+		if (_escapedModelProxy == null) {
+			_escapedModelProxy = (AssetEntry)ProxyUtil.newProxyInstance(_classLoader,
+					_escapedModelProxyInterfaces,
+					new AutoEscapeBeanHandler(this));
 		}
-		else {
-			if (_escapedModelProxy == null) {
-				_escapedModelProxy = (AssetEntry)Proxy.newProxyInstance(_classLoader,
-						_escapedModelProxyInterfaces,
-						new AutoEscapeBeanHandler(this));
-			}
 
-			return _escapedModelProxy;
-		}
+		return _escapedModelProxy;
 	}
 
 	@Override
@@ -657,6 +729,7 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 		assetEntryImpl.setClassNameId(getClassNameId());
 		assetEntryImpl.setClassPK(getClassPK());
 		assetEntryImpl.setClassUuid(getClassUuid());
+		assetEntryImpl.setClassTypeId(getClassTypeId());
 		assetEntryImpl.setVisible(getVisible());
 		assetEntryImpl.setStartDate(getStartDate());
 		assetEntryImpl.setEndDate(getEndDate());
@@ -730,6 +803,10 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 
 		assetEntryModelImpl._setOriginalGroupId = false;
 
+		assetEntryModelImpl._originalCompanyId = assetEntryModelImpl._companyId;
+
+		assetEntryModelImpl._setOriginalCompanyId = false;
+
 		assetEntryModelImpl._originalClassNameId = assetEntryModelImpl._classNameId;
 
 		assetEntryModelImpl._setOriginalClassNameId = false;
@@ -739,6 +816,16 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 		assetEntryModelImpl._setOriginalClassPK = false;
 
 		assetEntryModelImpl._originalClassUuid = assetEntryModelImpl._classUuid;
+
+		assetEntryModelImpl._originalVisible = assetEntryModelImpl._visible;
+
+		assetEntryModelImpl._setOriginalVisible = false;
+
+		assetEntryModelImpl._originalPublishDate = assetEntryModelImpl._publishDate;
+
+		assetEntryModelImpl._originalExpirationDate = assetEntryModelImpl._expirationDate;
+
+		assetEntryModelImpl._columnBitmask = 0;
 	}
 
 	@Override
@@ -790,6 +877,8 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 		if ((classUuid != null) && (classUuid.length() == 0)) {
 			assetEntryCacheModel.classUuid = null;
 		}
+
+		assetEntryCacheModel.classTypeId = getClassTypeId();
 
 		assetEntryCacheModel.visible = getVisible();
 
@@ -890,7 +979,7 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(51);
+		StringBundler sb = new StringBundler(53);
 
 		sb.append("{entryId=");
 		sb.append(getEntryId());
@@ -912,6 +1001,8 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 		sb.append(getClassPK());
 		sb.append(", classUuid=");
 		sb.append(getClassUuid());
+		sb.append(", classTypeId=");
+		sb.append(getClassTypeId());
 		sb.append(", visible=");
 		sb.append(getVisible());
 		sb.append(", startDate=");
@@ -948,7 +1039,7 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 	}
 
 	public String toXmlString() {
-		StringBundler sb = new StringBundler(79);
+		StringBundler sb = new StringBundler(82);
 
 		sb.append("<model><model-name>");
 		sb.append("com.liferay.portlet.asset.model.AssetEntry");
@@ -993,6 +1084,10 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 		sb.append(
 			"<column><column-name>classUuid</column-name><column-value><![CDATA[");
 		sb.append(getClassUuid());
+		sb.append("]]></column-value></column>");
+		sb.append(
+			"<column><column-name>classTypeId</column-name><column-value><![CDATA[");
+		sb.append(getClassTypeId());
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>visible</column-name><column-value><![CDATA[");
@@ -1069,6 +1164,8 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 	private long _originalGroupId;
 	private boolean _setOriginalGroupId;
 	private long _companyId;
+	private long _originalCompanyId;
+	private boolean _setOriginalCompanyId;
 	private long _userId;
 	private String _userUuid;
 	private String _userName;
@@ -1082,13 +1179,19 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 	private boolean _setOriginalClassPK;
 	private String _classUuid;
 	private String _originalClassUuid;
+	private long _classTypeId;
 	private boolean _visible;
+	private boolean _originalVisible;
+	private boolean _setOriginalVisible;
 	private Date _startDate;
 	private Date _endDate;
 	private Date _publishDate;
+	private Date _originalPublishDate;
 	private Date _expirationDate;
+	private Date _originalExpirationDate;
 	private String _mimeType;
 	private String _title;
+	private String _titleCurrentLanguageId;
 	private String _description;
 	private String _summary;
 	private String _url;
@@ -1098,5 +1201,6 @@ public class AssetEntryModelImpl extends BaseModelImpl<AssetEntry>
 	private double _priority;
 	private int _viewCount;
 	private transient ExpandoBridge _expandoBridge;
+	private long _columnBitmask;
 	private AssetEntry _escapedModelProxy;
 }

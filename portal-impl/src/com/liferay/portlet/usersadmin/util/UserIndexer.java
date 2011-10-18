@@ -19,7 +19,6 @@ import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.BooleanQueryFactoryUtil;
 import com.liferay.portal.kernel.search.Document;
-import com.liferay.portal.kernel.search.DocumentImpl;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchEngineUtil;
@@ -64,6 +63,10 @@ public class UserIndexer extends BaseIndexer {
 		return CLASS_NAMES;
 	}
 
+	public String getPortletId() {
+		return PORTLET_ID;
+	}
+
 	@Override
 	public void postProcessContextQuery(
 			BooleanQuery contextQuery, SearchContext searchContext)
@@ -71,7 +74,7 @@ public class UserIndexer extends BaseIndexer {
 
 		int status = GetterUtil.getInteger(
 			searchContext.getAttribute(Field.STATUS),
-			WorkflowConstants.STATUS_ANY);
+			WorkflowConstants.STATUS_APPROVED);
 
 		if (status != WorkflowConstants.STATUS_ANY) {
 			contextQuery.addRequiredTerm(Field.STATUS, status);
@@ -99,17 +102,17 @@ public class UserIndexer extends BaseIndexer {
 			BooleanQuery searchQuery, SearchContext searchContext)
 		throws Exception {
 
-		addSearchTerm(searchQuery, searchContext, "city", true);
-		addSearchTerm(searchQuery, searchContext, "country", true);
-		addSearchTerm(searchQuery, searchContext, "emailAddress", true);
-		addSearchTerm(searchQuery, searchContext, "firstName", true);
-		addSearchTerm(searchQuery, searchContext, "fullName", true);
-		addSearchTerm(searchQuery, searchContext, "lastName", true);
-		addSearchTerm(searchQuery, searchContext, "middleName", true);
-		addSearchTerm(searchQuery, searchContext, "region", true);
-		addSearchTerm(searchQuery, searchContext, "screenName", true);
-		addSearchTerm(searchQuery, searchContext, "street", true);
-		addSearchTerm(searchQuery, searchContext, "zip", true);
+		addSearchTerm(searchQuery, searchContext, "city", false);
+		addSearchTerm(searchQuery, searchContext, "country", false);
+		addSearchTerm(searchQuery, searchContext, "emailAddress", false);
+		addSearchTerm(searchQuery, searchContext, "firstName", false);
+		addSearchTerm(searchQuery, searchContext, "fullName", false);
+		addSearchTerm(searchQuery, searchContext, "lastName", false);
+		addSearchTerm(searchQuery, searchContext, "middleName", false);
+		addSearchTerm(searchQuery, searchContext, "region", false);
+		addSearchTerm(searchQuery, searchContext, "screenName", false);
+		addSearchTerm(searchQuery, searchContext, "street", false);
+		addSearchTerm(searchQuery, searchContext, "zip", false);
 
 		LinkedHashMap<String, Object> params =
 			(LinkedHashMap<String, Object>)searchContext.getAttribute("params");
@@ -168,12 +171,7 @@ public class UserIndexer extends BaseIndexer {
 	protected void doDelete(Object obj) throws Exception {
 		User user = (User)obj;
 
-		Document document = new DocumentImpl();
-
-		document.addUID(PORTLET_ID, user.getUserId());
-
-		SearchEngineUtil.deleteDocument(
-			user.getCompanyId(), document.get(Field.UID));
+		deleteDocument(user.getCompanyId(), user.getUserId());
 	}
 
 	@Override

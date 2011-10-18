@@ -17,6 +17,7 @@ package com.liferay.portlet.wiki.action;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
@@ -31,13 +32,11 @@ import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.PrefsPropsUtil;
 import com.liferay.portal.util.WebKeys;
-import com.liferay.portlet.ActionRequestImpl;
 import com.liferay.portlet.PortletURLImpl;
 import com.liferay.portlet.documentlibrary.util.DocumentConversionUtil;
 import com.liferay.portlet.wiki.model.WikiPage;
 import com.liferay.portlet.wiki.service.WikiPageServiceUtil;
 import com.liferay.portlet.wiki.util.WikiUtil;
-import com.liferay.util.servlet.ServletResponseUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -81,9 +80,8 @@ public class ExportPageAction extends PortletAction {
 				(ThemeDisplay)actionRequest.getAttribute(WebKeys.THEME_DISPLAY);
 
 			PortletURL viewPageURL = new PortletURLImpl(
-				(ActionRequestImpl)actionRequest,
-				portletConfig.getPortletName(), themeDisplay.getPlid(),
-				PortletRequest.RENDER_PHASE);
+				actionRequest, portletConfig.getPortletName(),
+				themeDisplay.getPlid(), PortletRequest.RENDER_PHASE);
 
 			viewPageURL.setPortletMode(PortletMode.VIEW);
 			viewPageURL.setWindowState(WindowState.MAXIMIZED);
@@ -92,9 +90,8 @@ public class ExportPageAction extends PortletAction {
 			viewPageURL.setParameter("title", title);
 
 			PortletURL editPageURL = new PortletURLImpl(
-				(ActionRequestImpl)actionRequest,
-				portletConfig.getPortletName(), themeDisplay.getPlid(),
-				PortletRequest.RENDER_PHASE);
+				actionRequest, portletConfig.getPortletName(),
+				themeDisplay.getPlid(), PortletRequest.RENDER_PHASE);
 
 			editPageURL.setPortletMode(PortletMode.VIEW);
 			editPageURL.setWindowState(WindowState.MAXIMIZED);

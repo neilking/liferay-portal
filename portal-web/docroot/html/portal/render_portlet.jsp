@@ -148,10 +148,10 @@ RenderRequestImpl renderRequestImpl = RenderRequestFactory.create(originalReques
 if (Validator.isNotNull(queryString)) {
 	DynamicServletRequest dynamicRequest = (DynamicServletRequest)renderRequestImpl.getHttpServletRequest();
 
-	String[] params = StringUtil.split(queryString, StringPool.AMPERSAND);
+	String[] params = StringUtil.split(queryString, CharPool.AMPERSAND);
 
 	for (int i = 0; i < params.length; i++) {
-		String[] kvp = StringUtil.split(params[i], StringPool.EQUAL);
+		String[] kvp = StringUtil.split(params[i], CharPool.EQUAL);
 
 		if (kvp.length > 1) {
 			dynamicRequest.setParameter(kvp[0], kvp[1]);
@@ -263,7 +263,7 @@ if (portlet.hasPortletMode(responseContentType, PortletMode.HELP)) {
 boolean supportsMimeType = portlet.hasPortletMode(responseContentType, portletMode);
 
 if (responseContentType.equals(ContentTypes.XHTML_MP) && portlet.hasMultipleMimeTypes()) {
-	supportsMimeType = GetterUtil.getBoolean(portletSetup.getValue("portlet-setup-supported-clients-mobile-devices-" + portletMode, String.valueOf(supportsMimeType)));
+	supportsMimeType = GetterUtil.getBoolean(portletSetup.getValue("portletSetupSupportedClientsMobileDevices_" + portletMode, String.valueOf(supportsMimeType)));
 }
 
 // Only authenticated with the correct permissions can update a layout. If
@@ -722,9 +722,21 @@ if (group.isControlPanel()) {
 	}
 }
 
+// Portlet decorate
+
+boolean portletDecorateDefault = GetterUtil.getBoolean(themeDisplay.getThemeSetting("portlet-setup-show-borders-default"), PropsValues.THEME_PORTLET_DECORATE_DEFAULT);
+
+boolean portletDecorate = GetterUtil.getBoolean(portletSetup.getValue("portletSetupShowBorders", String.valueOf(portletDecorateDefault)));
+
+Boolean portletDecorateObj = (Boolean)renderRequestImpl.getAttribute(WebKeys.PORTLET_DECORATE);
+
+if (portletDecorateObj != null) {
+	portletDecorate = portletDecorateObj.booleanValue();
+}
+
 // Make sure the Tiles context is reset for the next portlet
 
-if ((invokerPortlet != null) && invokerPortlet.isStrutsPortlet()) {
+if ((invokerPortlet != null) && (invokerPortlet.isStrutsPortlet() || invokerPortlet.isStrutsBridgePortlet())) {
 	request.removeAttribute(ComponentConstants.COMPONENT_CONTEXT);
 }
 %>
@@ -817,11 +829,21 @@ if ((layout.isTypePanel() || layout.isTypeControlPanel()) && !portletDisplay.get
 		}
 	}
 
+	if (!portletDecorate) {
+		cssClasses += " portlet-borderless";
+	}
+
 	cssClasses = "portlet-boundary portlet-boundary" + HtmlUtil.escapeAttribute(PortalUtil.getPortletNamespace(rootPortletId)) + StringPool.SPACE + cssClasses + StringPool.SPACE + portlet.getCssClassWrapper() + StringPool.SPACE + customCSSClassName;
+
+	if (portletResourcePortlet != null) {
+		cssClasses += StringPool.SPACE + portletResourcePortlet.getCssClassWrapper();
+	}
 	%>
 
 	<div id="p_p_id<%= HtmlUtil.escapeAttribute(renderResponseImpl.getNamespace()) %>" class="<%= cssClasses %>" <%= freeformStyles %>>
 		<a id="p_<%= HtmlUtil.escapeAttribute(portletId) %>"></a>
+
+		<div class="portlet-body">
 </c:if>
 
 <c:choose>
@@ -841,7 +863,7 @@ if ((layout.isTypePanel() || layout.isTypeControlPanel()) && !portletDisplay.get
 			useDefaultTemplate = useDefaultTemplateObj.booleanValue();
 		}
 
-		if ((invokerPortlet != null) && invokerPortlet.isStrutsPortlet()) {
+		if ((invokerPortlet != null) && (invokerPortlet.isStrutsPortlet() || invokerPortlet.isStrutsBridgePortlet())) {
 			if (!access || portletException) {
 				PortletRequestProcessor portletReqProcessor = (PortletRequestProcessor)portletCtx.getAttribute(WebKeys.PORTLET_STRUTS_PROCESSOR);
 
@@ -970,30 +992,90 @@ else {
 
 <c:if test="<%= !themeDisplay.isFacebook() && !themeDisplay.isStateExclusive() && !themeDisplay.isWapTheme() %>">
 
-		<%
-		String modules = StringPool.BLANK;
+			<%
+			String modules = StringPool.BLANK;
 
-		if (showConfigurationIcon) {
-			modules += "aui-editable";
-		}
-		%>
+			if (showConfigurationIcon) {
+				modules += "aui-editable";
+			}
+			%>
 
-		<aui:script position='<%= themeDisplay.isIsolated() ? "inline" : "auto" %>' use="<%= modules %>">
-			Liferay.Portlet.onLoad(
-				{
-					canEditTitle: <%= showConfigurationIcon %>,
-					columnPos: <%= columnPos %>,
-					isStatic: '<%= staticVar %>',
-					namespacedId: 'p_p_id<%= HtmlUtil.escapeJS(renderResponseImpl.getNamespace()) %>',
-					portletId: '<%= HtmlUtil.escapeJS(portletDisplay.getId()) %>',
-					refreshURL: '<%= HtmlUtil.escapeJS(PortletURLUtil.getRefreshURL(request, themeDisplay)) %>'
-				}
-			);
-		</aui:script>
+			<aui:script position='<%= themeDisplay.isIsolated() ? "inline" : "auto" %>' use="<%= modules %>">
+				Liferay.Portlet.onLoad(
+					{
+						canEditTitle: <%= showConfigurationIcon && portletDecorate %>,
+						columnPos: <%= columnPos %>,
+						isStatic: '<%= staticVar %>',
+						namespacedId: 'p_p_id<%= HtmlUtil.escapeJS(renderResponseImpl.getNamespace()) %>',
+						portletId: '<%= HtmlUtil.escapeJS(portletDisplay.getId()) %>',
+						refreshURL: '<%= HtmlUtil.escapeJS(PortletURLUtil.getRefreshURL(request, themeDisplay)) %>'
+					}
+				);
+			</aui:script>
+		</div>
 	</div>
 </c:if>
 
 <%
+if (themeDisplay.isStatePopUp()) {
+	String doRefreshPortletId = null;
+
+	if ((doRefreshPortletId = (String)SessionMessages.get(renderRequestImpl, portletConfig.getPortletName() + ".doRefresh")) != null) {
+		if (Validator.isNull(doRefreshPortletId) && (portletResourcePortlet != null)) {
+			doRefreshPortletId = portletResourcePortlet.getPortletId();
+		}
+%>
+
+		<aui:script position="inline" use="aui-base">
+			if (window.parent) {
+				var data = null;
+
+				var curPortletBoundaryId = '#p_p_id_<%= doRefreshPortletId %>_';
+
+				<c:if test='<%= (portletResourcePortlet != null && !portletResourcePortlet.isAjaxable()) || SessionMessages.contains(renderRequestImpl, portletConfig.getPortletName() + ".notAjaxable") %>'>
+					data = {
+						portletAjaxable: false
+					};
+				</c:if>
+
+				Liferay.Util.getOpener().Liferay.Portlet.refresh(curPortletBoundaryId, data);
+			}
+		</aui:script>
+
+<%
+	}
+
+	String doCloseRedirect = null;
+
+	if ((doCloseRedirect = (String)SessionMessages.get(renderRequestImpl, portletConfig.getPortletName() + ".doCloseRedirect")) != null) {
+%>
+
+		<aui:script use="aui-base,aui-loading-mask">
+			var dialog = Liferay.Util.getWindow();
+
+			dialog.on(
+				'visibleChange',
+				function(event) {
+					if (!event.newVal && event.src !== 'hideLink') {
+						var topWindow = Liferay.Util.getTop();
+						var topA = topWindow.AUI();
+
+						new topA.LoadingMask(
+							{
+								target: topA.getBody()
+							}
+						).show();
+
+						topWindow.location.href = '<%= doCloseRedirect %>';
+					}
+				}
+			);
+		</aui:script>
+
+<%
+	}
+}
+
 themeDisplay.setScopeGroupId(previousScopeGroupId);
 themeDisplay.setParentGroupId(previousParentGroupId);
 

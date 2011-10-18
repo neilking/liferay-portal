@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.servlet.PortalSessionContext;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.model.UserTracker;
 import com.liferay.portal.service.GroupLocalServiceUtil;
@@ -36,6 +37,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.servlet.http.HttpSession;
 
 /**
  * @author Charles May
@@ -145,32 +148,27 @@ public class LiveUsers {
 	}
 
 	private Map<Long, Set<Long>> _getLiveUsers(long companyId) {
-		String companyIdString = String.valueOf(companyId);
-
 		Map<Long, Set<Long>> liveUsers = (Map<Long, Set<Long>>)WebAppPool.get(
-			companyIdString, WebKeys.LIVE_USERS);
+			companyId, WebKeys.LIVE_USERS);
 
 		if (liveUsers == null) {
 			liveUsers = new ConcurrentHashMap<Long, Set<Long>>();
 
-			WebAppPool.put(companyIdString, WebKeys.LIVE_USERS, liveUsers);
+			WebAppPool.put(companyId, WebKeys.LIVE_USERS, liveUsers);
 		}
 
 		return liveUsers;
 	}
 
 	private Map<String, UserTracker> _getSessionUsers(long companyId) {
-		String companyIdString = String.valueOf(companyId);
-
 		Map<String, UserTracker> sessionUsers =
 			(Map<String, UserTracker>)WebAppPool.get(
-				companyIdString, WebKeys.LIVE_SESSION_USERS);
+				companyId, WebKeys.LIVE_SESSION_USERS);
 
 		if (sessionUsers == null) {
 			sessionUsers = new ConcurrentHashMap<String, UserTracker>();
 
-			WebAppPool.put(
-				companyIdString, WebKeys.LIVE_SESSION_USERS, sessionUsers);
+			WebAppPool.put(companyId, WebKeys.LIVE_SESSION_USERS, sessionUsers);
 		}
 
 		return sessionUsers;
@@ -190,17 +188,15 @@ public class LiveUsers {
 	}
 
 	private Map<Long, List<UserTracker>> _getUserTrackersMap(long companyId) {
-		String companyIdString = String.valueOf(companyId);
-
 		Map<Long, List<UserTracker>> userTrackersMap =
 			(Map<Long, List<UserTracker>>)WebAppPool.get(
-				companyIdString, WebKeys.LIVE_USER_TRACKERS);
+				companyId, WebKeys.LIVE_USER_TRACKERS);
 
 		if (userTrackersMap == null) {
 			userTrackersMap = new ConcurrentHashMap<Long, List<UserTracker>>();
 
 			WebAppPool.put(
-				companyIdString, WebKeys.LIVE_USER_TRACKERS, userTrackersMap);
+				companyId, WebKeys.LIVE_USER_TRACKERS, userTrackersMap);
 		}
 
 		return userTrackersMap;
@@ -316,22 +312,34 @@ public class LiveUsers {
 
 		UserTracker userTracker = sessionUsers.remove(sessionId);
 
-		if (userTracker != null) {
-			try {
-				UserTrackerLocalServiceUtil.addUserTracker(
-					userTracker.getCompanyId(), userTracker.getUserId(),
-					userTracker.getModifiedDate(), sessionId,
-					userTracker.getRemoteAddr(), userTracker.getRemoteHost(),
-					userTracker.getUserAgent(), userTracker.getPaths());
-			}
-			catch (Exception e) {
-				if (_log.isWarnEnabled()) {
-					_log.warn(e.getMessage());
-				}
-			}
-
-			_removeUserTracker(companyId, userId, userTracker);
+		if (userTracker == null) {
+			return;
 		}
+
+		try {
+			UserTrackerLocalServiceUtil.addUserTracker(
+				userTracker.getCompanyId(), userTracker.getUserId(),
+				userTracker.getModifiedDate(), sessionId,
+				userTracker.getRemoteAddr(), userTracker.getRemoteHost(),
+				userTracker.getUserAgent(), userTracker.getPaths());
+		}
+		catch (Exception e) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(e.getMessage());
+			}
+		}
+
+		try {
+			HttpSession session = PortalSessionContext.get(sessionId);
+
+			if (session != null) {
+				session.invalidate();
+			}
+		}
+		catch (Exception e) {
+		}
+
+		_removeUserTracker(companyId, userId, userTracker);
 	}
 
 	private Map<Long, Set<Long>> _updateGroupStatus(

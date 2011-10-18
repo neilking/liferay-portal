@@ -27,12 +27,9 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.lar.PortletDataHandlerKeys;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.mobile.device.Device;
-import com.liferay.portal.kernel.mobile.device.DeviceDetectionUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.servlet.BrowserSnifferUtil;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
-import com.liferay.portal.kernel.servlet.ImageServletTokenUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
@@ -55,12 +52,12 @@ import com.liferay.portal.model.LayoutConstants;
 import com.liferay.portal.model.LayoutSet;
 import com.liferay.portal.model.LayoutTypePortlet;
 import com.liferay.portal.model.LayoutTypePortletConstants;
-import com.liferay.portal.model.Organization;
 import com.liferay.portal.model.Portlet;
 import com.liferay.portal.model.RoleConstants;
 import com.liferay.portal.model.Theme;
 import com.liferay.portal.model.User;
 import com.liferay.portal.model.impl.ColorSchemeImpl;
+import com.liferay.portal.model.impl.LayoutTypePortletImpl;
 import com.liferay.portal.security.auth.PrincipalException;
 import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portal.security.permission.PermissionChecker;
@@ -70,7 +67,6 @@ import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.service.ImageLocalServiceUtil;
 import com.liferay.portal.service.LayoutLocalServiceUtil;
 import com.liferay.portal.service.LayoutSetLocalServiceUtil;
-import com.liferay.portal.service.OrganizationLocalServiceUtil;
 import com.liferay.portal.service.PortletLocalServiceUtil;
 import com.liferay.portal.service.RoleLocalServiceUtil;
 import com.liferay.portal.service.ServiceContext;
@@ -80,12 +76,7 @@ import com.liferay.portal.service.ThemeLocalServiceUtil;
 import com.liferay.portal.service.UserLocalServiceUtil;
 import com.liferay.portal.service.permission.GroupPermissionUtil;
 import com.liferay.portal.service.permission.LayoutPermissionUtil;
-import com.liferay.portal.service.permission.LayoutPrototypePermissionUtil;
-import com.liferay.portal.service.permission.LayoutSetPrototypePermissionUtil;
-import com.liferay.portal.service.permission.OrganizationPermissionUtil;
-import com.liferay.portal.service.permission.PortalPermissionUtil;
 import com.liferay.portal.service.permission.PortletPermissionUtil;
-import com.liferay.portal.service.permission.UserPermissionUtil;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.theme.ThemeDisplayFactory;
 import com.liferay.portal.util.CookieKeys;
@@ -99,6 +90,7 @@ import com.liferay.portal.util.PrefsPropsUtil;
 import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.util.WebKeys;
+import com.liferay.portal.webserver.WebServerServletTokenUtil;
 import com.liferay.portlet.PortalPreferences;
 import com.liferay.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portlet.PortletURLImpl;
@@ -107,10 +99,12 @@ import com.liferay.portlet.asset.service.AssetEntryLocalServiceUtil;
 import com.liferay.portlet.journal.NoSuchArticleException;
 import com.liferay.portlet.journal.model.JournalArticle;
 import com.liferay.portlet.journal.service.JournalArticleServiceUtil;
+import com.liferay.portlet.sites.util.SitesUtil;
 
 import java.io.File;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -140,798 +134,7 @@ public class ServicePreAction extends Action {
 		initImportLARFiles();
 	}
 
-	@Override
-	public void run(HttpServletRequest request, HttpServletResponse response)
-		throws ActionException {
-
-		StopWatch stopWatch = null;
-
-		if (_log.isDebugEnabled()) {
-			stopWatch = new StopWatch();
-
-			stopWatch.start();
-		}
-
-		try {
-			servicePre(request, response);
-		}
-		catch (Exception e) {
-			throw new ActionException(e);
-		}
-
-		if (_log.isDebugEnabled()) {
-			_log.debug("Running takes " + stopWatch.getTime() + " ms");
-		}
-	}
-
-	protected void addDefaultLayoutsByLAR(
-			long userId, long groupId, boolean privateLayout, File larFile)
-		throws PortalException, SystemException {
-
-		Map<String, String[]> parameterMap = new HashMap<String, String[]>();
-
-		parameterMap.put(
-			PortletDataHandlerKeys.PERMISSIONS,
-			new String[] {Boolean.TRUE.toString()});
-		parameterMap.put(
-			PortletDataHandlerKeys.PORTLET_DATA,
-			new String[] {Boolean.TRUE.toString()});
-		parameterMap.put(
-			PortletDataHandlerKeys.PORTLET_DATA_CONTROL_DEFAULT,
-			new String[] {Boolean.TRUE.toString()});
-		parameterMap.put(
-			PortletDataHandlerKeys.PORTLET_SETUP,
-			new String[] {Boolean.TRUE.toString()});
-		parameterMap.put(
-			PortletDataHandlerKeys.USER_PERMISSIONS,
-			new String[] {Boolean.FALSE.toString()});
-
-		LayoutLocalServiceUtil.importLayouts(
-			userId, groupId, privateLayout, parameterMap, larFile);
-	}
-
-	protected void addDefaultUserPrivateLayoutByProperties(
-			long userId, long groupId)
-		throws PortalException, SystemException {
-
-		String friendlyURL = getFriendlyURL(
-			PropsValues.DEFAULT_USER_PRIVATE_LAYOUT_FRIENDLY_URL);
-
-		ServiceContext serviceContext = new ServiceContext();
-
-		Layout layout = LayoutLocalServiceUtil.addLayout(
-			userId, groupId, true, LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
-			PropsValues.DEFAULT_USER_PRIVATE_LAYOUT_NAME, StringPool.BLANK,
-			StringPool.BLANK, LayoutConstants.TYPE_PORTLET, false, friendlyURL,
-			serviceContext);
-
-		LayoutTypePortlet layoutTypePortlet =
-			(LayoutTypePortlet)layout.getLayoutType();
-
-		layoutTypePortlet.setLayoutTemplateId(
-			0, PropsValues.DEFAULT_USER_PRIVATE_LAYOUT_TEMPLATE_ID, false);
-
-		for (int i = 0; i < 10; i++) {
-			String columnId = "column-" + i;
-			String portletIds = PropsUtil.get(
-				PropsKeys.DEFAULT_USER_PRIVATE_LAYOUT_COLUMN + i);
-
-			String[] portletIdsArray = StringUtil.split(portletIds);
-
-			layoutTypePortlet.addPortletIds(
-				0, portletIdsArray, columnId, false);
-		}
-
-		LayoutLocalServiceUtil.updateLayout(
-			layout.getGroupId(), layout.isPrivateLayout(), layout.getLayoutId(),
-			layout.getTypeSettings());
-
-		boolean updateLayoutSet = false;
-
-		LayoutSet layoutSet = layout.getLayoutSet();
-
-		if (Validator.isNotNull(
-				PropsValues.DEFAULT_USER_PRIVATE_LAYOUT_REGULAR_THEME_ID)) {
-
-			layoutSet.setThemeId(
-				PropsValues.DEFAULT_USER_PRIVATE_LAYOUT_REGULAR_THEME_ID);
-
-			updateLayoutSet = true;
-		}
-
-		if (Validator.isNotNull(
-				PropsValues.
-					DEFAULT_USER_PRIVATE_LAYOUT_REGULAR_COLOR_SCHEME_ID)) {
-
-			layoutSet.setColorSchemeId(
-				PropsValues.
-					DEFAULT_USER_PRIVATE_LAYOUT_REGULAR_COLOR_SCHEME_ID);
-
-			updateLayoutSet = true;
-		}
-
-		if (Validator.isNotNull(
-				PropsValues.DEFAULT_USER_PRIVATE_LAYOUT_WAP_THEME_ID)) {
-
-			layoutSet.setWapThemeId(
-				PropsValues.DEFAULT_USER_PRIVATE_LAYOUT_WAP_THEME_ID);
-
-			updateLayoutSet = true;
-		}
-
-		if (Validator.isNotNull(
-				PropsValues.DEFAULT_USER_PRIVATE_LAYOUT_WAP_COLOR_SCHEME_ID)) {
-
-			layoutSet.setWapColorSchemeId(
-				PropsValues.DEFAULT_USER_PRIVATE_LAYOUT_WAP_COLOR_SCHEME_ID);
-
-			updateLayoutSet = true;
-		}
-
-		if (updateLayoutSet) {
-			LayoutSetLocalServiceUtil.updateLayoutSet(layoutSet);
-		}
-	}
-
-	protected void addDefaultUserPrivateLayouts(User user)
-		throws PortalException, SystemException {
-
-		Group userGroup = user.getGroup();
-
-		if (privateLARFile != null) {
-			addDefaultLayoutsByLAR(
-				user.getUserId(), userGroup.getGroupId(), true, privateLARFile);
-		}
-		else {
-			addDefaultUserPrivateLayoutByProperties(
-				user.getUserId(), userGroup.getGroupId());
-		}
-	}
-
-	protected void addDefaultUserPublicLayoutByProperties(
-			long userId, long groupId)
-		throws PortalException, SystemException {
-
-		String friendlyURL = getFriendlyURL(
-			PropsValues.DEFAULT_USER_PUBLIC_LAYOUT_FRIENDLY_URL);
-
-		ServiceContext serviceContext = new ServiceContext();
-
-		Layout layout = LayoutLocalServiceUtil.addLayout(
-			userId, groupId, false, LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
-			PropsValues.DEFAULT_USER_PUBLIC_LAYOUT_NAME, StringPool.BLANK,
-			StringPool.BLANK, LayoutConstants.TYPE_PORTLET, false, friendlyURL,
-			serviceContext);
-
-		LayoutTypePortlet layoutTypePortlet =
-			(LayoutTypePortlet)layout.getLayoutType();
-
-		layoutTypePortlet.setLayoutTemplateId(
-			0, PropsValues.DEFAULT_USER_PUBLIC_LAYOUT_TEMPLATE_ID, false);
-
-		for (int i = 0; i < 10; i++) {
-			String columnId = "column-" + i;
-			String portletIds = PropsUtil.get(
-				PropsKeys.DEFAULT_USER_PUBLIC_LAYOUT_COLUMN + i);
-
-			String[] portletIdsArray = StringUtil.split(portletIds);
-
-			layoutTypePortlet.addPortletIds(
-				0, portletIdsArray, columnId, false);
-		}
-
-		LayoutLocalServiceUtil.updateLayout(
-			layout.getGroupId(), layout.isPrivateLayout(), layout.getLayoutId(),
-			layout.getTypeSettings());
-
-		boolean updateLayoutSet = false;
-
-		LayoutSet layoutSet = layout.getLayoutSet();
-
-		if (Validator.isNotNull(
-				PropsValues.DEFAULT_USER_PUBLIC_LAYOUT_REGULAR_THEME_ID)) {
-
-			layoutSet.setThemeId(
-				PropsValues.DEFAULT_USER_PUBLIC_LAYOUT_REGULAR_THEME_ID);
-
-			updateLayoutSet = true;
-		}
-
-		if (Validator.isNotNull(
-				PropsValues.
-					DEFAULT_USER_PUBLIC_LAYOUT_REGULAR_COLOR_SCHEME_ID)) {
-
-			layoutSet.setColorSchemeId(
-				PropsValues.DEFAULT_USER_PUBLIC_LAYOUT_REGULAR_COLOR_SCHEME_ID);
-
-			updateLayoutSet = true;
-		}
-
-		if (Validator.isNotNull(
-				PropsValues.DEFAULT_USER_PUBLIC_LAYOUT_WAP_THEME_ID)) {
-
-			layoutSet.setWapThemeId(
-				PropsValues.DEFAULT_USER_PUBLIC_LAYOUT_WAP_THEME_ID);
-
-			updateLayoutSet = true;
-		}
-
-		if (Validator.isNotNull(
-				PropsValues.DEFAULT_USER_PUBLIC_LAYOUT_WAP_COLOR_SCHEME_ID)) {
-
-			layoutSet.setWapColorSchemeId(
-				PropsValues.DEFAULT_USER_PUBLIC_LAYOUT_WAP_COLOR_SCHEME_ID);
-
-			updateLayoutSet = true;
-		}
-
-		if (updateLayoutSet) {
-			LayoutSetLocalServiceUtil.updateLayoutSet(layoutSet);
-		}
-	}
-
-	protected void addDefaultUserPublicLayouts(User user)
-		throws PortalException, SystemException {
-
-		Group userGroup = user.getGroup();
-
-		if (publicLARFile != null) {
-			addDefaultLayoutsByLAR(
-				user.getUserId(), userGroup.getGroupId(), false, publicLARFile);
-		}
-		else {
-			addDefaultUserPublicLayoutByProperties(
-				user.getUserId(), userGroup.getGroupId());
-		}
-	}
-
-	protected void deleteDefaultUserPrivateLayouts(User user)
-		throws PortalException, SystemException {
-
-		Group userGroup = user.getGroup();
-
-		LayoutLocalServiceUtil.deleteLayouts(userGroup.getGroupId(), true);
-	}
-
-	protected void deleteDefaultUserPublicLayouts(User user)
-		throws PortalException, SystemException {
-
-		Group userGroup = user.getGroup();
-
-		LayoutLocalServiceUtil.deleteLayouts(userGroup.getGroupId(), false);
-	}
-
-	protected Object[] getDefaultLayout(
-			HttpServletRequest request, User user, boolean signedIn)
-		throws PortalException, SystemException {
-
-		// Check the virtual host
-
-		LayoutSet layoutSet = (LayoutSet)request.getAttribute(
-			WebKeys.VIRTUAL_HOST_LAYOUT_SET);
-
-		if (layoutSet != null) {
-			List<Layout> layouts = LayoutLocalServiceUtil.getLayouts(
-				layoutSet.getGroupId(), layoutSet.isPrivateLayout(),
-				LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
-
-			if (layouts.size() > 0) {
-				Layout layout = layouts.get(0);
-
-				return new Object[] {layout, layouts};
-			}
-		}
-
-		Layout layout = null;
-		List<Layout> layouts = null;
-
-		if (signedIn) {
-
-			// Check the user's personal layouts
-
-			Group userGroup = user.getGroup();
-
-			layouts = LayoutLocalServiceUtil.getLayouts(
-				userGroup.getGroupId(), true,
-				LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
-
-			if (layouts.size() == 0) {
-				layouts = LayoutLocalServiceUtil.getLayouts(
-					userGroup.getGroupId(), false,
-					LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
-			}
-
-			if (layouts.size() > 0) {
-				layout = layouts.get(0);
-			}
-
-			// Check the user's sites
-
-			if (layout == null) {
-				LinkedHashMap<String, Object> groupParams =
-					new LinkedHashMap<String, Object>();
-
-				groupParams.put("usersGroups", new Long(user.getUserId()));
-
-				List<Group> groups = GroupLocalServiceUtil.search(
-					user.getCompanyId(), null, null, groupParams,
-					QueryUtil.ALL_POS, QueryUtil.ALL_POS);
-
-				for (Group group : groups) {
-					layouts = LayoutLocalServiceUtil.getLayouts(
-						group.getGroupId(), true,
-						LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
-
-					if (layouts.size() == 0) {
-						layouts = LayoutLocalServiceUtil.getLayouts(
-							group.getGroupId(), false,
-							LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
-					}
-
-					if (layouts.size() > 0) {
-						layout = layouts.get(0);
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (layout == null) {
-
-			// Check the Guest site
-
-			Group guestGroup = GroupLocalServiceUtil.getGroup(
-				user.getCompanyId(), GroupConstants.GUEST);
-
-			layouts = LayoutLocalServiceUtil.getLayouts(
-				guestGroup.getGroupId(), false,
-				LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
-
-			if (layouts.size() > 0) {
-				layout = layouts.get(0);
-			}
-		}
-
-		return new Object[] {layout, layouts};
-	}
-
-	protected String getFriendlyURL(String friendlyURL) {
-		friendlyURL = GetterUtil.getString(friendlyURL);
-
-		return FriendlyURLNormalizer.normalize(friendlyURL);
-	}
-
-	protected Object[] getViewableLayouts(
-			HttpServletRequest request, User user,
-			PermissionChecker permissionChecker, Layout layout,
-			List<Layout> layouts)
-		throws PortalException, SystemException {
-
-		if ((layouts == null) || layouts.isEmpty()) {
-			return new Object[] {layout, layouts};
-		}
-
-		boolean hasUpdateLayoutPermission = false;
-
-		if (LayoutPermissionUtil.contains(
-				permissionChecker, layout, ActionKeys.VIEW)) {
-
-			hasUpdateLayoutPermission = true;
-		}
-
-		List<Layout> accessibleLayouts = new ArrayList<Layout>();
-
-		for (int i = 0; i < layouts.size(); i++) {
-			Layout curLayout = layouts.get(i);
-
-			if (!curLayout.isHidden() &&
-				LayoutPermissionUtil.contains(
-					permissionChecker, curLayout, ActionKeys.VIEW)) {
-
-				if (accessibleLayouts.isEmpty() && !hasUpdateLayoutPermission) {
-					layout = curLayout;
-				}
-
-				accessibleLayouts.add(curLayout);
-			}
-		}
-
-		if (accessibleLayouts.isEmpty()) {
-			layouts = null;
-
-			if (!hasUpdateLayoutPermission) {
-				SessionErrors.add(
-					request, LayoutPermissionException.class.getName());
-			}
-		}
-		else {
-			layouts = accessibleLayouts;
-		}
-
-		return new Object[] {layout, layouts};
-	}
-
-	protected Boolean hasPowerUserRole(User user) throws Exception {
-		return RoleLocalServiceUtil.hasUserRole(
-			user.getUserId(), user.getCompanyId(), RoleConstants.POWER_USER,
-			true);
-	}
-
-	protected void initImportLARFiles() {
-		String privateLARFileName =
-			PropsValues.DEFAULT_USER_PRIVATE_LAYOUTS_LAR;
-
-		if (_log.isDebugEnabled()) {
-			_log.debug("Reading private LAR file " + privateLARFileName);
-		}
-
-		if (Validator.isNotNull(privateLARFileName)) {
-			privateLARFile = new File(privateLARFileName);
-
-			if (!privateLARFile.exists()) {
-				_log.error(
-					"Private LAR file " + privateLARFile + " does not exist");
-
-				privateLARFile = null;
-			}
-			else {
-				if (_log.isDebugEnabled()) {
-					_log.debug("Using private LAR file " + privateLARFileName);
-				}
-			}
-		}
-
-		String publicLARFileName = PropsValues.DEFAULT_USER_PUBLIC_LAYOUTS_LAR;
-
-		if (_log.isDebugEnabled()) {
-			_log.debug("Reading public LAR file " + publicLARFileName);
-		}
-
-		if (Validator.isNotNull(publicLARFileName)) {
-			publicLARFile = new File(publicLARFileName);
-
-			if (!publicLARFile.exists()) {
-				_log.error(
-					"Public LAR file " + publicLARFile + " does not exist");
-
-				publicLARFile = null;
-			}
-			else {
-				if (_log.isDebugEnabled()) {
-					_log.debug("Using public LAR file " + publicLARFileName);
-				}
-			}
-		}
-	}
-
-	/**
-	 * @deprecated Use <code>isViewableGroup</code>.
-	 */
-	protected boolean isViewableCommunity(
-			User user, long groupId, boolean privateLayout,
-			PermissionChecker permissionChecker)
-		throws PortalException, SystemException {
-
-		return isViewableGroup(
-			user, groupId, privateLayout, 0, null, permissionChecker);
-	}
-
-	protected boolean isViewableGroup(
-			User user, long groupId, boolean privateLayout, long layoutId,
-			String controlPanelCategory, PermissionChecker permissionChecker)
-		throws PortalException, SystemException {
-
-		Group group = GroupLocalServiceUtil.getGroup(groupId);
-
-		// Inactive sites are not viewable
-
-		if (!group.isActive()) {
-			return false;
-		}
-		else if (group.isStagingGroup()) {
-			Group liveGroup = group.getLiveGroup();
-
-			if (!liveGroup.isActive()) {
-				return false;
-			}
-		}
-
-		// User private layouts are only viewable by the user and anyone who can
-		// update the user. The user must also be active.
-
-		if (group.isUser()) {
-			long groupUserId = group.getClassPK();
-
-			if (groupUserId == user.getUserId()) {
-				return true;
-			}
-			else {
-				User groupUser = UserLocalServiceUtil.getUserById(groupUserId);
-
-				if (!groupUser.isActive()) {
-					return false;
-				}
-
-				if (privateLayout) {
-					if (UserPermissionUtil.contains(
-							permissionChecker, groupUserId,
-							groupUser.getOrganizationIds(),
-							ActionKeys.UPDATE)) {
-
-						return true;
-					}
-					else {
-						return false;
-					}
-				}
-			}
-		}
-
-		// If the current group is staging, only users with editorial rights
-		// can access it
-
-		if (group.isStagingGroup()) {
-			if (user.isDefaultUser()) {
-				return false;
-			}
-
-			if (GroupPermissionUtil.contains(
-					permissionChecker, groupId, ActionKeys.MANAGE_LAYOUTS) ||
-				GroupPermissionUtil.contains(
-					permissionChecker, groupId, ActionKeys.MANAGE_STAGING) ||
-				GroupPermissionUtil.contains(
-					permissionChecker, groupId, ActionKeys.PUBLISH_STAGING) ||
-				((layoutId > 0) && LayoutPermissionUtil.contains(
-					permissionChecker, groupId, privateLayout, layoutId,
-					ActionKeys.UPDATE))) {
-
-				return true;
-			}
-
-			return false;
-		}
-
-		// Most public layouts are viewable
-
-		if (!privateLayout) {
-			return true;
-		}
-
-		// Control panel layouts are only viewable by authenticated users
-
-		if (group.isControlPanel()) {
-			if (PortalPermissionUtil.contains(
-					permissionChecker, ActionKeys.VIEW_CONTROL_PANEL)) {
-
-				return true;
-			}
-			else {
-				if (Validator.isNotNull(controlPanelCategory)) {
-					return true;
-				}
-				else {
-					return false;
-				}
-			}
-		}
-
-		// Site layouts are only viewable by users who are members of the site
-		// or by users who can update the site
-
-		if (group.isSite()) {
-			if (GroupLocalServiceUtil.hasUserGroup(user.getUserId(), groupId)) {
-				return true;
-			}
-			else if (GroupPermissionUtil.contains(
-						permissionChecker, groupId, ActionKeys.UPDATE)) {
-
-				return true;
-			}
-		}
-
-		// Organization site layouts are also viewable by users who belong to
-		// the organization or by users who can update organization
-
-		if (group.isCompany()) {
-			return false;
-		}
-		else if (group.isLayoutPrototype()) {
-			if (LayoutPrototypePermissionUtil.contains(
-					permissionChecker, group.getClassPK(), ActionKeys.VIEW)) {
-
-				return true;
-			}
-			else {
-				return false;
-			}
-		}
-		else if (group.isLayoutSetPrototype()) {
-			if (LayoutSetPrototypePermissionUtil.contains(
-					permissionChecker, group.getClassPK(), ActionKeys.VIEW)) {
-
-				return true;
-			}
-			else {
-				return false;
-			}
-		}
-		else if (group.isOrganization()) {
-			long organizationId = group.getOrganizationId();
-
-			if (OrganizationLocalServiceUtil.hasUserOrganization(
-					user.getUserId(), organizationId, false, true, false)) {
-
-				return true;
-			}
-			else if (OrganizationPermissionUtil.contains(
-						permissionChecker, organizationId, ActionKeys.UPDATE)) {
-
-				return true;
-			}
-
-			if (!PropsValues.ORGANIZATIONS_MEMBERSHIP_STRICT) {
-				List<Organization> userOrgs =
-					OrganizationLocalServiceUtil.getUserOrganizations(
-						user.getUserId(), true);
-
-				for (Organization organization : userOrgs) {
-					for (Organization ancestorOrganization :
-							organization.getAncestors()) {
-
-						if (organizationId ==
-								ancestorOrganization.getOrganizationId()) {
-
-							return true;
-						}
-					}
-				}
-			}
-		}
-		else if (group.isUserGroup()) {
-			if (GroupPermissionUtil.contains(
-					permissionChecker, groupId, ActionKeys.MANAGE_LAYOUTS)) {
-
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	protected List<Layout> mergeAdditionalLayouts(
-			HttpServletRequest request, User user,
-			PermissionChecker permissionChecker, Layout layout,
-			List<Layout> layouts)
-		throws PortalException, SystemException {
-
-		if ((layout == null) || layout.isPrivateLayout()) {
-			return layouts;
-		}
-
-		long layoutGroupId = layout.getGroupId();
-
-		Group guestGroup = GroupLocalServiceUtil.getGroup(
-			user.getCompanyId(), GroupConstants.GUEST);
-
-		if (layoutGroupId != guestGroup.getGroupId()) {
-			Group layoutGroup = GroupLocalServiceUtil.getGroup(layoutGroupId);
-
-			UnicodeProperties typeSettingsProperties =
-				layoutGroup.getTypeSettingsProperties();
-
-			boolean mergeGuestPublicPages = GetterUtil.getBoolean(
-				typeSettingsProperties.getProperty("mergeGuestPublicPages"));
-
-			if (!mergeGuestPublicPages) {
-				return layouts;
-			}
-
-			List<Layout> guestLayouts = LayoutLocalServiceUtil.getLayouts(
-				guestGroup.getGroupId(), false,
-				LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
-
-			Object[] viewableLayouts = getViewableLayouts(
-				request, user, permissionChecker, layout, guestLayouts);
-
-			guestLayouts = (List<Layout>)viewableLayouts[1];
-
-			layouts.addAll(0, guestLayouts);
-		}
-		else {
-			HttpSession session = request.getSession();
-
-			Long previousGroupId = (Long)session.getAttribute(
-				WebKeys.VISITED_GROUP_ID_PREVIOUS);
-
-			if ((previousGroupId != null) &&
-				(previousGroupId.longValue() != layoutGroupId)) {
-
-				Group previousGroup = null;
-
-				try {
-					previousGroup = GroupLocalServiceUtil.getGroup(
-						previousGroupId.longValue());
-				}
-				catch (NoSuchGroupException nsge) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(nsge);
-					}
-
-					return layouts;
-				}
-
-				UnicodeProperties typeSettingsProperties =
-					previousGroup.getTypeSettingsProperties();
-
-				boolean mergeGuestPublicPages = GetterUtil.getBoolean(
-					typeSettingsProperties.getProperty(
-						"mergeGuestPublicPages"));
-
-				if (!mergeGuestPublicPages) {
-					return layouts;
-				}
-
-				List<Layout> previousLayouts =
-					LayoutLocalServiceUtil.getLayouts(
-						previousGroupId.longValue(), false,
-						LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
-
-				Object[] viewableLayouts = getViewableLayouts(
-					request, user, permissionChecker, layout, previousLayouts);
-
-				previousLayouts = (List<Layout>)viewableLayouts[1];
-
-				layouts.addAll(previousLayouts);
-			}
-		}
-
-		return layouts;
-	}
-
-	protected void rememberVisitedGroupIds(
-		HttpServletRequest request, long currentGroupId) {
-
-		String requestURI = GetterUtil.getString(request.getRequestURI());
-
-		if (!requestURI.endsWith(_PATH_PORTAL_LAYOUT)) {
-			return;
-		}
-
-		HttpSession session = request.getSession();
-
-		Long recentGroupId = (Long)session.getAttribute(
-			WebKeys.VISITED_GROUP_ID_RECENT);
-
-		Long previousGroupId = (Long)session.getAttribute(
-			WebKeys.VISITED_GROUP_ID_PREVIOUS);
-
-		if (recentGroupId == null) {
-			recentGroupId = new Long(currentGroupId);
-
-			session.setAttribute(
-				WebKeys.VISITED_GROUP_ID_RECENT, recentGroupId);
-		}
-		else if (recentGroupId.longValue() != currentGroupId) {
-			previousGroupId = new Long(recentGroupId.longValue());
-
-			recentGroupId = new Long(currentGroupId);
-
-			session.setAttribute(
-				WebKeys.VISITED_GROUP_ID_RECENT, recentGroupId);
-
-			session.setAttribute(
-				WebKeys.VISITED_GROUP_ID_PREVIOUS, previousGroupId);
-		}
-
-		if (_log.isDebugEnabled()) {
-			_log.debug("Current group id " + currentGroupId);
-			_log.debug("Recent group id " + recentGroupId);
-			_log.debug("Previous group id " + previousGroupId);
-		}
-	}
-
-	protected void servicePre(
+	public ThemeDisplay initThemeDisplay(
 			HttpServletRequest request, HttpServletResponse response)
 		throws Exception {
 
@@ -948,10 +151,10 @@ public class ServicePreAction extends Action {
 		String cdnHost = null;
 
 		if (request.isSecure()) {
-			cdnHost = PortalUtil.getCDNHostHttps();
+			cdnHost = PortalUtil.getCDNHostHttps(companyId);
 		}
 		else {
-			cdnHost = PortalUtil.getCDNHostHttp();
+			cdnHost = PortalUtil.getCDNHostHttp(companyId);
 		}
 
 		cdnHost = ParamUtil.getString(request, "cdn_host", cdnHost);
@@ -1004,7 +207,7 @@ public class ServicePreAction extends Action {
 		sb.append("/company_logo?img_id=");
 		sb.append(company.getLogoId());
 		sb.append("&t=");
-		sb.append(ImageServletTokenUtil.getToken(company.getLogoId()));
+		sb.append(WebServerServletTokenUtil.getToken(company.getLogoId()));
 
 		String companyLogo = sb.toString();
 
@@ -1041,7 +244,7 @@ public class ServicePreAction extends Action {
 				session.invalidate();
 			}
 
-			return;
+			return null;
 		}
 
 		boolean signedIn = false;
@@ -1166,16 +369,6 @@ public class ServicePreAction extends Action {
 			timeZone = company.getTimeZone();
 		}
 
-		// Device
-
-		Device device = (Device)session.getAttribute(WebKeys.DEVICE);
-
-		if (device == null) {
-			device = DeviceDetectionUtil.detectDevice(request);
-
-			session.setAttribute(WebKeys.DEVICE, device);
-		}
-
 		// Layouts
 
 		if (signedIn) {
@@ -1202,6 +395,22 @@ public class ServicePreAction extends Action {
 			}
 		}
 
+		// Dynamic Site Template
+
+		if (layout != null) {
+			try {
+				if (processLayoutSetPrototype(layout)) {
+					layout = LayoutLocalServiceUtil.getLayout(layout.getPlid());
+				}
+			}
+			catch (Exception e) {
+				if (_log.isWarnEnabled()) {
+					_log.warn("Failed to process dynamic site templates: " +
+						e.getMessage());
+				}
+			}
+		}
+
 		if (layout != null) {
 			try {
 				Group group = layout.getGroup();
@@ -1210,12 +419,19 @@ public class ServicePreAction extends Action {
 					request.setAttribute(WebKeys.REQUESTED_LAYOUT, layout);
 				}
 
-				boolean isViewableGroup = isViewableGroup(
-					user, layout.getGroupId(), layout.isPrivateLayout(),
-					layout.getLayoutId(), controlPanelCategory,
-					permissionChecker);
+				boolean isViewableGroup = LayoutPermissionUtil.contains(
+					permissionChecker, layout, controlPanelCategory,
+					ActionKeys.VIEW);
+				boolean isViewableStaging = GroupPermissionUtil.contains(
+					permissionChecker, group.getGroupId(),
+					ActionKeys.VIEW_STAGING);
 
-				if (!isViewableGroup && group.isStagingGroup()) {
+				if (isViewableStaging) {
+					layouts = LayoutLocalServiceUtil.getLayouts(
+						layout.getGroupId(), layout.isPrivateLayout(),
+						LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
+				}
+				else if (!isViewableGroup && group.isStagingGroup()) {
 					layout = null;
 				}
 				else if (!isViewableGroup) {
@@ -1237,6 +453,10 @@ public class ServicePreAction extends Action {
 				else if (isViewableGroup &&
 						!LayoutPermissionUtil.contains(
 							permissionChecker, layout, ActionKeys.VIEW)) {
+
+					layouts = LayoutLocalServiceUtil.getLayouts(
+						layout.getGroupId(), layout.isPrivateLayout(),
+						LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
 
 					layout = null;
 				}
@@ -1293,10 +513,18 @@ public class ServicePreAction extends Action {
 
 		LayoutSet layoutSet = null;
 
+		boolean hasCustomizeLayoutPermission = false;
+		boolean hasUpdateLayoutPermission = false;
+
 		boolean customizedView = SessionParamUtil.getBoolean(
 			request, "customized_view", true);
 
 		if (layout != null) {
+			hasCustomizeLayoutPermission = LayoutPermissionUtil.contains(
+				permissionChecker, layout, ActionKeys.CUSTOMIZE);
+			hasUpdateLayoutPermission = LayoutPermissionUtil.contains(
+				permissionChecker, layout, ActionKeys.UPDATE);
+
 			layoutSet = layout.getLayoutSet();
 
 			if (company.isSiteLogo()) {
@@ -1322,7 +550,7 @@ public class ServicePreAction extends Action {
 					sb.append("/layout_set_logo?img_id=");
 					sb.append(logoId);
 					sb.append("&t=");
-					sb.append(ImageServletTokenUtil.getToken(logoId));
+					sb.append(WebServerServletTokenUtil.getToken(logoId));
 
 					layoutSetLogo = sb.toString();
 
@@ -1353,13 +581,10 @@ public class ServicePreAction extends Action {
 			}
 
 			layoutTypePortlet.setCustomizedView(customizedView);
-			layoutTypePortlet.setUpdatePermission(
-				LayoutPermissionUtil.contains(
-					permissionChecker, layout, ActionKeys.UPDATE));
+			layoutTypePortlet.setUpdatePermission(hasUpdateLayoutPermission);
 
 			if (signedIn && customizable && customizedView &&
-				LayoutPermissionUtil.contains(
-					permissionChecker, layout, ActionKeys.CUSTOMIZE)) {
+				hasCustomizeLayoutPermission) {
 
 				PortalPreferences portalPreferences =
 					PortletPreferencesFactoryUtil.getPortalPreferences(
@@ -1532,7 +757,6 @@ public class ServicePreAction extends Action {
 		themeDisplay.setI18nLanguageId(i18nLanguageId);
 		themeDisplay.setI18nPath(i18nPath);
 		themeDisplay.setTimeZone(timeZone);
-		themeDisplay.setDevice(device);
 		themeDisplay.setLookAndFeel(contextPath, theme, colorScheme);
 		themeDisplay.setThemeCssFastLoad(themeCssFastLoad);
 		themeDisplay.setThemeImagesFastLoad(themeImagesFastLoad);
@@ -1591,11 +815,19 @@ public class ServicePreAction extends Action {
 
 			Portlet groupPagesPortlet = PortletLocalServiceUtil.getPortletById(
 				PortletKeys.GROUP_PAGES);
+
+			siteContentPortlets.remove(groupPagesPortlet);
+
+			Portlet siteMembershipsAdminPortlet =
+				PortletLocalServiceUtil.getPortletById(
+					PortletKeys.SITE_MEMBERSHIPS_ADMIN);
+
+			siteContentPortlets.remove(siteMembershipsAdminPortlet);
+
 			Portlet siteSettingsPortlet =
 				PortletLocalServiceUtil.getPortletById(
 					PortletKeys.SITE_SETTINGS);
 
-			siteContentPortlets.remove(groupPagesPortlet);
 			siteContentPortlets.remove(siteSettingsPortlet);
 
 			showSiteContentIcon = PortletPermissionUtil.contains(
@@ -1650,24 +882,10 @@ public class ServicePreAction extends Action {
 		String siteContentURL = urlControlPanel;
 
 		siteContentURL = HttpUtil.addParameter(
-			siteContentURL, "p_p_id", PortletKeys.RECENT_CONTENT);
-		siteContentURL = HttpUtil.addParameter(
 			siteContentURL, "controlPanelCategory",
 			PortletCategoryKeys.CONTENT);
 
 		themeDisplay.setURLSiteContent(siteContentURL);
-
-		PortletURL createAccountURL = new PortletURLImpl(
-			request, PortletKeys.LOGIN, plid, PortletRequest.ACTION_PHASE);
-
-		createAccountURL.setWindowState(WindowState.MAXIMIZED);
-		createAccountURL.setPortletMode(PortletMode.VIEW);
-
-		createAccountURL.setParameter("saveLastPath", "0");
-		createAccountURL.setParameter(
-			"struts_action", "/login/create_account");
-
-		themeDisplay.setURLCreateAccount(createAccountURL);
 
 		String currentURL = PortalUtil.getCurrentURL(request);
 
@@ -1685,10 +903,6 @@ public class ServicePreAction extends Action {
 
 				themeDisplay.setFreeformLayout(freeformLayout);
 
-				boolean hasUpdateLayoutPermission =
-					LayoutPermissionUtil.contains(
-						permissionChecker, layout, ActionKeys.UPDATE);
-
 				if (hasUpdateLayoutPermission) {
 					themeDisplay.setShowAddContentIconPermission(true);
 
@@ -1697,7 +911,10 @@ public class ServicePreAction extends Action {
 					}
 
 					themeDisplay.setShowLayoutTemplatesIcon(true);
-					themeDisplay.setShowPageCustomizationIcon(true);
+
+					if (!group.isUser()) {
+						themeDisplay.setShowPageCustomizationIcon(true);
+					}
 
 					themeDisplay.setURLAddContent(
 						"Liferay.LayoutConfiguration.toggle('".concat(
@@ -1707,10 +924,7 @@ public class ServicePreAction extends Action {
 						"Liferay.LayoutConfiguration.showTemplates();");
 				}
 
-				boolean hasCustomizePermission = LayoutPermissionUtil.contains(
-					permissionChecker, layout, ActionKeys.CUSTOMIZE);
-
-				if (hasCustomizePermission && customizedView) {
+				if (hasCustomizeLayoutPermission && customizedView) {
 					themeDisplay.setShowAddContentIconPermission(true);
 
 					if (!LiferayWindowState.isMaximized(request)) {
@@ -1723,24 +937,19 @@ public class ServicePreAction extends Action {
 				}
 			}
 
-			boolean hasManageLayoutsPermission = false;
-
 			if (signedIn) {
-				hasManageLayoutsPermission = GroupPermissionUtil.contains(
-					permissionChecker, scopeGroupId, ActionKeys.MANAGE_LAYOUTS);
-
 				if (group.isUser()) {
 					if ((layout.isPrivateLayout() &&
 						 !PropsValues.LAYOUT_USER_PRIVATE_LAYOUTS_MODIFIABLE) ||
 						(layout.isPublicLayout() &&
 						 !PropsValues.LAYOUT_USER_PUBLIC_LAYOUTS_MODIFIABLE)) {
 
-						hasManageLayoutsPermission = false;
+						hasUpdateLayoutPermission = false;
 					}
 				}
 			}
 
-			if (hasManageLayoutsPermission) {
+			if (hasUpdateLayoutPermission) {
 				themeDisplay.setShowPageSettingsIcon(true);
 
 				PortletURL pageSettingsURL = new PortletURLImpl(
@@ -1760,46 +969,63 @@ public class ServicePreAction extends Action {
 					pageSettingsURL.setParameter("tabs1", "public-pages");
 				}
 
+				pageSettingsURL.setParameter("closeRedirect", currentURL);
 				pageSettingsURL.setParameter(
 					"groupId", String.valueOf(scopeGroupId));
 				pageSettingsURL.setParameter("selPlid", String.valueOf(plid));
 
 				themeDisplay.setURLPageSettings(pageSettingsURL);
 
-				if (group.isSite()) {
+				if (group.isSite() &&
+					GroupPermissionUtil.contains(
+						permissionChecker, scopeGroupId,
+						ActionKeys.ASSIGN_MEMBERS)) {
+
 					themeDisplay.setShowManageSiteMembershipsIcon(true);
+
+					PortletURL manageSiteMembershipsURL = new PortletURLImpl(
+						request, PortletKeys.SITE_MEMBERSHIPS_ADMIN,
+						controlPanelPlid, PortletRequest.RENDER_PHASE);
+
+					manageSiteMembershipsURL.setWindowState(
+						LiferayWindowState.POP_UP);
+					manageSiteMembershipsURL.setPortletMode(PortletMode.VIEW);
+
+					manageSiteMembershipsURL.setParameter(
+						"struts_action", "/sites_admin/edit_site_assignments");
+					manageSiteMembershipsURL.setParameter(
+						"groupId", String.valueOf(scopeGroupId));
+					manageSiteMembershipsURL.setParameter(
+						"selPlid", String.valueOf(plid));
+
+					themeDisplay.setURLManageSiteMemberships(
+						manageSiteMembershipsURL);
 				}
 				else {
 					themeDisplay.setShowManageSiteMembershipsIcon(false);
 				}
-
-				PortletURL manageSiteMembershipsURL = new PortletURLImpl(
-					request, PortletKeys.SITE_MEMBERSHIPS_ADMIN,
-					controlPanelPlid, PortletRequest.RENDER_PHASE);
-
-				manageSiteMembershipsURL.setWindowState(
-					LiferayWindowState.POP_UP);
-				manageSiteMembershipsURL.setPortletMode(PortletMode.VIEW);
-
-				manageSiteMembershipsURL.setParameter(
-					"struts_action", "/sites_admin/edit_site_assignments");
-				manageSiteMembershipsURL.setParameter(
-					"groupId", String.valueOf(scopeGroupId));
-				manageSiteMembershipsURL.setParameter(
-					"selPlid", String.valueOf(plid));
-
-				themeDisplay.setURLManageSiteMemberships(
-					manageSiteMembershipsURL);
 			}
 
-			if (!group.isControlPanel() && !group.isUser() &&
-				!group.isUserGroup() &&
-				(GroupPermissionUtil.contains(
-					permissionChecker, group.getGroupId(),
-					ActionKeys.MANAGE_STAGING) ||
+			boolean hasAddLayoutGroupPermission =
 				GroupPermissionUtil.contains(
-					permissionChecker, group.getGroupId(),
-					ActionKeys.UPDATE))) {
+					permissionChecker, scopeGroupId, ActionKeys.ADD_LAYOUT);
+			boolean hasAddLayoutLayoutPermission =
+				LayoutPermissionUtil.contains(
+					permissionChecker, layout, ActionKeys.ADD_LAYOUT);
+			boolean hasManageLayoutsGroupPermission =
+				GroupPermissionUtil.contains(
+					permissionChecker, scopeGroupId, ActionKeys.MANAGE_LAYOUTS);
+			boolean hasManageStagingPermission = GroupPermissionUtil.contains(
+				permissionChecker, scopeGroupId, ActionKeys.MANAGE_STAGING);
+			boolean hasPublishStagingPermission = GroupPermissionUtil.contains(
+				permissionChecker, scopeGroupId, ActionKeys.PUBLISH_STAGING);
+			boolean hasUpdateGroupPermission = GroupPermissionUtil.contains(
+				permissionChecker, scopeGroupId, ActionKeys.UPDATE);
+			boolean hasViewStagingPermission = GroupPermissionUtil.contains(
+				permissionChecker, scopeGroupId, ActionKeys.VIEW_STAGING);
+
+			if (!group.isControlPanel() && !group.isUser() &&
+				!group.isUserGroup() && hasUpdateGroupPermission) {
 
 				themeDisplay.setShowSiteSettingsIcon(true);
 
@@ -1813,13 +1039,17 @@ public class ServicePreAction extends Action {
 				siteSettingsURL.setParameter(
 					"struts_action", "/sites_admin/edit_site");
 
+				siteSettingsURL.setParameter("closeRedirect", currentURL);
 				siteSettingsURL.setParameter(
 					"groupId", String.valueOf(scopeGroupId));
 
 				themeDisplay.setURLSiteSettings(siteSettingsURL);
 			}
 
-			if (hasManageLayoutsPermission && !group.isLayoutPrototype()) {
+			if (!group.isLayoutPrototype() &&
+				(hasAddLayoutGroupPermission || hasAddLayoutLayoutPermission ||
+				 hasManageLayoutsGroupPermission || hasUpdateGroupPermission)) {
+
 				themeDisplay.setShowSiteMapSettingsIcon(true);
 
 				PortletURL siteMapSettingsURL = new PortletURLImpl(
@@ -1860,12 +1090,9 @@ public class ServicePreAction extends Action {
 			// LEP-4987
 
 			if (group.isStaged() || group.isStagingGroup()) {
-				boolean hasPublishStagingPermission =
-					GroupPermissionUtil.contains(
-						permissionChecker, scopeGroupId,
-						ActionKeys.PUBLISH_STAGING);
+				if (hasManageStagingPermission || hasPublishStagingPermission ||
+					hasUpdateLayoutPermission || hasViewStagingPermission) {
 
-				if (hasManageLayoutsPermission || hasPublishStagingPermission) {
 					themeDisplay.setShowStagingIcon(true);
 				}
 
@@ -1915,8 +1142,6 @@ public class ServicePreAction extends Action {
 			else {
 				myAccountURL.setRefererPlid(plid);
 			}
-
-			myAccountURL.setControlPanelCategory(PortletCategoryKeys.MY);
 
 			myAccountURL.setParameter("struts_action", "/my_account/edit_user");
 
@@ -1969,6 +1194,662 @@ public class ServicePreAction extends Action {
 
 		themeDisplay.setURLUpdateManager(updateManagerURL);
 
+		return themeDisplay;
+	}
+
+	@Override
+	public void run(HttpServletRequest request, HttpServletResponse response)
+		throws ActionException {
+
+		StopWatch stopWatch = null;
+
+		if (_log.isDebugEnabled()) {
+			stopWatch = new StopWatch();
+
+			stopWatch.start();
+		}
+
+		try {
+			servicePre(request, response);
+		}
+		catch (Exception e) {
+			throw new ActionException(e);
+		}
+
+		if (_log.isDebugEnabled()) {
+			_log.debug("Running takes " + stopWatch.getTime() + " ms");
+		}
+	}
+
+	protected void addDefaultLayoutsByLAR(
+			long userId, long groupId, boolean privateLayout, File larFile)
+		throws PortalException, SystemException {
+
+		Map<String, String[]> parameterMap = new HashMap<String, String[]>();
+
+		parameterMap.put(
+			PortletDataHandlerKeys.PERMISSIONS,
+			new String[] {Boolean.TRUE.toString()});
+		parameterMap.put(
+			PortletDataHandlerKeys.PORTLET_DATA,
+			new String[] {Boolean.TRUE.toString()});
+		parameterMap.put(
+			PortletDataHandlerKeys.PORTLET_DATA_CONTROL_DEFAULT,
+			new String[] {Boolean.TRUE.toString()});
+		parameterMap.put(
+			PortletDataHandlerKeys.PORTLET_SETUP,
+			new String[] {Boolean.TRUE.toString()});
+		parameterMap.put(
+			PortletDataHandlerKeys.USER_PERMISSIONS,
+			new String[] {Boolean.FALSE.toString()});
+
+		LayoutLocalServiceUtil.importLayouts(
+			userId, groupId, privateLayout, parameterMap, larFile);
+	}
+
+	protected void addDefaultUserPrivateLayoutByProperties(
+			long userId, long groupId)
+		throws PortalException, SystemException {
+
+		String friendlyURL = getFriendlyURL(
+			PropsValues.DEFAULT_USER_PRIVATE_LAYOUT_FRIENDLY_URL);
+
+		ServiceContext serviceContext = new ServiceContext();
+
+		Layout layout = LayoutLocalServiceUtil.addLayout(
+			userId, groupId, true, LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
+			PropsValues.DEFAULT_USER_PRIVATE_LAYOUT_NAME, StringPool.BLANK,
+			StringPool.BLANK, LayoutConstants.TYPE_PORTLET, false, friendlyURL,
+			false, serviceContext);
+
+		LayoutTypePortlet layoutTypePortlet =
+			(LayoutTypePortlet)layout.getLayoutType();
+
+		layoutTypePortlet.setLayoutTemplateId(
+			0, PropsValues.DEFAULT_USER_PRIVATE_LAYOUT_TEMPLATE_ID, false);
+
+		for (int i = 0; i < 10; i++) {
+			String columnId = "column-" + i;
+			String portletIds = PropsUtil.get(
+				PropsKeys.DEFAULT_USER_PRIVATE_LAYOUT_COLUMN + i);
+
+			String[] portletIdsArray = StringUtil.split(portletIds);
+
+			layoutTypePortlet.addPortletIds(
+				0, portletIdsArray, columnId, false);
+		}
+
+		LayoutLocalServiceUtil.updateLayout(
+			layout.getGroupId(), layout.isPrivateLayout(), layout.getLayoutId(),
+			layout.getTypeSettings());
+
+		boolean updateLayoutSet = false;
+
+		LayoutSet layoutSet = layout.getLayoutSet();
+
+		if (Validator.isNotNull(
+				PropsValues.DEFAULT_USER_PRIVATE_LAYOUT_REGULAR_THEME_ID)) {
+
+			layoutSet.setThemeId(
+				PropsValues.DEFAULT_USER_PRIVATE_LAYOUT_REGULAR_THEME_ID);
+
+			updateLayoutSet = true;
+		}
+
+		if (Validator.isNotNull(
+				PropsValues.
+					DEFAULT_USER_PRIVATE_LAYOUT_REGULAR_COLOR_SCHEME_ID)) {
+
+			layoutSet.setColorSchemeId(
+				PropsValues.
+					DEFAULT_USER_PRIVATE_LAYOUT_REGULAR_COLOR_SCHEME_ID);
+
+			updateLayoutSet = true;
+		}
+
+		if (Validator.isNotNull(
+				PropsValues.DEFAULT_USER_PRIVATE_LAYOUT_WAP_THEME_ID)) {
+
+			layoutSet.setWapThemeId(
+				PropsValues.DEFAULT_USER_PRIVATE_LAYOUT_WAP_THEME_ID);
+
+			updateLayoutSet = true;
+		}
+
+		if (Validator.isNotNull(
+				PropsValues.DEFAULT_USER_PRIVATE_LAYOUT_WAP_COLOR_SCHEME_ID)) {
+
+			layoutSet.setWapColorSchemeId(
+				PropsValues.DEFAULT_USER_PRIVATE_LAYOUT_WAP_COLOR_SCHEME_ID);
+
+			updateLayoutSet = true;
+		}
+
+		if (updateLayoutSet) {
+			LayoutSetLocalServiceUtil.updateLayoutSet(layoutSet);
+		}
+	}
+
+	protected void addDefaultUserPrivateLayouts(User user)
+		throws PortalException, SystemException {
+
+		Group userGroup = user.getGroup();
+
+		if (privateLARFile != null) {
+			addDefaultLayoutsByLAR(
+				user.getUserId(), userGroup.getGroupId(), true, privateLARFile);
+		}
+		else {
+			addDefaultUserPrivateLayoutByProperties(
+				user.getUserId(), userGroup.getGroupId());
+		}
+	}
+
+	protected void addDefaultUserPublicLayoutByProperties(
+			long userId, long groupId)
+		throws PortalException, SystemException {
+
+		String friendlyURL = getFriendlyURL(
+			PropsValues.DEFAULT_USER_PUBLIC_LAYOUT_FRIENDLY_URL);
+
+		ServiceContext serviceContext = new ServiceContext();
+
+		Layout layout = LayoutLocalServiceUtil.addLayout(
+			userId, groupId, false, LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
+			PropsValues.DEFAULT_USER_PUBLIC_LAYOUT_NAME, StringPool.BLANK,
+			StringPool.BLANK, LayoutConstants.TYPE_PORTLET, false, friendlyURL,
+			false, serviceContext);
+
+		LayoutTypePortlet layoutTypePortlet =
+			(LayoutTypePortlet)layout.getLayoutType();
+
+		layoutTypePortlet.setLayoutTemplateId(
+			0, PropsValues.DEFAULT_USER_PUBLIC_LAYOUT_TEMPLATE_ID, false);
+
+		for (int i = 0; i < 10; i++) {
+			String columnId = "column-" + i;
+			String portletIds = PropsUtil.get(
+				PropsKeys.DEFAULT_USER_PUBLIC_LAYOUT_COLUMN + i);
+
+			String[] portletIdsArray = StringUtil.split(portletIds);
+
+			layoutTypePortlet.addPortletIds(
+				0, portletIdsArray, columnId, false);
+		}
+
+		LayoutLocalServiceUtil.updateLayout(
+			layout.getGroupId(), layout.isPrivateLayout(), layout.getLayoutId(),
+			layout.getTypeSettings());
+
+		boolean updateLayoutSet = false;
+
+		LayoutSet layoutSet = layout.getLayoutSet();
+
+		if (Validator.isNotNull(
+				PropsValues.DEFAULT_USER_PUBLIC_LAYOUT_REGULAR_THEME_ID)) {
+
+			layoutSet.setThemeId(
+				PropsValues.DEFAULT_USER_PUBLIC_LAYOUT_REGULAR_THEME_ID);
+
+			updateLayoutSet = true;
+		}
+
+		if (Validator.isNotNull(
+				PropsValues.
+					DEFAULT_USER_PUBLIC_LAYOUT_REGULAR_COLOR_SCHEME_ID)) {
+
+			layoutSet.setColorSchemeId(
+				PropsValues.DEFAULT_USER_PUBLIC_LAYOUT_REGULAR_COLOR_SCHEME_ID);
+
+			updateLayoutSet = true;
+		}
+
+		if (Validator.isNotNull(
+				PropsValues.DEFAULT_USER_PUBLIC_LAYOUT_WAP_THEME_ID)) {
+
+			layoutSet.setWapThemeId(
+				PropsValues.DEFAULT_USER_PUBLIC_LAYOUT_WAP_THEME_ID);
+
+			updateLayoutSet = true;
+		}
+
+		if (Validator.isNotNull(
+				PropsValues.DEFAULT_USER_PUBLIC_LAYOUT_WAP_COLOR_SCHEME_ID)) {
+
+			layoutSet.setWapColorSchemeId(
+				PropsValues.DEFAULT_USER_PUBLIC_LAYOUT_WAP_COLOR_SCHEME_ID);
+
+			updateLayoutSet = true;
+		}
+
+		if (updateLayoutSet) {
+			LayoutSetLocalServiceUtil.updateLayoutSet(layoutSet);
+		}
+	}
+
+	protected void addDefaultUserPublicLayouts(User user)
+		throws PortalException, SystemException {
+
+		Group userGroup = user.getGroup();
+
+		if (publicLARFile != null) {
+			addDefaultLayoutsByLAR(
+				user.getUserId(), userGroup.getGroupId(), false, publicLARFile);
+		}
+		else {
+			addDefaultUserPublicLayoutByProperties(
+				user.getUserId(), userGroup.getGroupId());
+		}
+	}
+
+	protected void deleteDefaultUserPrivateLayouts(User user)
+		throws PortalException, SystemException {
+
+		Group userGroup = user.getGroup();
+
+		ServiceContext serviceContext = new ServiceContext();
+
+		LayoutLocalServiceUtil.deleteLayouts(
+			userGroup.getGroupId(), true, serviceContext);
+	}
+
+	protected void deleteDefaultUserPublicLayouts(User user)
+		throws PortalException, SystemException {
+
+		Group userGroup = user.getGroup();
+
+		ServiceContext serviceContext = new ServiceContext();
+
+		LayoutLocalServiceUtil.deleteLayouts(
+			userGroup.getGroupId(), false, serviceContext);
+	}
+
+	protected Object[] getDefaultLayout(
+			HttpServletRequest request, User user, boolean signedIn)
+		throws PortalException, SystemException {
+
+		// Check the virtual host
+
+		LayoutSet layoutSet = (LayoutSet)request.getAttribute(
+			WebKeys.VIRTUAL_HOST_LAYOUT_SET);
+
+		if (layoutSet != null) {
+			List<Layout> layouts = LayoutLocalServiceUtil.getLayouts(
+				layoutSet.getGroupId(), layoutSet.isPrivateLayout(),
+				LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
+
+			if (layouts.size() > 0) {
+				Layout layout = layouts.get(0);
+
+				return new Object[] {layout, layouts};
+			}
+		}
+
+		Layout layout = null;
+		List<Layout> layouts = null;
+
+		if (signedIn) {
+
+			// Check the user's personal layouts
+
+			Group userGroup = user.getGroup();
+
+			layouts = LayoutLocalServiceUtil.getLayouts(
+				userGroup.getGroupId(), true,
+				LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
+
+			if (layouts.size() == 0) {
+				layouts = LayoutLocalServiceUtil.getLayouts(
+					userGroup.getGroupId(), false,
+					LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
+			}
+
+			if (layouts.size() > 0) {
+				layout = layouts.get(0);
+			}
+
+			// Check the user's sites
+
+			if (layout == null) {
+				LinkedHashMap<String, Object> groupParams =
+					new LinkedHashMap<String, Object>();
+
+				groupParams.put("usersGroups", new Long(user.getUserId()));
+
+				List<Group> groups = GroupLocalServiceUtil.search(
+					user.getCompanyId(), null, null, groupParams,
+					QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+
+				for (Group group : groups) {
+					layouts = LayoutLocalServiceUtil.getLayouts(
+						group.getGroupId(), true,
+						LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
+
+					if (layouts.size() == 0) {
+						layouts = LayoutLocalServiceUtil.getLayouts(
+							group.getGroupId(), false,
+							LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
+					}
+
+					if (layouts.size() > 0) {
+						layout = layouts.get(0);
+
+						break;
+					}
+				}
+			}
+		}
+
+		if (layout == null) {
+
+			// Check the Guest site
+
+			Group guestGroup = GroupLocalServiceUtil.getGroup(
+				user.getCompanyId(), GroupConstants.GUEST);
+
+			layouts = LayoutLocalServiceUtil.getLayouts(
+				guestGroup.getGroupId(), false,
+				LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
+
+			if (layouts.size() > 0) {
+				layout = layouts.get(0);
+			}
+		}
+
+		return new Object[] {layout, layouts};
+	}
+
+	protected String getFriendlyURL(String friendlyURL) {
+		friendlyURL = GetterUtil.getString(friendlyURL);
+
+		return FriendlyURLNormalizer.normalize(friendlyURL);
+	}
+
+	protected Object[] getViewableLayouts(
+			HttpServletRequest request, User user,
+			PermissionChecker permissionChecker, Layout layout,
+			List<Layout> layouts)
+		throws PortalException, SystemException {
+
+		if ((layouts == null) || layouts.isEmpty()) {
+			return new Object[] {layout, layouts};
+		}
+
+		Group group = layout.getGroup();
+
+		boolean hasUpdateLayoutPermission = false;
+		boolean hasViewStagingPermission =
+			(group.isStagingGroup() || group.isStagedRemotely()) &&
+			 GroupPermissionUtil.contains(
+				 permissionChecker, group.getGroupId(),
+				 ActionKeys.VIEW_STAGING);
+
+		if (LayoutPermissionUtil.contains(
+				permissionChecker, layout, ActionKeys.VIEW) ||
+			hasViewStagingPermission) {
+
+			hasUpdateLayoutPermission = true;
+		}
+
+		List<Layout> accessibleLayouts = new ArrayList<Layout>();
+
+		for (int i = 0; i < layouts.size(); i++) {
+			Layout curLayout = layouts.get(i);
+
+			if (!curLayout.isHidden() &&
+				(LayoutPermissionUtil.contains(
+					permissionChecker, curLayout, ActionKeys.VIEW) ||
+				 hasViewStagingPermission)) {
+
+				if (accessibleLayouts.isEmpty() && !hasUpdateLayoutPermission) {
+					layout = curLayout;
+				}
+
+				accessibleLayouts.add(curLayout);
+			}
+		}
+
+		if (accessibleLayouts.isEmpty()) {
+			layouts = null;
+
+			if (!hasUpdateLayoutPermission) {
+				SessionErrors.add(
+					request, LayoutPermissionException.class.getName());
+			}
+		}
+		else {
+			layouts = accessibleLayouts;
+		}
+
+		return new Object[] {layout, layouts};
+	}
+
+	protected Boolean hasPowerUserRole(User user) throws Exception {
+		return RoleLocalServiceUtil.hasUserRole(
+			user.getUserId(), user.getCompanyId(), RoleConstants.POWER_USER,
+			true);
+	}
+
+	protected void initImportLARFiles() {
+		String privateLARFileName =
+			PropsValues.DEFAULT_USER_PRIVATE_LAYOUTS_LAR;
+
+		if (_log.isDebugEnabled()) {
+			_log.debug("Reading private LAR file " + privateLARFileName);
+		}
+
+		if (Validator.isNotNull(privateLARFileName)) {
+			privateLARFile = new File(privateLARFileName);
+
+			if (!privateLARFile.exists()) {
+				_log.error(
+					"Private LAR file " + privateLARFile + " does not exist");
+
+				privateLARFile = null;
+			}
+			else {
+				if (_log.isDebugEnabled()) {
+					_log.debug("Using private LAR file " + privateLARFileName);
+				}
+			}
+		}
+
+		String publicLARFileName = PropsValues.DEFAULT_USER_PUBLIC_LAYOUTS_LAR;
+
+		if (_log.isDebugEnabled()) {
+			_log.debug("Reading public LAR file " + publicLARFileName);
+		}
+
+		if (Validator.isNotNull(publicLARFileName)) {
+			publicLARFile = new File(publicLARFileName);
+
+			if (!publicLARFile.exists()) {
+				_log.error(
+					"Public LAR file " + publicLARFile + " does not exist");
+
+				publicLARFile = null;
+			}
+			else {
+				if (_log.isDebugEnabled()) {
+					_log.debug("Using public LAR file " + publicLARFileName);
+				}
+			}
+		}
+	}
+
+	/**
+	 * @deprecated
+	 */
+	protected boolean isViewableCommunity(
+			User user, long groupId, boolean privateLayout,
+			PermissionChecker permissionChecker)
+		throws PortalException, SystemException {
+
+		return LayoutPermissionUtil.contains(
+			permissionChecker, groupId, privateLayout, 0, ActionKeys.VIEW);
+	}
+
+	/**
+	 * @deprecated
+	 */
+	protected boolean isViewableGroup(
+			User user, long groupId, boolean privateLayout, long layoutId,
+			String controlPanelCategory, PermissionChecker permissionChecker)
+		throws PortalException, SystemException {
+
+		return LayoutPermissionUtil.contains(
+			permissionChecker, groupId, privateLayout, layoutId,
+			controlPanelCategory, ActionKeys.VIEW);
+	}
+
+	protected List<Layout> mergeAdditionalLayouts(
+			HttpServletRequest request, User user,
+			PermissionChecker permissionChecker, Layout layout,
+			List<Layout> layouts)
+		throws PortalException, SystemException {
+
+		if ((layout == null) || layout.isPrivateLayout()) {
+			return layouts;
+		}
+
+		long layoutGroupId = layout.getGroupId();
+
+		Group guestGroup = GroupLocalServiceUtil.getGroup(
+			user.getCompanyId(), GroupConstants.GUEST);
+
+		if (layoutGroupId != guestGroup.getGroupId()) {
+			Group layoutGroup = GroupLocalServiceUtil.getGroup(layoutGroupId);
+
+			UnicodeProperties typeSettingsProperties =
+				layoutGroup.getTypeSettingsProperties();
+
+			boolean mergeGuestPublicPages = GetterUtil.getBoolean(
+				typeSettingsProperties.getProperty("mergeGuestPublicPages"));
+
+			if (!mergeGuestPublicPages) {
+				return layouts;
+			}
+
+			List<Layout> guestLayouts = LayoutLocalServiceUtil.getLayouts(
+				guestGroup.getGroupId(), false,
+				LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
+
+			Object[] viewableLayouts = getViewableLayouts(
+				request, user, permissionChecker, layout, guestLayouts);
+
+			guestLayouts = (List<Layout>)viewableLayouts[1];
+
+			if (layouts == null) {
+				return guestLayouts;
+			}
+
+			layouts.addAll(0, guestLayouts);
+		}
+		else {
+			HttpSession session = request.getSession();
+
+			Long previousGroupId = (Long)session.getAttribute(
+				WebKeys.VISITED_GROUP_ID_PREVIOUS);
+
+			if ((previousGroupId != null) &&
+				(previousGroupId.longValue() != layoutGroupId)) {
+
+				Group previousGroup = null;
+
+				try {
+					previousGroup = GroupLocalServiceUtil.getGroup(
+						previousGroupId.longValue());
+				}
+				catch (NoSuchGroupException nsge) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(nsge);
+					}
+
+					return layouts;
+				}
+
+				UnicodeProperties typeSettingsProperties =
+					previousGroup.getTypeSettingsProperties();
+
+				boolean mergeGuestPublicPages = GetterUtil.getBoolean(
+					typeSettingsProperties.getProperty(
+						"mergeGuestPublicPages"));
+
+				if (!mergeGuestPublicPages) {
+					return layouts;
+				}
+
+				List<Layout> previousLayouts =
+					LayoutLocalServiceUtil.getLayouts(
+						previousGroupId.longValue(), false,
+						LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
+
+				Object[] viewableLayouts = getViewableLayouts(
+					request, user, permissionChecker, layout, previousLayouts);
+
+				previousLayouts = (List<Layout>)viewableLayouts[1];
+
+				if (previousLayouts != null) {
+					layouts.addAll(previousLayouts);
+				}
+			}
+		}
+
+		return layouts;
+	}
+
+	protected void rememberVisitedGroupIds(
+		HttpServletRequest request, long currentGroupId) {
+
+		String requestURI = GetterUtil.getString(request.getRequestURI());
+
+		if (!requestURI.endsWith(_PATH_PORTAL_LAYOUT)) {
+			return;
+		}
+
+		HttpSession session = request.getSession();
+
+		Long recentGroupId = (Long)session.getAttribute(
+			WebKeys.VISITED_GROUP_ID_RECENT);
+
+		Long previousGroupId = (Long)session.getAttribute(
+			WebKeys.VISITED_GROUP_ID_PREVIOUS);
+
+		if (recentGroupId == null) {
+			recentGroupId = new Long(currentGroupId);
+
+			session.setAttribute(
+				WebKeys.VISITED_GROUP_ID_RECENT, recentGroupId);
+		}
+		else if (recentGroupId.longValue() != currentGroupId) {
+			previousGroupId = new Long(recentGroupId.longValue());
+
+			recentGroupId = new Long(currentGroupId);
+
+			session.setAttribute(
+				WebKeys.VISITED_GROUP_ID_RECENT, recentGroupId);
+
+			session.setAttribute(
+				WebKeys.VISITED_GROUP_ID_PREVIOUS, previousGroupId);
+		}
+
+		if (_log.isDebugEnabled()) {
+			_log.debug("Current group id " + currentGroupId);
+			_log.debug("Recent group id " + recentGroupId);
+			_log.debug("Previous group id " + previousGroupId);
+		}
+	}
+
+	protected void servicePre(
+			HttpServletRequest request, HttpServletResponse response)
+		throws Exception {
+
+		ThemeDisplay themeDisplay = initThemeDisplay(request, response);
+
+		if (themeDisplay == null) {
+			return;
+		}
+
 		request.setAttribute(WebKeys.THEME_DISPLAY, themeDisplay);
 
 		// Service context
@@ -1982,7 +1863,12 @@ public class ServicePreAction extends Action {
 
 		boolean parallelRenderEnable = true;
 
+		Layout layout = themeDisplay.getLayout();
+
 		if (layout != null) {
+			LayoutTypePortlet layoutTypePortlet =
+				themeDisplay.getLayoutTypePortlet();
+
 			List<String> portletIds = layoutTypePortlet.getPortletIds();
 
 			if (portletIds.size() == 1) {
@@ -2117,6 +2003,31 @@ public class ServicePreAction extends Action {
 		if (deleteDefaultUserPublicLayouts && user.hasPublicLayouts()) {
 			deleteDefaultUserPublicLayouts(user);
 		}
+	}
+
+	protected boolean processLayoutSetPrototype(Layout layout)
+		throws Exception {
+
+		if (SitesUtil.isLayoutToBeUpdatedFromTemplate(layout)) {
+			Layout templateLayout = LayoutTypePortletImpl.getTemplateLayout(
+				layout);
+
+			SitesUtil.copyLayout(templateLayout, layout, new ServiceContext());
+
+			layout = LayoutLocalServiceUtil.getLayout(layout.getPlid());
+
+			UnicodeProperties typeSettings = layout.getTypeSettingsProperties();
+
+			typeSettings.put(
+				"layoutSetPrototypeLastCopyDate",
+				String.valueOf((new Date()).getTime()));
+
+			LayoutLocalServiceUtil.updateLayout(layout);
+
+			return true;
+		}
+
+		return false;
 	}
 
 	protected File privateLARFile;

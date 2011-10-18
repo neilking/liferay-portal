@@ -55,7 +55,7 @@ public class DLFileEntryAssetRenderer extends BaseAssetRenderer {
 	public long getClassPK() {
 		if (!_fileVersion.isApproved() &&
 			(!_fileVersion.getVersion().equals(
-				DLFileEntryConstants.DEFAULT_VERSION))) {
+				DLFileEntryConstants.VERSION_DEFAULT))) {
 
 			return _fileVersion.getFileVersionId();
 		}
@@ -127,14 +127,10 @@ public class DLFileEntryAssetRenderer extends BaseAssetRenderer {
 		LiferayPortletResponse liferayPortletResponse,
 		String noSuchEntryRedirect) {
 
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)liferayPortletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
-		return themeDisplay.getPathMain() +
-			"/document_library/find_file_entry?p_l_id=" +
-				themeDisplay.getPlid() + "&fileEntryId=" +
-					_fileEntry.getFileEntryId();
+		return getURLViewInContext(
+			liferayPortletRequest, noSuchEntryRedirect,
+			"/document_library/find_file_entry", "fileEntryId",
+			_fileEntry.getFileEntryId());
 	}
 
 	public long getUserId() {
@@ -193,7 +189,8 @@ public class DLFileEntryAssetRenderer extends BaseAssetRenderer {
 
 	@Override
 	protected String getIconPath(ThemeDisplay themeDisplay) {
-		return themeDisplay.getPathThemeImages() + "/common/clip.png";
+		return themeDisplay.getPathThemeImages() + "/file_system/small/" +
+			_fileEntry.getIcon() + ".png";
 	}
 
 	private FileEntry _fileEntry;

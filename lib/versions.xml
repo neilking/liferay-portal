@@ -72,7 +72,7 @@
 	</library>
 	<library>
 		<file-name>development/catalina.jar</file-name>
-		<version>6.0.32</version>
+		<version>7.0.21</version>
 		<project-name>Tomcat</project-name>
 		<project-url>http://tomcat.apache.org</project-url>
 		<licenses>
@@ -89,6 +89,17 @@
 		<licenses>
 			<license>
 				<license-name>LGPL 2.1</license-name>
+			</license>
+		</licenses>
+	</library>
+	<library>
+		<file-name>development/cobertura.jar</file-name>
+		<version>1.9.4.1</version>
+		<project-name>Cobertura</project-name>
+		<project-url>http://cobertura.sourceforge.net</project-url>
+		<licenses>
+			<license>
+				<license-name>Apache License 1.1</license-name>
 			</license>
 		</licenses>
 	</library>
@@ -283,7 +294,7 @@
 	</library>
 	<library>
 		<file-name>development/jasper.jar</file-name>
-		<version>6.0.32</version>
+		<version>7.0.21</version>
 		<project-name>Tomcat</project-name>
 		<project-url>http://tomcat.apache.org</project-url>
 		<licenses>
@@ -351,24 +362,30 @@
 		</licenses>
 	</library>
 	<library>
-		<file-name>development/jetty.jar</file-name>
-		<version>6.1.26</version>
+		<file-name>development/jetty-server.jar</file-name>
+		<version>7.5.1</version>
 		<project-name>Jetty</project-name>
-		<project-url>http://www.mortbay.org/jetty</project-url>
+		<project-url>http://www.eclipse.org/jetty</project-url>
 		<licenses>
 			<license>
 				<license-name>Apache License 2.0</license-name>
+			</license>
+			<license>
+				<license-name>Eclipse Public License 1.0</license-name>
 			</license>
 		</licenses>
 	</library>
 	<library>
 		<file-name>development/jetty-util.jar</file-name>
-		<version>6.1.26</version>
+		<version>7.5.1</version>
 		<project-name>Jetty</project-name>
-		<project-url>http://www.mortbay.org/jetty</project-url>
+		<project-url>http://www.eclipse.org/jetty</project-url>
 		<licenses>
 			<license>
 				<license-name>Apache License 2.0</license-name>
+			</license>
+			<license>
+				<license-name>Eclipse Public License 1.0</license-name>
 			</license>
 		</licenses>
 	</library>
@@ -659,7 +676,7 @@
 	</library>
 	<library>
 		<file-name>development/postgresql.jar</file-name>
-		<version>8.4-701 JDBC 3</version>
+		<version>9.0-801 JDBC 3</version>
 		<project-name>PostgreSQL JDBC Driver</project-name>
 		<project-url>http://jdbc.postgresql.org</project-url>
 		<licenses>
@@ -832,7 +849,7 @@
 	</library>
 	<library>
 		<file-name>development/tomcat-coyote.jar</file-name>
-		<version>6.0.32</version>
+		<version>7.0.21</version>
 		<project-name>Tomcat</project-name>
 		<project-url>http://tomcat.apache.org</project-url>
 		<licenses>
@@ -1131,6 +1148,17 @@
 		</licenses>
 	</library>
 	<library>
+		<file-name>portal/bnd.jar</file-name>
+		<version>1.44.0</version>
+		<project-name>Bnd</project-name>
+		<project-url>http://www.aqute.biz/Bnd</project-url>
+		<licenses>
+			<license>
+				<license-name>Apache License 2.0</license-name>
+			</license>
+		</licenses>
+	</library>
+	<library>
 		<file-name>portal/bobo-browse.jar</file-name>
 		<version>2.5.0 RC1</version>
 		<project-name>Bob Browse</project-name>
@@ -1304,7 +1332,7 @@
 	</library>
 	<library>
 		<file-name>portal/commons-codec.jar</file-name>
-		<version>1.4.0</version>
+		<version>1.5.0</version>
 		<project-name>Commons Codec</project-name>
 		<project-url>http://commons.apache.org/codec</project-url>
 		<licenses>
@@ -1428,7 +1456,7 @@
 	</library>
 	<library>
 		<file-name>portal/commons-lang.jar</file-name>
-		<version>2.5.0</version>
+		<version>2.6.0</version>
 		<project-name>Commons Lang</project-name>
 		<project-url>http://commons.apache.org/lang</project-url>
 		<licenses>
@@ -1613,8 +1641,8 @@
 		</licenses>
 	</library>
 	<library>
-		<file-name>portal/ehcache.jar</file-name>
-		<version>2.1.0</version>
+		<file-name>portal/ehcache-core.jar</file-name>
+		<version>2.4.4</version>
 		<project-name>Ehcache</project-name>
 		<project-url>http://ehcache.sourceforge.net</project-url>
 		<licenses>
@@ -1625,9 +1653,20 @@
 	</library>
 	<library>
 		<file-name>portal/ehcache-jgroupsreplication.jar</file-name>
-		<version>1.3.0</version>
+		<version>1.4.0</version>
 		<project-name>Ehcache</project-name>
 		<project-url>http://ehcache.sourceforge.net</project-url>
+		<licenses>
+			<license>
+				<license-name>Apache License 2.0</license-name>
+			</license>
+		</licenses>
+	</library>
+	<library>
+		<file-name>portal/equinox.jar</file-name>
+		<version>3.7.0.v20110613</version>
+		<project-name>Eclipse OSGi Platform</project-name>
+		<project-url>http://www.eclipse.org/equinox/</project-url>
 		<licenses>
 			<license>
 				<license-name>Apache License 2.0</license-name>
@@ -1658,13 +1697,13 @@
 	</library>
 	<library>
 		<file-name>portal/fontbox.jar</file-name>
-		<version>1.4.0</version>
+		<version>1.6.0</version>
 		<project-name>PDFBox</project-name>
-		<project-url>http://www.pdfbox.org</project-url>
+		<project-url>http://pdfbox.apache.org</project-url>
 		<licenses>
 			<license>
 				<license-name>Apache License 2.0</license-name>
-				<copyright-notice>Copyright (c) 2000-2002 The Apache Software Foundation. All rights reserved.</copyright-notice>
+				<copyright-notice>Copyright (c) 2011 The Apache Software Foundation. All rights reserved.</copyright-notice>
 			</license>
 		</licenses>
 	</library>
@@ -1820,6 +1859,9 @@
 				<license-name>Apache License 2.0</license-name>
 			</license>
 		</licenses>
+		<comments>
+			Removed org.json.* because it json-java.jar.
+		</comments>
 	</library>
 	<library>
 		<file-name>portal/jackrabbit-api.jar</file-name>
@@ -1843,7 +1885,7 @@
 			</license>
 		</licenses>
 		<comments>
-			This includes a public patch from LPS-13343.
+			This includes public patches from LPS-13343 and LPS-19623.
 		</comments>
 	</library>
 	<library>
@@ -1903,7 +1945,7 @@
 	</library>
 	<library>
 		<file-name>portal/jamwiki-core.jar</file-name>
-		<version>0.9.3</version>
+		<version>1.0.6</version>
 		<project-name>JAMWiki</project-name>
 		<project-url>http://jamwiki.org</project-url>
 		<licenses>
@@ -2037,13 +2079,13 @@
 	</library>
 	<library>
 		<file-name>portal/jempbox.jar</file-name>
-		<version>1.4.0</version>
+		<version>1.6.0</version>
 		<project-name>PDFBox</project-name>
-		<project-url>http://www.pdfbox.org</project-url>
+		<project-url>http://pdfbox.apache.org</project-url>
 		<licenses>
 			<license>
 				<license-name>Apache License 2.0</license-name>
-				<copyright-notice>Copyright (c) 2000-2002 The Apache Software Foundation. All rights reserved.</copyright-notice>
+				<copyright-notice>Copyright (c) 2011 The Apache Software Foundation. All rights reserved.</copyright-notice>
 			</license>
 		</licenses>
 	</library>
@@ -2135,7 +2177,7 @@
 	</library>
 	<library>
 		<file-name>portal/jodd.jar</file-name>
-		<version>3.2.7 B2</version>
+		<version>3.2.8-20110918</version>
 		<project-name>Jodd</project-name>
 		<project-url>http://jodd.org</project-url>
 		<licenses>
@@ -2146,7 +2188,7 @@
 	</library>
 	<library>
 		<file-name>portal/jodd-wot.jar</file-name>
-		<version>3.2.7 B2</version>
+		<version>3.2.8-20110918</version>
 		<project-name>Jodd</project-name>
 		<project-url>http://jodd.org</project-url>
 		<licenses>
@@ -2168,7 +2210,7 @@
 	</library>
 	<library>
 		<file-name>portal/jruby.jar</file-name>
-		<version>1.5.6</version>
+		<version>1.6.4</version>
 		<project-name>JRuby</project-name>
 		<project-url>http://jruby.codehaus.org</project-url>
 		<licenses>
@@ -2176,8 +2218,19 @@
 				<license-name>LGPL 2.1</license-name>
 			</license>
 		</licenses>
+	</library>
+	<library>
+		<file-name>portal/json-java.jar</file-name>
+		<version>ce2f5ed80a2cfe665779</version>
+		<project-name>JSON in Java</project-name>
+		<project-url>https://github.com/douglascrockford/JSON-java</project-url>
+		<licenses>
+			<license>
+				<license-name>Apache License 2.0</license-name>
+			</license>
+		</licenses>
 		<comments>
-			This includes a public patch from JRUBY-4774.
+			See the Ant target "build-json-java" in portal-impl/build.xml.
 		</comments>
 	</library>
 	<library>
@@ -2476,13 +2529,13 @@
 	</library>
 	<library>
 		<file-name>portal/pdfbox.jar</file-name>
-		<version>1.4.0</version>
+		<version>1.6.0</version>
 		<project-name>PDFBox</project-name>
-		<project-url>http://www.pdfbox.org</project-url>
+		<project-url>http://pdfbox.apache.org</project-url>
 		<licenses>
 			<license>
 				<license-name>Apache License 2.0</license-name>
-				<copyright-notice>Copyright (c) 2000-2002 The Apache Software Foundation. All rights reserved.</copyright-notice>
+				<copyright-notice>Copyright (c) 2011 The Apache Software Foundation. All rights reserved.</copyright-notice>
 			</license>
 		</licenses>
 	</library>
@@ -2669,7 +2722,7 @@
 	</library>
 	<library>
 		<file-name>portal/serializer.jar</file-name>
-		<version>2.7.0</version>
+		<version>2.7.1</version>
 		<project-name>Xalan-Java</project-name>
 		<project-url>http://xml.apache.org/xalan-j</project-url>
 		<licenses>
@@ -3040,7 +3093,7 @@
 	</library>
 	<library>
 		<file-name>portal/tomcat-juli.jar</file-name>
-		<version>7.0.19</version>
+		<version>7.0.21</version>
 		<project-name>Tomcat</project-name>
 		<project-url>http://tomcat.apache.org</project-url>
 		<licenses>
@@ -3147,7 +3200,7 @@
 	</library>
 	<library>
 		<file-name>portal/xalan.jar</file-name>
-		<version>2.7.0</version>
+		<version>2.7.1</version>
 		<project-name>Xalan</project-name>
 		<project-url>http://xml.apache.org/xalan-j</project-url>
 		<licenses>
@@ -3196,7 +3249,7 @@
 	</library>
 	<library>
 		<file-name>portal/xercesImpl.jar</file-name>
-		<version>2.7.0</version>
+		<version>2.11.0</version>
 		<project-name>Xerces</project-name>
 		<project-url>http://xerces.apache.org/xerces2-j</project-url>
 		<licenses>
@@ -3216,7 +3269,7 @@
 	</library>
 	<library>
 		<file-name>portal/xml-apis.jar</file-name>
-		<version>2.7.0</version>
+		<version>1.4.01</version>
 		<project-name>Xalan</project-name>
 		<project-url>http://xml.apache.org/xalan-j</project-url>
 		<licenses>
@@ -3236,7 +3289,7 @@
 	</library>
 	<library>
 		<file-name>portal/xmlsec.jar</file-name>
-		<version>1.4.1</version>
+		<version>1.4.5</version>
 		<project-name>XML Security</project-name>
 		<project-url>http://santuario.apache.org</project-url>
 		<licenses>

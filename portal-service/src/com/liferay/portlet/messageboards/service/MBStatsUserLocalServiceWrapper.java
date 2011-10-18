@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.messageboards.service;
 
+import com.liferay.portal.service.ServiceWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link MBStatsUserLocalService}.
@@ -23,7 +25,8 @@ package com.liferay.portlet.messageboards.service;
  * @see       MBStatsUserLocalService
  * @generated
  */
-public class MBStatsUserLocalServiceWrapper implements MBStatsUserLocalService {
+public class MBStatsUserLocalServiceWrapper implements MBStatsUserLocalService,
+	ServiceWrapper<MBStatsUserLocalService> {
 	public MBStatsUserLocalServiceWrapper(
 		MBStatsUserLocalService mbStatsUserLocalService) {
 		_mbStatsUserLocalService = mbStatsUserLocalService;
@@ -287,13 +290,15 @@ public class MBStatsUserLocalServiceWrapper implements MBStatsUserLocalService {
 
 	public java.util.List<com.liferay.portlet.messageboards.model.MBStatsUser> getStatsUsersByGroupId(
 		long groupId, int start, int end)
-		throws com.liferay.portal.kernel.exception.SystemException {
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
 		return _mbStatsUserLocalService.getStatsUsersByGroupId(groupId, start,
 			end);
 	}
 
 	public int getStatsUsersByGroupIdCount(long groupId)
-		throws com.liferay.portal.kernel.exception.SystemException {
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
 		return _mbStatsUserLocalService.getStatsUsersByGroupIdCount(groupId);
 	}
 
@@ -315,11 +320,26 @@ public class MBStatsUserLocalServiceWrapper implements MBStatsUserLocalService {
 			lastPostDate);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public MBStatsUserLocalService getWrappedMBStatsUserLocalService() {
 		return _mbStatsUserLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedMBStatsUserLocalService(
+		MBStatsUserLocalService mbStatsUserLocalService) {
+		_mbStatsUserLocalService = mbStatsUserLocalService;
+	}
+
+	public MBStatsUserLocalService getWrappedService() {
+		return _mbStatsUserLocalService;
+	}
+
+	public void setWrappedService(
 		MBStatsUserLocalService mbStatsUserLocalService) {
 		_mbStatsUserLocalService = mbStatsUserLocalService;
 	}

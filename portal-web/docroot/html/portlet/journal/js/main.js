@@ -87,7 +87,7 @@ AUI().add(
 
 			instance._helperId = instance._getNamespacedId('journalArticleHelper', instance.portletNamespace, '');
 
-			var helperHTML = A.substitute(TPL_HELPER, [instance._helperId]);
+			var helperHTML = Lang.sub(TPL_HELPER, [instance._helperId]);
 
 			instance._helper = A.Node.create(helperHTML);
 
@@ -357,17 +357,20 @@ AUI().add(
 			addStructure: function(groupId, structureId, autoStructureId, name, description, xsd, callback) {
 				var instance = this;
 
+				var parentStructureId = '';
+
 				var addGroupPermissions = true;
 				var addGuestPermissions = true;
-				var parentStructureId = '';
+
+				var defaultLocale = instance.getDefaultLocale();
 
 				var serviceParameterTypes = [
 					'long',
 					'java.lang.String',
 					'boolean',
 					'java.lang.String',
-					'java.lang.String',
-					'java.lang.String',
+					'java.util.Map<java.util.Locale, java.lang.String>',
+					'java.util.Map<java.util.Locale, java.lang.String>',
 					'java.lang.String',
 					'com.liferay.portal.service.ServiceContext'
 				];
@@ -378,8 +381,8 @@ AUI().add(
 						structureId: structureId,
 						autoStructureId: autoStructureId,
 						parentStructureId: parentStructureId,
-						name: name,
-						description: description,
+						nameMap:  '{' + defaultLocale + ':' + name + '}',
+						descriptionMap:  '{' + defaultLocale + ':' + (description == '' ? null : description ) + '}',
 						xsd: xsd,
 						serviceContext: A.JSON.stringify(
 							{
@@ -404,7 +407,7 @@ AUI().add(
 				var instanceId = fieldInstance.get('instanceId');
 				var name = instance.portletNamespace + 'structure_el_' + instanceId + '_content';
 
-				var editorHTML = A.substitute(
+				var editorHTML = Lang.sub(
 					TPL_EDITOR_ELEMENT,
 					{
 						id: name,
@@ -850,7 +853,15 @@ AUI().add(
 			getParentStructureId: function() {
 				var instance = this;
 
-				return instance.getById('parentStructureId').val();
+				var parentStructureEl = instance.getById('parentStructureId');
+
+				var parentStructureId;
+
+				if (parentStructureEl) {
+					parentStructureId = parentStructureEl.val();
+				}
+
+				return parentStructureId;
 			},
 
 			getRepeatableButtons: function() {
@@ -933,13 +944,13 @@ AUI().add(
 							buttons: [
 								{
 									handler: saveCallback,
-									text: Liferay.Language.get('save')
+									label: Liferay.Language.get('save')
 								},
 								{
 									handler: function() {
 										this.close();
 									},
-									text: Liferay.Language.get('cancel')
+									label: Liferay.Language.get('cancel')
 								}
 							],
 							centered: true,
@@ -972,16 +983,14 @@ AUI().add(
 						var exception = message.exception;
 
 						if (!exception) {
-							structureDescriptionInput.val(message.description);
+							structureDescriptionInput.val(dialogFields.dialogDescription.val());
 							structureIdInput.val(message.structureId);
-							structureNameInput.val(message.name);
+							structureNameInput.val(dialogFields.dialogStructureName.val());
 							storedStructureXSD.val(encodeURIComponent(dialogFields.contentXSD));
 
 							dialogFields.dialogStructureGroupId.val(message.structureGroupId);
 							dialogFields.dialogStructureId.val(message.structureId);
-							dialogFields.dialogStructureName.val(message.name);
-							dialogFields.dialogDescription.val(message.description);
-							dialogFields.structureNameLabel.html(message.name);
+							dialogFields.structureNameLabel.html(dialogFields.dialogStructureName.val());
 							dialogFields.saveStructureAutogenerateIdCheckbox.hide();
 
 							if (dialogFields.loadDefaultStructure) {
@@ -1239,6 +1248,7 @@ AUI().add(
 				Liferay.Util.openWindow(
 					{
 						dialog: {
+							align: Liferay.Util.Window.ALIGN_CENTER,
 							stack: false,
 							width: 680
 						},
@@ -1623,12 +1633,14 @@ AUI().add(
 			updateStructure: function(groupId, structureId, parentStructureId, name, description, xsd, callback) {
 				var instance = this;
 
+				var defaultLocale = instance.getDefaultLocale();
+
 				var serviceParameterTypes = [
 					'long',
 					'java.lang.String',
 					'java.lang.String',
-					'java.lang.String',
-					'java.lang.String',
+					'java.util.Map<java.util.Locale, java.lang.String>',
+					'java.util.Map<java.util.Locale, java.lang.String>',
 					'java.lang.String',
 					'com.liferay.portal.service.ServiceContext'
 				];
@@ -1638,8 +1650,8 @@ AUI().add(
 						groupId: groupId,
 						structureId: structureId,
 						parentStructureId: parentStructureId || '',
-						name: name,
-						description: description,
+						nameMap:  '{' + defaultLocale + ':' + name + '}',
+						descriptionMap:  '{' + defaultLocale + ':' + (description == '' ? null : description ) + '}',
 						xsd: xsd,
 						serviceContext: A.JSON.stringify(
 							{
@@ -1721,7 +1733,7 @@ AUI().add(
 				var selector = '> span.folder > ul > li';
 
 				if (!generateArticleContent) {
-					selector += '.structure-field:not(.repeated-field,.parent-structure-field)';
+					selector += '.structure-field:not(.repeated-field):not(.parent-structure-field)';
 				}
 
 				var children = source.all(selector);
@@ -1774,16 +1786,20 @@ AUI().add(
 						);
 					}
 
-					var dynConAttributes = null;
+					var dynamicContentAttrs = null;
 
 					if (fieldInstance.get('localized')) {
-						dynConAttributes = {
-							'language-id': fieldInstance.get('localizedValue')
-						};
+						var localizedValue = fieldInstance.get('localizedValue');
+
+						if (localizedValue !== 'false') {
+							dynamicContentAttrs = {
+								'language-id': localizedValue
+							};
+						}
 					}
 
 					var nodeTypeContent = instance.getNodeTypeContent();
-					var typeContent = instance._createDynamicNode(nodeTypeContent, dynConAttributes);
+					var typeContent = instance._createDynamicNode(nodeTypeContent, dynamicContentAttrs);
 					var metadata = instance._createDynamicNode('meta-data');
 
 					var entryInstructions = instance._createDynamicNode(
@@ -1831,41 +1847,57 @@ AUI().add(
 
 					if (!generateArticleContent) {
 						buffer.push(metadata.openTag);
-							var displayAsTooltipVal = instance.normalizeValue(
-								fieldInstance.get('displayAsTooltip')
-							);
-							buffer.push(displayAsTooltip.openTag);
-							buffer.push('<![CDATA[' + displayAsTooltipVal + ']]>');
-							buffer.push(displayAsTooltip.closeTag);
 
-							var requiredVal = instance.normalizeValue(
-								fieldInstance.get('required')
-							);
-							buffer.push(entryRequired.openTag);
-							buffer.push('<![CDATA[' + requiredVal + ']]>');
-							buffer.push(entryRequired.closeTag);
+						var displayAsTooltipVal = instance.normalizeValue(
+							fieldInstance.get('displayAsTooltip')
+						);
 
-							var instructionsVal = instance.normalizeValue(
-								fieldInstance.get('instructions')
-							);
-							buffer.push(entryInstructions.openTag);
-							buffer.push('<![CDATA[' + instructionsVal + ']]>');
-							buffer.push(entryInstructions.closeTag);
+						buffer.push(
+							displayAsTooltip.openTag,
+							'<![CDATA[' + displayAsTooltipVal + ']]>',
+							displayAsTooltip.closeTag
+						);
 
-							var fieldLabelVal = instance.normalizeValue(
-								fieldInstance.get('fieldLabel')
-							);
-							buffer.push(label.openTag);
-							buffer.push('<![CDATA[' + fieldLabelVal + ']]>');
-							buffer.push(label.closeTag);
+						var requiredVal = instance.normalizeValue(
+							fieldInstance.get('required')
+						);
 
-							var predefinedValueVal = instance.normalizeValue(
-								fieldInstance.get('predefinedValue')
-							);
-							buffer.push(predefinedValue.openTag);
-							buffer.push('<![CDATA[' + predefinedValueVal + ']]>');
-							buffer.push(predefinedValue.closeTag);
-						buffer.push(metadata.closeTag);
+						buffer.push(
+							entryRequired.openTag,
+							'<![CDATA[' + requiredVal + ']]>',
+							entryRequired.closeTag
+						);
+
+						var instructionsVal = instance.normalizeValue(
+							fieldInstance.get('instructions')
+						);
+
+						buffer.push(
+							entryInstructions.openTag,
+							'<![CDATA[' + instructionsVal + ']]>',
+							entryInstructions.closeTag
+						);
+
+						var fieldLabelVal = instance.normalizeValue(
+							fieldInstance.get('fieldLabel')
+						);
+
+						buffer.push(
+							label.openTag,
+							'<![CDATA[' + fieldLabelVal + ']]>',
+							label.closeTag
+						);
+
+						var predefinedValueVal = instance.normalizeValue(
+							fieldInstance.get('predefinedValue')
+						);
+
+						buffer.push(
+							predefinedValue.openTag,
+							'<![CDATA[' + predefinedValueVal + ']]>',
+							predefinedValue.closeTag,
+							metadata.closeTag
+						);
 					}
 					else if (generateArticleContent) {
 						buffer.push(typeContent.openTag);
@@ -2081,7 +2113,7 @@ AUI().add(
 
 						button.val(buttonValue);
 					},
-					'[name="' + instance.portletNamespace + 'journalImageDeleteButton"]'
+					'#' + instance.portletNamespace + 'journalImageDeleteButton'
 				);
 
 				container.delegate(
@@ -2109,28 +2141,21 @@ AUI().add(
 					'.journal-image-link'
 				);
 
-				var _attachButtonInputSelector = function(id, title, handlerName) {
-					var buttonId = '.journal-' + id + '-button .aui-button-input';
+				container.delegate(
+					'click',
+					function(event) {
+						var button = event.currentTarget;
+						var input = button.ancestor('.journal-article-component-container').one('.aui-field-input');
+						var selectUrl = button.attr('data-documentlibraryUrl');
 
-					container.delegate(
-						'click',
-						function(event) {
-							var button = event.currentTarget;
-							var input = button.ancestor('.journal-article-component-container').one('.aui-field-input');
-							var selectUrl = button.attr('data-' + id + 'Url');
+						window[instance.portletNamespace + 'selectDocumentLibrary'] = function(url) {
+							input.val(url);
+						};
 
-							window[instance.portletNamespace + handlerName] = function(url) {
-								input.val(url);
-							};
-
-							instance.openPopupWindow(selectUrl, title);
-						},
-						buttonId
-					);
-				};
-
-				_attachButtonInputSelector('documentlibrary', 'DocumentLibrary', 'selectDocumentLibrary');
-				_attachButtonInputSelector('imagegallery', 'ImageGallery', 'selectImageGallery');
+						instance.openPopupWindow(selectUrl, Liferay.Language.get('javax.portlet.title.20'));
+					},
+					'.journal-documentlibrary-button .aui-button-input'
+				);
 
 				container.delegate(
 					'mouseover',
@@ -2464,7 +2489,6 @@ AUI().add(
 					'boolean': Journal.FieldModel.Boolean,
 					'document_library': Journal.FieldModel.DocumentLibrary,
 					'image': Journal.FieldModel.Image,
-					'image_gallery': Journal.FieldModel.ImageGallery,
 					'link_to_layout': Journal.FieldModel.LinkToPage,
 					'list': Journal.FieldModel.List,
 					'multi-list': Journal.FieldModel.MultiList,
@@ -2967,11 +2991,23 @@ AUI().add(
 					destructor: function() {
 						var instance = this;
 
+						var source = instance.get('source');
+
+						var children = source.all('.structure-field');
+
+						children.each(
+							function(item, index, collection) {
+								var fieldInstance = instance.getFieldInstance(item);
+
+								if (fieldInstance) {
+									fieldInstance.destroy();
+								}
+							}
+						);
+
 						var fieldType = instance.get('fieldType');
 
 						if (fieldType == 'text_area') {
-							var source = instance.get('source');
-
 							var textarea = source.one('textarea');
 
 							if (textarea) {
@@ -3157,7 +3193,7 @@ AUI().add(
 							var variableName = instance.get('variableName') + getUID();
 							var randomInstanceId = generateInstanceId();
 
-							htmlTemplate = A.substitute(
+							htmlTemplate = Lang.sub(
 								TPL_FIELD_CONTAINER,
 								{
 									articleButtonsRowCSSClass: articleButtonsRowCSSClass,
@@ -3460,7 +3496,6 @@ AUI().add(
 		registerFieldModel('TextArea', 'text_area', 'TextAreaField', true);
 		registerFieldModel('TextBox', 'text_box', 'TextBoxField', true);
 		registerFieldModel('Image', 'image', 'ImageField', true);
-		registerFieldModel('ImageGallery', 'image_gallery', 'ImageGalleryField', true);
 		registerFieldModel('DocumentLibrary', 'document_library', 'DocumentLibraryField', true);
 		registerFieldModel('Boolean', 'boolean', 'BooleanField', true);
 		registerFieldModel('List', 'list', 'ListField', true);
@@ -3472,6 +3507,6 @@ AUI().add(
 	},
 	'',
 	{
-		requires: ['aui-base', 'aui-data-set', 'aui-datatype','aui-dialog', 'aui-dialog-iframe', 'aui-io-request', 'aui-nested-list', 'aui-overlay-context-panel', 'json', 'substitute']
+		requires: ['aui-base', 'aui-data-set', 'aui-datatype','aui-dialog', 'aui-dialog-iframe', 'aui-io-request', 'aui-nested-list', 'aui-overlay-context-panel', 'json']
 	}
 );

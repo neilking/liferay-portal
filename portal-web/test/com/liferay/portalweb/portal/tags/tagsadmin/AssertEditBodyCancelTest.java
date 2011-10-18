@@ -25,7 +25,7 @@ public class AssertEditBodyCancelTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -40,21 +40,19 @@ public class AssertEditBodyCancelTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Control Panel", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Control Panel",
+			RuntimeVariables.replace("Control Panel"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Tags", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Tags", RuntimeVariables.replace("Tags"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isVisible("//div[4]/ul/li/span/a")) {
+				if (selenium.isVisible("//h1[@class='header-title']/span")) {
 					break;
 				}
 			}
@@ -64,16 +62,18 @@ public class AssertEditBodyCancelTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("//div[4]/ul/li/span/a", RuntimeVariables.replace(""));
+		assertEquals(RuntimeVariables.replace("selenium ide"),
+			selenium.getText("//h1[@class='header-title']/span"));
+		selenium.clickAt("//input[@id='editTagButton']",
+			RuntimeVariables.replace("Edit"));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isVisible("//td[2]/div[2]/div[3]/input[2]")) {
+				if (selenium.isVisible("//input[@id='_99_name']")) {
 					break;
 				}
 			}
@@ -83,51 +83,7 @@ public class AssertEditBodyCancelTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		assertTrue(selenium.isVisible("//td[2]/div[2]/div[3]/input[2]"));
-		selenium.clickAt("//td[2]/div[2]/div[3]/input[2]",
-			RuntimeVariables.replace(""));
-		assertFalse(selenium.isVisible("//td[2]/div[2]/div[3]/input[2]"));
-
-		for (int second = 0;; second++) {
-			if (second >= 60) {
-				fail("timeout");
-			}
-
-			try {
-				if (selenium.isVisible("//div[4]/ul/li/span/a")) {
-					break;
-				}
-			}
-			catch (Exception e) {
-			}
-
-			Thread.sleep(1000);
-		}
-
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("//div[4]/ul/li/span/a", RuntimeVariables.replace(""));
-
-		for (int second = 0;; second++) {
-			if (second >= 60) {
-				fail("timeout");
-			}
-
-			try {
-				if (selenium.isVisible("//div[3]/div[2]/input[1]")) {
-					break;
-				}
-			}
-			catch (Exception e) {
-			}
-
-			Thread.sleep(1000);
-		}
-
-		selenium.saveScreenShotAndSource();
-		assertEquals("This is a tag for anything",
-			selenium.getValue("//div[3]/div[2]/input[1]"));
-		assertEquals("related to selenium.",
-			selenium.getValue("//div[3]/div[2]/input[2]"));
+		selenium.click("//input[@value='Close']");
+		assertFalse(selenium.isElementPresent("//input[@id='_99_name']"));
 	}
 }

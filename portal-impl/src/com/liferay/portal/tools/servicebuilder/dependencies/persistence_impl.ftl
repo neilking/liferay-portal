@@ -99,17 +99,21 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 
 	public static final String FINDER_CLASS_NAME_ENTITY = ${entity.name}Impl.class.getName();
 
-	public static final String FINDER_CLASS_NAME_LIST = FINDER_CLASS_NAME_ENTITY + ".List";
+	public static final String FINDER_CLASS_NAME_LIST_WITH_PAGINATION = FINDER_CLASS_NAME_ENTITY + ".List1";
+
+	public static final String FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION = FINDER_CLASS_NAME_ENTITY + ".List2";
+
+	<#assign columnBitmaskEnabled = (entity.finderColumnsList?size &gt; 0) && (entity.finderColumnsList?size &lt; 64)>
 
 	<#list entity.getFinderList() as finder>
 		<#assign finderColsList = finder.getColumns()>
 
 		<#if finder.isCollection()>
-			public static final FinderPath FINDER_PATH_FIND_BY_${finder.name?upper_case} = new FinderPath(
+			public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_${finder.name?upper_case} = new FinderPath(
 				${entity.name}ModelImpl.ENTITY_CACHE_ENABLED,
 				${entity.name}ModelImpl.FINDER_CACHE_ENABLED,
 				${entity.name}Impl.class,
-				FINDER_CLASS_NAME_LIST,
+				FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
 				"findBy${finder.name}",
 				new String[] {
 					<#list finderColsList as finderCol>
@@ -118,6 +122,36 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 
 					"java.lang.Integer", "java.lang.Integer", "com.liferay.portal.kernel.util.OrderByComparator"
 				});
+
+			public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_${finder.name?upper_case} = new FinderPath(
+				${entity.name}ModelImpl.ENTITY_CACHE_ENABLED,
+				${entity.name}ModelImpl.FINDER_CACHE_ENABLED,
+				${entity.name}Impl.class,
+				FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
+				"findBy${finder.name}",
+				new String[] {
+					<#list finderColsList as finderCol>
+						${serviceBuilder.getPrimitiveObj("${finderCol.type}")}.class.getName()
+
+						<#if finderCol_has_next>
+							,
+						</#if>
+					</#list>
+				}
+
+				<#if columnBitmaskEnabled>
+					,
+
+					<#list finderColsList as finderCol>
+						${entity.name}ModelImpl.${finderCol.name?upper_case}_COLUMN_BITMASK
+
+						<#if finderCol_has_next>
+							|
+						</#if>
+					</#list>
+				</#if>
+
+				);
 		<#else>
 			public static final FinderPath FINDER_PATH_FETCH_BY_${finder.name?upper_case} = new FinderPath(
 				${entity.name}ModelImpl.ENTITY_CACHE_ENABLED,
@@ -133,14 +167,28 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 							,
 						</#if>
 					</#list>
-				});
+				}
+
+				<#if columnBitmaskEnabled>
+					,
+
+					<#list finderColsList as finderCol>
+						${entity.name}ModelImpl.${finderCol.name?upper_case}_COLUMN_BITMASK
+
+						<#if finderCol_has_next>
+							|
+						</#if>
+					</#list>
+				</#if>
+
+				);
 		</#if>
 
 		public static final FinderPath FINDER_PATH_COUNT_BY_${finder.name?upper_case} = new FinderPath(
 			${entity.name}ModelImpl.ENTITY_CACHE_ENABLED,
 			${entity.name}ModelImpl.FINDER_CACHE_ENABLED,
 			Long.class,
-			FINDER_CLASS_NAME_LIST,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"countBy${finder.name}",
 			new String[] {
 				<#list finderColsList as finderCol>
@@ -153,11 +201,19 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			});
 	</#list>
 
-	public static final FinderPath FINDER_PATH_FIND_ALL = new FinderPath(
+	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_ALL = new FinderPath(
 		${entity.name}ModelImpl.ENTITY_CACHE_ENABLED,
 		${entity.name}ModelImpl.FINDER_CACHE_ENABLED,
 		${entity.name}Impl.class,
-		FINDER_CLASS_NAME_LIST,
+		FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
+		"findAll",
+		new String[0]);
+
+	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL = new FinderPath(
+		${entity.name}ModelImpl.ENTITY_CACHE_ENABLED,
+		${entity.name}ModelImpl.FINDER_CACHE_ENABLED,
+		${entity.name}Impl.class,
+		FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
 		"findAll",
 		new String[0]);
 
@@ -165,7 +221,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		${entity.name}ModelImpl.ENTITY_CACHE_ENABLED,
 		${entity.name}ModelImpl.FINDER_CACHE_ENABLED,
 		Long.class,
-		FINDER_CLASS_NAME_LIST,
+		FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 		"countAll",
 		new String[0]);
 
@@ -212,15 +268,12 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	 */
 	public void cacheResult(List<${entity.name}> ${entity.varNames}) {
 		for (${entity.name} ${entity.varName} : ${entity.varNames}) {
-			if (EntityCacheUtil.getResult(${entity.name}ModelImpl.ENTITY_CACHE_ENABLED, ${entity.name}Impl.class, ${entity.varName}.getPrimaryKey(), this) == null) {
+			if (EntityCacheUtil.getResult(${entity.name}ModelImpl.ENTITY_CACHE_ENABLED, ${entity.name}Impl.class, ${entity.varName}.getPrimaryKey()) == null) {
 				cacheResult(${entity.varName});
 			}
-
-			<#if entity.hasLazyBlobColumn()>
-				else {
-					${entity.varName}.resetOriginalValues();
-				}
-			</#if>
+			else {
+				${entity.varName}.resetOriginalValues();
+			}
 		}
 	}
 
@@ -238,8 +291,10 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		}
 
 		EntityCacheUtil.clearCache(${entity.name}Impl.class.getName());
+
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 	}
 
 	/**
@@ -252,6 +307,9 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	@Override
 	public void clearCache(${entity.name} ${entity.varName}) {
 		EntityCacheUtil.removeResult(${entity.name}ModelImpl.ENTITY_CACHE_ENABLED, ${entity.name}Impl.class, ${entity.varName}.getPrimaryKey());
+
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 
 		<#list entity.getUniqueFinderList() as finder>
 			<#assign finderColsList = finder.getColumns()>
@@ -415,7 +473,8 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			closeSession(session);
 		}
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 
 		<#assign uniqueFinderList = entity.getUniqueFinderList()>
 
@@ -456,9 +515,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	public ${entity.name} updateImpl(${packagePath}.model.${entity.name} ${entity.varName}, boolean merge) throws SystemException {
 		${entity.varName} = toUnwrappedModel(${entity.varName});
 
-		<#assign uniqueFinderList = entity.getUniqueFinderList()>
-
-		<#if (uniqueFinderList?size != 0) || entity.isHierarchicalTree()>
+		<#if (entity.finderColumnsList?size != 0) || entity.isHierarchicalTree()>
 			boolean isNew = ${entity.varName}.isNew();
 
 			${entity.name}ModelImpl ${entity.varName}ModelImpl = (${entity.name}ModelImpl)${entity.varName};
@@ -551,6 +608,11 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			BatchSessionUtil.update(session, ${entity.varName}, merge);
 
 			${entity.varName}.setNew(false);
+
+			<#if entity.hasLazyBlobColumn()>
+				session.flush();
+				session.clear();
+			</#if>
 		}
 		catch (Exception e) {
 			throw processException(e);
@@ -559,90 +621,218 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			closeSession(session);
 		}
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+
+		<#assign collectionFinderList = entity.getCollectionFinderList()>
+
+		<#if columnBitmaskEnabled>
+			if (isNew || !${entity.name}ModelImpl.COLUMN_BITMASK_ENABLED) {
+				FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+			}
+
+			<#if collectionFinderList?size != 0>
+				else {
+					<#list collectionFinderList as finder>
+						if ((${entity.varName}ModelImpl.getColumnBitmask() & FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_${finder.name?upper_case}.getColumnBitmask()) != 0) {
+							Object[] args = new Object[] {
+								<#list finder.getColumns() as finderCol>
+									<#if finderCol.isPrimitiveType()>
+										${serviceBuilder.getPrimitiveObj("${finderCol.type}")}.valueOf(
+									</#if>
+
+									${entity.varName}ModelImpl.getOriginal${finderCol.methodName}()
+
+									<#if finderCol.isPrimitiveType()>
+										)
+									</#if>
+
+									<#if finderCol_has_next>
+										,
+									</#if>
+								</#list>
+							};
+
+							FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_${finder.name?upper_case}, args);
+							FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_${finder.name?upper_case}, args);
+
+							args = new Object[] {
+								<#list finder.getColumns() as finderCol>
+									<#if finderCol.isPrimitiveType()>
+										${serviceBuilder.getPrimitiveObj("${finderCol.type}")}.valueOf(
+									</#if>
+
+									${entity.varName}ModelImpl.get${finderCol.methodName}()
+
+									<#if finderCol.isPrimitiveType()>
+										)
+									</#if>
+
+									<#if finderCol_has_next>
+										,
+									</#if>
+								</#list>
+							};
+
+							FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_${finder.name?upper_case}, args);
+							FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_${finder.name?upper_case}, args);
+						}
+					</#list>
+				}
+			</#if>
+		<#else>
+			<#if entity.finderColumnsList?size != 0>
+				if (isNew) {
+					FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+				}
+				else {
+					<#list entity.collectionFinderList as finder>
+						<#assign finderColsList = finder.getColumns()>
+						if (
+							<#list finderColsList as finderCol>
+								<#if finderCol.isPrimitiveType()>
+									${entity.varName}.get${finderCol.methodName}() != ${entity.varName}ModelImpl.getOriginal${finderCol.methodName}()
+								<#else>
+									!Validator.equals(${entity.varName}.get${finderCol.methodName}(), ${entity.varName}ModelImpl.getOriginal${finderCol.methodName}())
+								</#if>
+
+								<#if finderCol_has_next>
+									||
+								</#if>
+							</#list>
+						) {
+
+							Object[] args = new Object[] {
+								<#list finderColsList as finderCol>
+									<#if finderCol.isPrimitiveType()>
+										${serviceBuilder.getPrimitiveObj("${finderCol.type}")}.valueOf(
+									</#if>
+
+									${entity.varName}ModelImpl.getOriginal${finderCol.methodName}()
+
+									<#if finderCol.isPrimitiveType()>
+										)
+									</#if>
+
+									<#if finderCol_has_next>
+										,
+									</#if>
+								</#list>
+							});
+
+							FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_${finder.name?upper_case}, args);
+							FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_${finder.name?upper_case}, args);
+
+							args = new Object[] {
+								<#list finderColsList as finderCol>
+									<#if finderCol.isPrimitiveType()>
+										${serviceBuilder.getPrimitiveObj("${finderCol.type}")}.valueOf(
+									</#if>
+
+									${entity.varName}ModelImpl.get${finderCol.methodName}()
+
+									<#if finderCol.isPrimitiveType()>
+										)
+									</#if>
+
+									<#if finderCol_has_next>
+										,
+									</#if>
+								</#list>
+							});
+
+							FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_${finder.name?upper_case}, args);
+							FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_${finder.name?upper_case}, args);
+						}
+					</#list>
+				}
+			</#if>
+		</#if>
 
 		EntityCacheUtil.putResult(${entity.name}ModelImpl.ENTITY_CACHE_ENABLED, ${entity.name}Impl.class, ${entity.varName}.getPrimaryKey(), ${entity.varName});
+
+		<#assign uniqueFinderList = entity.getUniqueFinderList()>
+
+		<#if uniqueFinderList?size &gt; 0>
+			if (isNew) {
+				<#list uniqueFinderList as finder>
+					<#assign finderColsList = finder.getColumns()>
+
+					FinderCacheUtil.putResult(
+						FINDER_PATH_FETCH_BY_${finder.name?upper_case},
+						new Object[] {
+							<#list finderColsList as finderCol>
+								<#if finderCol.isPrimitiveType()>
+									${serviceBuilder.getPrimitiveObj("${finderCol.type}")}.valueOf(
+								</#if>
+
+								${entity.varName}.get${finderCol.methodName}()
+
+								<#if finderCol.isPrimitiveType()>
+									)
+								</#if>
+
+								<#if finderCol_has_next>
+									,
+								</#if>
+							</#list>
+						},
+						${entity.varName});
+				</#list>
+			}
+			else {
+				<#list uniqueFinderList as finder>
+					<#assign finderColsList = finder.getColumns()>
+
+					if ((${entity.varName}ModelImpl.getColumnBitmask() & FINDER_PATH_FETCH_BY_${finder.name?upper_case}.getColumnBitmask()) != 0) {
+						Object[] args = new Object[] {
+							<#list finderColsList as finderCol>
+								<#if finderCol.isPrimitiveType()>
+									${serviceBuilder.getPrimitiveObj("${finderCol.type}")}.valueOf(
+								</#if>
+
+								${entity.varName}ModelImpl.getOriginal${finderCol.methodName}()
+
+								<#if finderCol.isPrimitiveType()>
+									)
+								</#if>
+
+								<#if finderCol_has_next>
+									,
+								</#if>
+							</#list>
+						};
+
+						FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_${finder.name?upper_case}, args);
+						FinderCacheUtil.removeResult(FINDER_PATH_FETCH_BY_${finder.name?upper_case}, args);
+
+						FinderCacheUtil.putResult(
+							FINDER_PATH_FETCH_BY_${finder.name?upper_case},
+							new Object[] {
+								<#list finderColsList as finderCol>
+									<#if finderCol.isPrimitiveType()>
+										${serviceBuilder.getPrimitiveObj("${finderCol.type}")}.valueOf(
+									</#if>
+
+									${entity.varName}.get${finderCol.methodName}()
+
+									<#if finderCol.isPrimitiveType()>
+										)
+									</#if>
+
+									<#if finderCol_has_next>
+										,
+									</#if>
+								</#list>
+							},
+							${entity.varName});
+					}
+				</#list>
+			}
+		</#if>
 
 		<#if entity.hasLazyBlobColumn()>
 			${entity.varName}.resetOriginalValues();
 		</#if>
-
-		<#list uniqueFinderList as finder>
-			<#assign finderColsList = finder.getColumns()>
-
-			if (
-					!isNew && (
-						<#list finderColsList as finderCol>
-							<#if finderCol.isPrimitiveType()>
-								${entity.varName}.get${finderCol.methodName}() != ${entity.varName}ModelImpl.getOriginal${finderCol.methodName}()
-							<#else>
-								!Validator.equals(${entity.varName}.get${finderCol.methodName}(), ${entity.varName}ModelImpl.getOriginal${finderCol.methodName}())
-							</#if>
-
-							<#if finderCol_has_next>
-								||
-							</#if>
-						</#list>
-					)
-			) {
-				FinderCacheUtil.removeResult(
-					FINDER_PATH_FETCH_BY_${finder.name?upper_case},
-					new Object[] {
-						<#list finderColsList as finderCol>
-							<#if finderCol.isPrimitiveType()>
-								${serviceBuilder.getPrimitiveObj("${finderCol.type}")}.valueOf(
-							</#if>
-
-							${entity.varName}ModelImpl.getOriginal${finderCol.methodName}()
-
-							<#if finderCol.isPrimitiveType()>
-								)
-							</#if>
-
-							<#if finderCol_has_next>
-								,
-							</#if>
-						</#list>
-					});
-			}
-
-			if (
-					isNew || (
-						<#list finderColsList as finderCol>
-							<#if finderCol.isPrimitiveType()>
-								${entity.varName}.get${finderCol.methodName}() != ${entity.varName}ModelImpl.getOriginal${finderCol.methodName}()
-							<#else>
-								!Validator.equals(${entity.varName}.get${finderCol.methodName}(), ${entity.varName}ModelImpl.getOriginal${finderCol.methodName}())
-							</#if>
-
-							<#if finderCol_has_next>
-								||
-							</#if>
-						</#list>
-					)
-			) {
-				FinderCacheUtil.putResult(
-					FINDER_PATH_FETCH_BY_${finder.name?upper_case},
-					new Object[] {
-						<#list finderColsList as finderCol>
-							<#if finderCol.isPrimitiveType()>
-								${serviceBuilder.getPrimitiveObj("${finderCol.type}")}.valueOf(
-							</#if>
-
-							${entity.varName}.get${finderCol.methodName}()
-
-							<#if finderCol.isPrimitiveType()>
-								)
-							</#if>
-
-							<#if finderCol_has_next>
-								,
-							</#if>
-						</#list>
-					},
-					${entity.varName});
-			}
-		</#list>
 
 		return ${entity.varName};
 	}
@@ -735,7 +925,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	 * @throws SystemException if a system exception occurred
 	 */
 	public ${entity.name} fetchByPrimaryKey(${entity.PKClassName} ${entity.PKVarName}) throws SystemException {
-		${entity.name} ${entity.varName} = (${entity.name})EntityCacheUtil.getResult(${entity.name}ModelImpl.ENTITY_CACHE_ENABLED, ${entity.name}Impl.class, ${entity.PKVarName}, this);
+		${entity.name} ${entity.varName} = (${entity.name})EntityCacheUtil.getResult(${entity.name}ModelImpl.ENTITY_CACHE_ENABLED, ${entity.name}Impl.class, ${entity.PKVarName});
 
 		if (${entity.varName} == _null${entity.name}) {
 			return null;
@@ -870,39 +1060,36 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			</#list>
 
 			int start, int end, OrderByComparator orderByComparator) throws SystemException {
-				Object[] finderArgs = new Object[] {
-					<#list finderColsList as finderCol>
-						${finderCol.name},
-					</#list>
+				FinderPath finderPath = null;
+				Object[] finderArgs = null;
 
-					String.valueOf(start), String.valueOf(end), String.valueOf(orderByComparator)
-				};
+				if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) && (orderByComparator == null)) {
+					finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_${finder.name?upper_case};
+					finderArgs = new Object[] {
+						<#list finderColsList as finderCol>
+							${finderCol.name}
 
-				List<${entity.name}> list = (List<${entity.name}>)FinderCacheUtil.getResult(FINDER_PATH_FIND_BY_${finder.name?upper_case}, finderArgs, this);
+							<#if finderCol_has_next>
+								,
+							</#if>
+						</#list>
+					};
+				}
+				else {
+					finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_${finder.name?upper_case};
+					finderArgs = new Object[] {
+						<#list finderColsList as finderCol>
+							${finderCol.name},
+						</#list>
+
+						start, end, orderByComparator
+					};
+				}
+
+				List<${entity.name}> list = (List<${entity.name}>)FinderCacheUtil.getResult(finderPath, finderArgs, this);
 
 				if (list == null) {
-					StringBundler query = null;
-
-					if (orderByComparator != null) {
-						query = new StringBundler(${finderColsList?size + 2} + (orderByComparator.getOrderByFields().length * 3));
-					}
-					else {
-						query = new StringBundler(<#if entity.getOrder()??>${finderColsList?size + 2}<#else>${finderColsList?size + 1}</#if>);
-					}
-
-					query.append(_SQL_SELECT_${entity.alias?upper_case}_WHERE);
-
-					<#include "persistence_impl_finder_cols.ftl">
-
-					if (orderByComparator != null) {
-						appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-					}
-
-					<#if entity.getOrder()??>
-						else {
-							query.append(${entity.name}ModelImpl.ORDER_BY_JPQL);
-						}
-					</#if>
+					<#include "persistence_impl_find_by_query.ftl">
 
 					String sql = query.toString();
 
@@ -924,12 +1111,12 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 					}
 					finally {
 						if (list == null) {
-							FinderCacheUtil.removeResult(FINDER_PATH_FIND_BY_${finder.name?upper_case}, finderArgs);
+							FinderCacheUtil.removeResult(finderPath, finderArgs);
 						}
 						else {
 							cacheResult(list);
 
-							FinderCacheUtil.putResult(FINDER_PATH_FIND_BY_${finder.name?upper_case}, finderArgs, list);
+							FinderCacheUtil.putResult(finderPath, finderArgs, list);
 						}
 
 						closeSession(session);
@@ -1126,78 +1313,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 
 				OrderByComparator orderByComparator, boolean previous) {
 
-				StringBundler query = null;
-
-				if (orderByComparator != null) {
-					query = new StringBundler(6 + (orderByComparator.getOrderByFields().length * 6));
-				}
-				else {
-					query = new StringBundler(3);
-				}
-
-				query.append(_SQL_SELECT_${entity.alias?upper_case}_WHERE);
-
-				<#include "persistence_impl_finder_cols.ftl">
-
-				if (orderByComparator != null) {
-					String[] orderByFields = orderByComparator.getOrderByFields();
-
-					if (orderByFields.length > 0) {
-						query.append(WHERE_AND);
-					}
-
-					for (int i = 0; i < orderByFields.length; i++) {
-						query.append(_ORDER_BY_ENTITY_ALIAS);
-						query.append(orderByFields[i]);
-
-						if ((i + 1) < orderByFields.length) {
-							if (orderByComparator.isAscending() ^ previous) {
-								query.append(WHERE_GREATER_THAN_HAS_NEXT);
-							}
-							else {
-								query.append(WHERE_LESSER_THAN_HAS_NEXT);
-							}
-						}
-						else {
-							if (orderByComparator.isAscending() ^ previous) {
-								query.append(WHERE_GREATER_THAN);
-							}
-							else {
-								query.append(WHERE_LESSER_THAN);
-							}
-						}
-					}
-
-					query.append(ORDER_BY_CLAUSE);
-
-					for (int i = 0; i < orderByFields.length; i++) {
-						query.append(_ORDER_BY_ENTITY_ALIAS);
-						query.append(orderByFields[i]);
-
-						if ((i + 1) < orderByFields.length) {
-							if (orderByComparator.isAscending() ^ previous) {
-								query.append(ORDER_BY_ASC_HAS_NEXT);
-							}
-							else {
-								query.append(ORDER_BY_DESC_HAS_NEXT);
-							}
-						}
-						else {
-							if (orderByComparator.isAscending() ^ previous) {
-								query.append(ORDER_BY_ASC);
-							}
-							else {
-								query.append(ORDER_BY_DESC);
-							}
-						}
-					}
-				}
-
-				<#if entity.getOrder()??>
-					else {
-						query.append(${entity.name}ModelImpl.ORDER_BY_JPQL);
-					}
-				</#if>
+				<#include "persistence_impl_get_by_prev_and_next_query.ftl">
 
 				String sql = query.toString();
 
@@ -1211,7 +1327,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				<#include "persistence_impl_finder_qpos.ftl">
 
 				if (orderByComparator != null) {
-					Object[] values = orderByComparator.getOrderByValues(${entity.varName});
+					Object[] values = orderByComparator.getOrderByConditionValues(${entity.varName});
 
 					for (Object value : values) {
 						qPos.add(value);
@@ -1348,37 +1464,44 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				</#list>
 
 				int start, int end, OrderByComparator orderByComparator) throws SystemException {
+					FinderPath finderPath = null;
+					Object[] finderArgs = null;
 
-					Object[] finderArgs = new Object[] {
-						<#list finderColsList as finderCol>
-							<#if finderCol.hasArrayableOperator()>
-								StringUtil.merge(${finderCol.names}),
-							<#else>
-								${finderCol.name},
-							</#if>
-						</#list>
+					if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) && (orderByComparator == null)) {
+						finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_${finder.name?upper_case};
+						finderArgs = new Object[] {
+							<#list finderColsList as finderCol>
+								<#if finderCol.hasArrayableOperator()>
+									StringUtil.merge(${finderCol.names})
+								<#else>
+									${finderCol.name}
+								</#if>
 
-						String.valueOf(start), String.valueOf(end), String.valueOf(orderByComparator)
-					};
+								<#if finderCol_has_next>
+									,
+								</#if>
+							</#list>
+						};
+					}
+					else {
+						finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_${finder.name?upper_case};
+						finderArgs = new Object[] {
+							<#list finderColsList as finderCol>
+								<#if finderCol.hasArrayableOperator()>
+									StringUtil.merge(${finderCol.names}),
+								<#else>
+									${finderCol.name},
+								</#if>
+							</#list>
 
-					List<${entity.name}> list = (List<${entity.name}>)FinderCacheUtil.getResult(FINDER_PATH_FIND_BY_${finder.name?upper_case}, finderArgs, this);
+							start, end, orderByComparator
+						};
+					}
+
+					List<${entity.name}> list = (List<${entity.name}>)FinderCacheUtil.getResult(finderPath, finderArgs, this);
 
 					if (list == null) {
-						StringBundler query = new StringBundler();
-
-						query.append(_SQL_SELECT_${entity.alias?upper_case}_WHERE);
-
-						<#include "persistence_impl_finder_arrayable_cols.ftl">
-
-						if (orderByComparator != null) {
-							appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-						}
-
-						<#if entity.getOrder()??>
-							else {
-								query.append(${entity.name}ModelImpl.ORDER_BY_JPQL);
-							}
-						</#if>
+						<#include "persistence_impl_find_by_arrayable_query.ftl">
 
 						String sql = query.toString();
 
@@ -1400,12 +1523,12 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 						}
 						finally {
 							if (list == null) {
-								FinderCacheUtil.removeResult(FINDER_PATH_FIND_BY_${finder.name?upper_case}, finderArgs);
+								FinderCacheUtil.removeResult(finderPath, finderArgs);
 							}
 							else {
 								cacheResult(list);
 
-								FinderCacheUtil.putResult(FINDER_PATH_FIND_BY_${finder.name?upper_case}, finderArgs, list);
+								FinderCacheUtil.putResult(finderPath, finderArgs, list);
 							}
 
 							closeSession(session);
@@ -1510,76 +1633,102 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 						start, end, orderByComparator);
 					}
 
-					StringBundler query = null;
+					<#if entity.isPermissionedModel()>
+						<#include "persistence_impl_find_by_query.ftl">
 
-					if (orderByComparator != null) {
-						query = new StringBundler(${finderColsList?size + 2} + (orderByComparator.getOrderByFields().length * 3));
-					}
-					else {
-						query = new StringBundler(<#if entity.getOrder()??>${finderColsList?size + 2}<#else>${finderColsList?size + 1}</#if>);
-					}
+						String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(), ${entity.name}.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN, _FILTER_ENTITY_TABLE_FILTER_USERID_COLUMN<#if finder.hasColumn("groupId")>, groupId</#if>);
 
-					if (getDB().isSupportsInlineDistinct()) {
-						query.append(_FILTER_SQL_SELECT_${entity.alias?upper_case}_WHERE);
-					}
-					else {
-						query.append(_FILTER_SQL_SELECT_${entity.alias?upper_case}_NO_INLINE_DISTINCT_WHERE_1);
-					}
+						Session session = null;
 
-					<#include "persistence_impl_finder_cols.ftl">
+						try {
+							session = openSession();
 
-					if (!getDB().isSupportsInlineDistinct()) {
-						query.append(_FILTER_SQL_SELECT_${entity.alias?upper_case}_NO_INLINE_DISTINCT_WHERE_2);
-					}
+							Query q = session.createQuery(sql);
 
-					if (orderByComparator != null) {
+							QueryPos qPos = QueryPos.getInstance(q);
+
+							<#include "persistence_impl_finder_qpos.ftl">
+
+							return (List<${entity.name}>)QueryUtil.list(q, getDialect(), start, end);
+						}
+						catch (Exception e) {
+							throw processException(e);
+						}
+						finally {
+							closeSession(session);
+						}
+					<#else>
+						StringBundler query = null;
+
+						if (orderByComparator != null) {
+							query = new StringBundler(${finderColsList?size + 2} + (orderByComparator.getOrderByFields().length * 3));
+						}
+						else {
+							query = new StringBundler(<#if entity.getOrder()??>${finderColsList?size + 2}<#else>${finderColsList?size + 1}</#if>);
+						}
+
 						if (getDB().isSupportsInlineDistinct()) {
-							appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+							query.append(_FILTER_SQL_SELECT_${entity.alias?upper_case}_WHERE);
 						}
 						else {
-							appendOrderByComparator(query, _ORDER_BY_ENTITY_TABLE, orderByComparator);
+							query.append(_FILTER_SQL_SELECT_${entity.alias?upper_case}_NO_INLINE_DISTINCT_WHERE_1);
 						}
-					}
 
-					<#if entity.getOrder()??>
-						else {
+						<#include "persistence_impl_finder_cols.ftl">
+
+						if (!getDB().isSupportsInlineDistinct()) {
+							query.append(_FILTER_SQL_SELECT_${entity.alias?upper_case}_NO_INLINE_DISTINCT_WHERE_2);
+						}
+
+						if (orderByComparator != null) {
 							if (getDB().isSupportsInlineDistinct()) {
-								query.append(${entity.name}ModelImpl.ORDER_BY_JPQL);
+								appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 							}
 							else {
-								query.append(${entity.name}ModelImpl.ORDER_BY_SQL);
+								appendOrderByComparator(query, _ORDER_BY_ENTITY_TABLE, orderByComparator);
 							}
 						}
+
+						<#if entity.getOrder()??>
+							else {
+								if (getDB().isSupportsInlineDistinct()) {
+									query.append(${entity.name}ModelImpl.ORDER_BY_JPQL);
+								}
+								else {
+									query.append(${entity.name}ModelImpl.ORDER_BY_SQL);
+								}
+							}
+						</#if>
+
+						String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(), ${entity.name}.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN<#if finder.hasColumn("groupId")>, groupId</#if>);
+
+						Session session = null;
+
+						try {
+							session = openSession();
+
+							SQLQuery q = session.createSQLQuery(sql);
+
+							if (getDB().isSupportsInlineDistinct()) {
+								q.addEntity(_FILTER_ENTITY_ALIAS, ${entity.name}Impl.class);
+							}
+							else {
+								q.addEntity(_FILTER_ENTITY_TABLE, ${entity.name}Impl.class);
+							}
+
+							QueryPos qPos = QueryPos.getInstance(q);
+
+							<#include "persistence_impl_finder_qpos.ftl">
+
+							return (List<${entity.name}>)QueryUtil.list(q, getDialect(), start, end);
+						}
+						catch (Exception e) {
+							throw processException(e);
+						}
+						finally {
+							closeSession(session);
+						}
 					</#if>
-
-					String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(), ${entity.name}.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN<#if finder.hasColumn("groupId")>, groupId</#if>);
-
-					Session session = null;
-
-					try {
-						session = openSession();
-
-						SQLQuery q = session.createSQLQuery(sql);
-
-						if (getDB().isSupportsInlineDistinct()) {
-							q.addEntity(_FILTER_ENTITY_ALIAS, ${entity.name}Impl.class);
-						}
-						else {
-							q.addEntity(_FILTER_ENTITY_TABLE, ${entity.name}Impl.class);
-						}
-
-						QueryPos qPos = QueryPos.getInstance(q);
-
-						<#include "persistence_impl_finder_qpos.ftl">
-
-						return (List<${entity.name}>)QueryUtil.list(q, getDialect(), start, end);
-					}
-					catch (Exception e) {
-						throw processException(e);
-					}
-					finally {
-						closeSession(session);
-					}
 				}
 
 				/**
@@ -1661,139 +1810,173 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 
 					OrderByComparator orderByComparator, boolean previous) {
 
-					StringBundler query = null;
+					<#if entity.isPermissionedModel()>
+						<#include "persistence_impl_get_by_prev_and_next_query.ftl">
 
-					if (orderByComparator != null) {
-						query = new StringBundler(6 + (orderByComparator.getOrderByFields().length * 6));
-					}
-					else {
-						query = new StringBundler(3);
-					}
+						String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(), ${entity.name}.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN, _FILTER_ENTITY_TABLE_FILTER_USERID_COLUMN<#if finder.hasColumn("groupId")>, groupId</#if>);
 
-					if (getDB().isSupportsInlineDistinct()) {
-						query.append(_FILTER_SQL_SELECT_${entity.alias?upper_case}_WHERE);
-					}
-					else {
-						query.append(_FILTER_SQL_SELECT_${entity.alias?upper_case}_NO_INLINE_DISTINCT_WHERE_1);
-					}
+						Query q = session.createQuery(sql);
 
-					<#include "persistence_impl_finder_cols.ftl">
+						q.setFirstResult(0);
+						q.setMaxResults(2);
 
-					if (!getDB().isSupportsInlineDistinct()) {
-						query.append(_FILTER_SQL_SELECT_${entity.alias?upper_case}_NO_INLINE_DISTINCT_WHERE_2);
-					}
+						QueryPos qPos = QueryPos.getInstance(q);
 
-					if (orderByComparator != null) {
-						String[] orderByFields = orderByComparator.getOrderByFields();
+						<#include "persistence_impl_finder_qpos.ftl">
 
-						if (orderByFields.length > 0) {
-							query.append(WHERE_AND);
-						}
+						if (orderByComparator != null) {
+							Object[] values = orderByComparator.getOrderByConditionValues(${entity.varName});
 
-						for (int i = 0; i < orderByFields.length; i++) {
-							if (getDB().isSupportsInlineDistinct()) {
-								query.append(_ORDER_BY_ENTITY_ALIAS);
-							}
-							else {
-								query.append(_ORDER_BY_ENTITY_TABLE);
-							}
-
-							query.append(orderByFields[i]);
-
-							if ((i + 1) < orderByFields.length) {
-								if (orderByComparator.isAscending() ^ previous) {
-									query.append(WHERE_GREATER_THAN_HAS_NEXT);
-								}
-								else {
-									query.append(WHERE_LESSER_THAN_HAS_NEXT);
-								}
-							}
-							else {
-								if (orderByComparator.isAscending() ^ previous) {
-									query.append(WHERE_GREATER_THAN);
-								}
-								else {
-									query.append(WHERE_LESSER_THAN);
-								}
+							for (Object value : values) {
+								qPos.add(value);
 							}
 						}
 
-						query.append(ORDER_BY_CLAUSE);
+						List<${entity.name}> list = q.list();
 
-						for (int i = 0; i < orderByFields.length; i++) {
-							if (getDB().isSupportsInlineDistinct()) {
-								query.append(_ORDER_BY_ENTITY_ALIAS);
-							}
-							else {
-								query.append(_ORDER_BY_ENTITY_TABLE);
-							}
-
-							query.append(orderByFields[i]);
-
-							if ((i + 1) < orderByFields.length) {
-								if (orderByComparator.isAscending() ^ previous) {
-									query.append(ORDER_BY_ASC_HAS_NEXT);
-								}
-								else {
-									query.append(ORDER_BY_DESC_HAS_NEXT);
-								}
-							}
-							else {
-								if (orderByComparator.isAscending() ^ previous) {
-									query.append(ORDER_BY_ASC);
-								}
-								else {
-									query.append(ORDER_BY_DESC);
-								}
-							}
+						if (list.size() == 2) {
+							return list.get(1);
 						}
-					}
-
-					<#if entity.getOrder()??>
 						else {
-							if (getDB().isSupportsInlineDistinct()) {
-								query.append(${entity.name}ModelImpl.ORDER_BY_JPQL);
+							return null;
+						}
+					<#else>
+						StringBundler query = null;
+
+						if (orderByComparator != null) {
+							query = new StringBundler(6 + (orderByComparator.getOrderByFields().length * 6));
+						}
+						else {
+							query = new StringBundler(3);
+						}
+
+						if (getDB().isSupportsInlineDistinct()) {
+							query.append(_FILTER_SQL_SELECT_${entity.alias?upper_case}_WHERE);
+						}
+						else {
+							query.append(_FILTER_SQL_SELECT_${entity.alias?upper_case}_NO_INLINE_DISTINCT_WHERE_1);
+						}
+
+						<#include "persistence_impl_finder_cols.ftl">
+
+						if (!getDB().isSupportsInlineDistinct()) {
+							query.append(_FILTER_SQL_SELECT_${entity.alias?upper_case}_NO_INLINE_DISTINCT_WHERE_2);
+						}
+
+						if (orderByComparator != null) {
+							String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+
+							if (orderByConditionFields.length > 0) {
+								query.append(WHERE_AND);
 							}
+
+							for (int i = 0; i < orderByConditionFields.length; i++) {
+								if (getDB().isSupportsInlineDistinct()) {
+									query.append(_ORDER_BY_ENTITY_ALIAS);
+								}
+								else {
+									query.append(_ORDER_BY_ENTITY_TABLE);
+								}
+
+								query.append(orderByConditionFields[i]);
+
+								if ((i + 1) < orderByConditionFields.length) {
+									if (orderByComparator.isAscending() ^ previous) {
+										query.append(WHERE_GREATER_THAN_HAS_NEXT);
+									}
+									else {
+										query.append(WHERE_LESSER_THAN_HAS_NEXT);
+									}
+								}
+								else {
+									if (orderByComparator.isAscending() ^ previous) {
+										query.append(WHERE_GREATER_THAN);
+									}
+									else {
+										query.append(WHERE_LESSER_THAN);
+									}
+								}
+							}
+
+							query.append(ORDER_BY_CLAUSE);
+
+							String[] orderByFields = orderByComparator.getOrderByFields();
+
+							for (int i = 0; i < orderByFields.length; i++) {
+								if (getDB().isSupportsInlineDistinct()) {
+									query.append(_ORDER_BY_ENTITY_ALIAS);
+								}
+								else {
+									query.append(_ORDER_BY_ENTITY_TABLE);
+								}
+
+								query.append(orderByFields[i]);
+
+								if ((i + 1) < orderByFields.length) {
+									if (orderByComparator.isAscending() ^ previous) {
+										query.append(ORDER_BY_ASC_HAS_NEXT);
+									}
+									else {
+										query.append(ORDER_BY_DESC_HAS_NEXT);
+									}
+								}
+								else {
+									if (orderByComparator.isAscending() ^ previous) {
+										query.append(ORDER_BY_ASC);
+									}
+									else {
+										query.append(ORDER_BY_DESC);
+									}
+								}
+							}
+						}
+
+						<#if entity.getOrder()??>
 							else {
-								query.append(${entity.name}ModelImpl.ORDER_BY_SQL);
+								if (getDB().isSupportsInlineDistinct()) {
+									query.append(${entity.name}ModelImpl.ORDER_BY_JPQL);
+								}
+								else {
+									query.append(${entity.name}ModelImpl.ORDER_BY_SQL);
+								}
 							}
+						</#if>
+
+						String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(), ${entity.name}.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN<#if finder.hasColumn("groupId")>, groupId</#if>);
+
+						SQLQuery q = session.createSQLQuery(sql);
+
+						q.setFirstResult(0);
+						q.setMaxResults(2);
+
+						if (getDB().isSupportsInlineDistinct()) {
+							q.addEntity(_FILTER_ENTITY_ALIAS, ${entity.name}Impl.class);
+						}
+						else {
+							q.addEntity(_FILTER_ENTITY_TABLE, ${entity.name}Impl.class);
+						}
+
+						QueryPos qPos = QueryPos.getInstance(q);
+
+						<#include "persistence_impl_finder_qpos.ftl">
+
+						if (orderByComparator != null) {
+							Object[] values = orderByComparator.getOrderByConditionValues(${entity.varName});
+
+							for (Object value : values) {
+								qPos.add(value);
+							}
+						}
+
+						List<${entity.name}> list = q.list();
+
+						if (list.size() == 2) {
+							return list.get(1);
+						}
+						else {
+							return null;
 						}
 					</#if>
-
-					String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(), ${entity.name}.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN<#if finder.hasColumn("groupId")>, groupId</#if>);
-
-					SQLQuery q = session.createSQLQuery(sql);
-
-					q.setFirstResult(0);
-					q.setMaxResults(2);
-
-					if (getDB().isSupportsInlineDistinct()) {
-						q.addEntity(_FILTER_ENTITY_ALIAS, ${entity.name}Impl.class);
-					}
-					else {
-						q.addEntity(_FILTER_ENTITY_TABLE, ${entity.name}Impl.class);
-					}
-
-					QueryPos qPos = QueryPos.getInstance(q);
-
-					<#include "persistence_impl_finder_qpos.ftl">
-
-					if (orderByComparator != null) {
-						Object[] values = orderByComparator.getOrderByValues(${entity.varName});
-
-						for (Object value : values) {
-							qPos.add(value);
-						}
-					}
-
-					List<${entity.name}> list = q.list();
-
-					if (list.size() == 2) {
-						return list.get(1);
-					}
-					else {
-						return null;
-					}
 				}
 
 				<#if finder.hasArrayableOperator()>
@@ -1934,77 +2117,111 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 							start, end, orderByComparator);
 						}
 
-						StringBundler query = new StringBundler();
+						<#if entity.isPermissionedModel()>
+							<#include "persistence_impl_find_by_arrayable_query.ftl">
 
-						if (getDB().isSupportsInlineDistinct()) {
-							query.append(_FILTER_SQL_SELECT_${entity.alias?upper_case}_WHERE);
-						}
-						else {
-							query.append(_FILTER_SQL_SELECT_${entity.alias?upper_case}_NO_INLINE_DISTINCT_WHERE_1);
-						}
+							String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(), ${entity.name}.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN, _FILTER_ENTITY_TABLE_FILTER_USERID_COLUMN
 
-						<#include "persistence_impl_finder_arrayable_cols.ftl">
+							<#if finder.hasColumn("groupId")>,
+								<#if finder.getColumn("groupId").hasArrayableOperator()>
+									groupIds
+								<#else>
+									groupId
+								</#if>
+							</#if>);
 
-						if (!getDB().isSupportsInlineDistinct()) {
-							query.append(_FILTER_SQL_SELECT_${entity.alias?upper_case}_NO_INLINE_DISTINCT_WHERE_2);
-						}
+							Session session = null;
 
-						if (orderByComparator != null) {
+							try {
+								session = openSession();
+
+								Query q = session.createQuery(sql);
+
+								QueryPos qPos = QueryPos.getInstance(q);
+
+								<#include "persistence_impl_finder_arrayable_qpos.ftl">
+
+								return (List<${entity.name}>)QueryUtil.list(q, getDialect(), start, end);
+							}
+							catch (Exception e) {
+								throw processException(e);
+							}
+							finally {
+								closeSession(session);
+							}
+						<#else>
+							StringBundler query = new StringBundler();
+
 							if (getDB().isSupportsInlineDistinct()) {
-								appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+								query.append(_FILTER_SQL_SELECT_${entity.alias?upper_case}_WHERE);
 							}
 							else {
-								appendOrderByComparator(query, _ORDER_BY_ENTITY_TABLE, orderByComparator);
+								query.append(_FILTER_SQL_SELECT_${entity.alias?upper_case}_NO_INLINE_DISTINCT_WHERE_1);
 							}
-						}
 
-						<#if entity.getOrder()??>
-							else {
+							<#include "persistence_impl_finder_arrayable_cols.ftl">
+
+							if (!getDB().isSupportsInlineDistinct()) {
+								query.append(_FILTER_SQL_SELECT_${entity.alias?upper_case}_NO_INLINE_DISTINCT_WHERE_2);
+							}
+
+							if (orderByComparator != null) {
 								if (getDB().isSupportsInlineDistinct()) {
-									query.append(${entity.name}ModelImpl.ORDER_BY_JPQL);
+									appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 								}
 								else {
-									query.append(${entity.name}ModelImpl.ORDER_BY_SQL);
+									appendOrderByComparator(query, _ORDER_BY_ENTITY_TABLE, orderByComparator);
 								}
 							}
-						</#if>
 
-						String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(), ${entity.name}.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN
-
-						<#if finder.hasColumn("groupId")>,
-							<#if finder.getColumn("groupId").hasArrayableOperator()>
-								groupIds
-							<#else>
-								groupId
+							<#if entity.getOrder()??>
+								else {
+									if (getDB().isSupportsInlineDistinct()) {
+										query.append(${entity.name}ModelImpl.ORDER_BY_JPQL);
+									}
+									else {
+										query.append(${entity.name}ModelImpl.ORDER_BY_SQL);
+									}
+								}
 							</#if>
-						</#if>);
 
-						Session session = null;
+							String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(), ${entity.name}.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN
 
-						try {
-							session = openSession();
+							<#if finder.hasColumn("groupId")>,
+								<#if finder.getColumn("groupId").hasArrayableOperator()>
+									groupIds
+								<#else>
+									groupId
+								</#if>
+							</#if>);
 
-							SQLQuery q = session.createSQLQuery(sql);
+							Session session = null;
 
-							if (getDB().isSupportsInlineDistinct()) {
-								q.addEntity(_FILTER_ENTITY_ALIAS, ${entity.name}Impl.class);
+							try {
+								session = openSession();
+
+								SQLQuery q = session.createSQLQuery(sql);
+
+								if (getDB().isSupportsInlineDistinct()) {
+									q.addEntity(_FILTER_ENTITY_ALIAS, ${entity.name}Impl.class);
+								}
+								else {
+									q.addEntity(_FILTER_ENTITY_TABLE, ${entity.name}Impl.class);
+								}
+
+								QueryPos qPos = QueryPos.getInstance(q);
+
+								<#include "persistence_impl_finder_arrayable_qpos.ftl">
+
+								return (List<${entity.name}>)QueryUtil.list(q, getDialect(), start, end);
 							}
-							else {
-								q.addEntity(_FILTER_ENTITY_TABLE, ${entity.name}Impl.class);
+							catch (Exception e) {
+								throw processException(e);
 							}
-
-							QueryPos qPos = QueryPos.getInstance(q);
-
-							<#include "persistence_impl_finder_arrayable_qpos.ftl">
-
-							return (List<${entity.name}>)QueryUtil.list(q, getDialect(), start, end);
-						}
-						catch (Exception e) {
-							throw processException(e);
-						}
-						finally {
-							closeSession(session);
-						}
+							finally {
+								closeSession(session);
+							}
+						</#if>
 					}
 				</#if>
 			</#if>
@@ -2253,9 +2470,19 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	 * @throws SystemException if a system exception occurred
 	 */
 	public List<${entity.name}> findAll(int start, int end, OrderByComparator orderByComparator) throws SystemException {
-		Object[] finderArgs = new Object[] {String.valueOf(start), String.valueOf(end), String.valueOf(orderByComparator)};
+		FinderPath finderPath = null;
+		Object[] finderArgs = new Object[] {start, end, orderByComparator};
 
-		List<${entity.name}> list = (List<${entity.name}>)FinderCacheUtil.getResult(FINDER_PATH_FIND_ALL, finderArgs, this);
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) && (orderByComparator == null)) {
+			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_ALL;
+			finderArgs = FINDER_ARGS_EMPTY;
+		}
+		else {
+			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL;
+			finderArgs = new Object[] {start, end, orderByComparator};
+		}
+
+		List<${entity.name}> list = (List<${entity.name}>)FinderCacheUtil.getResult(finderPath, finderArgs, this);
 
 		if (list == null) {
 			StringBundler query = null;
@@ -2299,12 +2526,12 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			}
 			finally {
 				if (list == null) {
-					FinderCacheUtil.removeResult(FINDER_PATH_FIND_ALL, finderArgs);
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
 				}
 				else {
 					cacheResult(list);
 
-					FinderCacheUtil.putResult(FINDER_PATH_FIND_ALL, finderArgs, list);
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
 				}
 
 				closeSession(session);
@@ -2431,11 +2658,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			Long count = (Long)FinderCacheUtil.getResult(FINDER_PATH_COUNT_BY_${finder.name?upper_case}, finderArgs, this);
 
 			if (count == null) {
-				StringBundler query = new StringBundler(${finderColsList?size + 1});
-
-				query.append(_SQL_COUNT_${entity.alias?upper_case}_WHERE);
-
-				<#include "persistence_impl_finder_cols.ftl">
+				<#include "persistence_impl_count_by_query.ftl">
 
 				String sql = query.toString();
 
@@ -2515,11 +2738,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				Long count = (Long)FinderCacheUtil.getResult(FINDER_PATH_COUNT_BY_${finder.name?upper_case}, finderArgs, this);
 
 				if (count == null) {
-					StringBundler query = new StringBundler();
-
-					query.append(_SQL_COUNT_${entity.alias?upper_case}_WHERE);
-
-					<#include "persistence_impl_finder_arrayable_cols.ftl">
+					<#include "persistence_impl_count_by_arrayable_query.ftl">
 
 					String sql = query.toString();
 
@@ -2589,37 +2808,65 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 					);
 				}
 
-				StringBundler query = new StringBundler(${finderColsList?size + 1});
+				<#if entity.isPermissionedModel()>
+					<#include "persistence_impl_count_by_query.ftl">
 
-				query.append(_FILTER_SQL_COUNT_${entity.alias?upper_case}_WHERE);
+					String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(), ${entity.name}.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN, _FILTER_ENTITY_TABLE_FILTER_USERID_COLUMN<#if finder.hasColumn("groupId")>, groupId</#if>);
 
-				<#include "persistence_impl_finder_cols.ftl">
+					Session session = null;
 
-				String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(), ${entity.name}.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN<#if finder.hasColumn("groupId")>, groupId</#if>);
+					try {
+						session = openSession();
 
-				Session session = null;
+						Query q = session.createQuery(sql);
 
-				try {
-					session = openSession();
+						QueryPos qPos = QueryPos.getInstance(q);
 
-					SQLQuery q = session.createSQLQuery(sql);
+						<#include "persistence_impl_finder_qpos.ftl">
 
-					q.addScalar(COUNT_COLUMN_NAME, com.liferay.portal.kernel.dao.orm.Type.LONG);
+						Long count = (Long)q.uniqueResult();
 
-					QueryPos qPos = QueryPos.getInstance(q);
+						return count.intValue();
+					}
+					catch (Exception e) {
+						throw processException(e);
+					}
+					finally {
+						closeSession(session);
+					}
+				<#else>
+					StringBundler query = new StringBundler(${finderColsList?size + 1});
 
-					<#include "persistence_impl_finder_qpos.ftl">
+					query.append(_FILTER_SQL_COUNT_${entity.alias?upper_case}_WHERE);
 
-					Long count = (Long)q.uniqueResult();
+					<#include "persistence_impl_finder_cols.ftl">
 
-					return count.intValue();
-				}
-				catch (Exception e) {
-					throw processException(e);
-				}
-				finally {
-					closeSession(session);
-				}
+					String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(), ${entity.name}.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN<#if finder.hasColumn("groupId")>, groupId</#if>);
+
+					Session session = null;
+
+					try {
+						session = openSession();
+
+						SQLQuery q = session.createSQLQuery(sql);
+
+						q.addScalar(COUNT_COLUMN_NAME, com.liferay.portal.kernel.dao.orm.Type.LONG);
+
+						QueryPos qPos = QueryPos.getInstance(q);
+
+						<#include "persistence_impl_finder_qpos.ftl">
+
+						Long count = (Long)q.uniqueResult();
+
+						return count.intValue();
+					}
+					catch (Exception e) {
+						throw processException(e);
+					}
+					finally {
+						closeSession(session);
+					}
+				</#if>
 			}
 
 			<#if finder.hasArrayableOperator()>
@@ -2677,45 +2924,81 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 						);
 					}
 
-					StringBundler query = new StringBundler();
+					<#if entity.isPermissionedModel()>
+						<#include "persistence_impl_count_by_arrayable_query.ftl">
 
-					query.append(_FILTER_SQL_COUNT_${entity.alias?upper_case}_WHERE);
+						String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(), ${entity.name}.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN, _FILTER_ENTITY_TABLE_FILTER_USERID_COLUMN
 
-					<#include "persistence_impl_finder_arrayable_cols.ftl">
+						<#if finder.hasColumn("groupId")>,
+							<#if finder.getColumn("groupId").hasArrayableOperator()>
+								groupIds
+							<#else>
+								groupId
+							</#if>
+						</#if>);
 
-					String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(), ${entity.name}.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN
+						Session session = null;
 
-					<#if finder.hasColumn("groupId")>,
-						<#if finder.getColumn("groupId").hasArrayableOperator()>
-							groupIds
-						<#else>
-							groupId
-						</#if>
-					</#if>);
+						try {
+							session = openSession();
 
-					Session session = null;
+							Query q = session.createQuery(sql);
 
-					try {
-						session = openSession();
+							QueryPos qPos = QueryPos.getInstance(q);
 
-						SQLQuery q = session.createSQLQuery(sql);
+							<#include "persistence_impl_finder_arrayable_qpos.ftl">
 
-						q.addScalar(COUNT_COLUMN_NAME, com.liferay.portal.kernel.dao.orm.Type.LONG);
+							Long count = (Long)q.uniqueResult();
 
-						QueryPos qPos = QueryPos.getInstance(q);
+							return count.intValue();
+						}
+						catch (Exception e) {
+							throw processException(e);
+						}
+						finally {
+							closeSession(session);
+						}
+					<#else>
+						StringBundler query = new StringBundler();
 
-						<#include "persistence_impl_finder_arrayable_qpos.ftl">
+						query.append(_FILTER_SQL_COUNT_${entity.alias?upper_case}_WHERE);
 
-						Long count = (Long)q.uniqueResult();
+						<#include "persistence_impl_finder_arrayable_cols.ftl">
 
-						return count.intValue();
-					}
-					catch (Exception e) {
-						throw processException(e);
-					}
-					finally {
-						closeSession(session);
-					}
+						String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(), ${entity.name}.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN
+
+						<#if finder.hasColumn("groupId")>,
+							<#if finder.getColumn("groupId").hasArrayableOperator()>
+								groupIds
+							<#else>
+								groupId
+							</#if>
+						</#if>);
+
+						Session session = null;
+
+						try {
+							session = openSession();
+
+							SQLQuery q = session.createSQLQuery(sql);
+
+							q.addScalar(COUNT_COLUMN_NAME, com.liferay.portal.kernel.dao.orm.Type.LONG);
+
+							QueryPos qPos = QueryPos.getInstance(q);
+
+							<#include "persistence_impl_finder_arrayable_qpos.ftl">
+
+							Long count = (Long)q.uniqueResult();
+
+							return count.intValue();
+						}
+						catch (Exception e) {
+							throw processException(e);
+						}
+						finally {
+							closeSession(session);
+						}
+					</#if>
 				}
 			</#if>
 		</#if>
@@ -2728,9 +3011,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	 * @throws SystemException if a system exception occurred
 	 */
 	public int countAll() throws SystemException {
-		Object[] finderArgs = new Object[0];
-
-		Long count = (Long)FinderCacheUtil.getResult(FINDER_PATH_COUNT_ALL, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(FINDER_PATH_COUNT_ALL, FINDER_ARGS_EMPTY, this);
 
 		if (count == null) {
 			Session session = null;
@@ -2750,7 +3031,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 					count = Long.valueOf(0);
 				}
 
-				FinderCacheUtil.putResult(FINDER_PATH_COUNT_ALL, finderArgs, count);
+				FinderCacheUtil.putResult(FINDER_PATH_COUNT_ALL, FINDER_ARGS_EMPTY, count);
 
 				closeSession(session);
 			}
@@ -2801,7 +3082,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				<#else>
 					${tempEntity.packagePath}.model.impl.${tempEntity.name}ModelImpl.FINDER_CACHE_ENABLED,
 					${tempEntity.packagePath}.model.impl.${tempEntity.name}Impl.class,
-					${tempEntity.packagePath}.service.persistence.${tempEntity.name}PersistenceImpl.FINDER_CLASS_NAME_LIST,
+					${tempEntity.packagePath}.service.persistence.${tempEntity.name}PersistenceImpl.FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 				</#if>
 
 				"get${tempEntity.names}",
@@ -2831,7 +3112,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			 */
 			public List<${tempEntity.packagePath}.model.${tempEntity.name}> get${tempEntity.names}(${entity.PKClassName} pk, int start, int end, OrderByComparator orderByComparator) throws SystemException {
 				Object[] finderArgs = new Object[] {
-					pk, String.valueOf(start), String.valueOf(end), String.valueOf(orderByComparator)
+					pk, start, end, orderByComparator
 				};
 
 				List<${tempEntity.packagePath}.model.${tempEntity.name}> list = (List<${tempEntity.packagePath}.model.${tempEntity.name}>)FinderCacheUtil.getResult(FINDER_PATH_GET_${tempEntity.names?upper_case}, finderArgs, this);
@@ -2895,7 +3176,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				<#else>
 					${tempEntity.packagePath}.model.impl.${tempEntity.name}ModelImpl.FINDER_CACHE_ENABLED,
 					${tempEntity.packagePath}.model.impl.${tempEntity.name}Impl.class,
-					${tempEntity.packagePath}.service.persistence.${tempEntity.name}PersistenceImpl.FINDER_CLASS_NAME_LIST,
+					${tempEntity.packagePath}.service.persistence.${tempEntity.name}PersistenceImpl.FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 				</#if>
 
 				"get${tempEntity.names}Size",
@@ -2964,7 +3245,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				<#else>
 					${tempEntity.packagePath}.model.impl.${tempEntity.name}ModelImpl.FINDER_CACHE_ENABLED,
 					${tempEntity.packagePath}.model.impl.${tempEntity.name}Impl.class,
-					${tempEntity.packagePath}.service.persistence.${tempEntity.name}PersistenceImpl.FINDER_CLASS_NAME_LIST,
+					${tempEntity.packagePath}.service.persistence.${tempEntity.name}PersistenceImpl.FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 				</#if>
 
 				"contains${tempEntity.name}",
@@ -3294,7 +3575,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				CacheRegistryUtil.clear(${entity.name}Impl.class.getName());
 				EntityCacheUtil.clearCache(${entity.name}Impl.class.getName());
 				FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-				FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST);
+				FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 			}
 		}
 
@@ -3340,7 +3621,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				CacheRegistryUtil.clear(${entity.name}Impl.class.getName());
 				EntityCacheUtil.clearCache(${entity.name}Impl.class.getName());
 				FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-				FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST);
+				FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 			}
 
 			${entity.varName}.setLeft${pkColumn.methodName}(left${pkColumn.methodName});
@@ -3366,6 +3647,8 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 
 				if (list.isEmpty()) {
 					if (parent${pkColumn.methodName} > 0) {
+						session.clear();
+
 						${entity.name} parent${entity.name} = findByPrimaryKey(parent${pkColumn.methodName});
 
 						return parent${entity.name}.getLeft${pkColumn.methodName}();
@@ -3438,7 +3721,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			CacheRegistryUtil.clear(${entity.name}Impl.class.getName());
 			EntityCacheUtil.clearCache(${entity.name}Impl.class.getName());
 			FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-			FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST);
+			FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 		}
 	</#if>
 
@@ -3489,7 +3772,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	public void destroy() {
 		EntityCacheUtil.removeCache(${entity.name}Impl.class.getName());
 		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST);
+		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 	}
 
 	<#list referenceList as tempEntity>
@@ -3860,24 +4143,32 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	</#if>
 
 	<#if entity.isPermissionCheckEnabled()>
-		private static final String _FILTER_SQL_SELECT_${entity.alias?upper_case}_WHERE = "SELECT DISTINCT {${entity.alias}.*} FROM ${entity.table} ${entity.alias} WHERE ";
-
-		private static final String _FILTER_SQL_SELECT_${entity.alias?upper_case}_NO_INLINE_DISTINCT_WHERE_1 = "SELECT {${entity.table}.*} FROM (SELECT DISTINCT ${entity.alias}.${entity.PKDBName} FROM ${entity.table} ${entity.alias} WHERE ";
-
-		private static final String _FILTER_SQL_SELECT_${entity.alias?upper_case}_NO_INLINE_DISTINCT_WHERE_2 = ") TEMP_TABLE INNER JOIN ${entity.table} ON TEMP_TABLE.${entity.PKDBName} = ${entity.table}.${entity.PKDBName}";
-
-		private static final String _FILTER_SQL_COUNT_${entity.alias?upper_case}_WHERE = "SELECT COUNT(DISTINCT ${entity.alias}.${entity.PKDBName}) AS COUNT_VALUE FROM ${entity.table} ${entity.alias} WHERE ";
-
-		private static final String _FILTER_ENTITY_ALIAS = "${entity.alias}";
-
-		private static final String _FILTER_ENTITY_TABLE = "${entity.table}";
-
 		private static final String _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN = "${entity.alias}.${entity.filterPKColumn.DBName}";
+
+		<#if entity.isPermissionedModel()>
+			<#if entity.hasColumn("userId") >
+				private static final String _FILTER_ENTITY_TABLE_FILTER_USERID_COLUMN = "${entity.alias}.userId";
+			<#else>
+				private static final String _FILTER_ENTITY_TABLE_FILTER_USERID_COLUMN = null;
+			</#if>
+		<#else>
+			private static final String _FILTER_SQL_SELECT_${entity.alias?upper_case}_WHERE = "SELECT DISTINCT {${entity.alias}.*} FROM ${entity.table} ${entity.alias} WHERE ";
+
+			private static final String _FILTER_SQL_SELECT_${entity.alias?upper_case}_NO_INLINE_DISTINCT_WHERE_1 = "SELECT {${entity.table}.*} FROM (SELECT DISTINCT ${entity.alias}.${entity.PKDBName} FROM ${entity.table} ${entity.alias} WHERE ";
+
+			private static final String _FILTER_SQL_SELECT_${entity.alias?upper_case}_NO_INLINE_DISTINCT_WHERE_2 = ") TEMP_TABLE INNER JOIN ${entity.table} ON TEMP_TABLE.${entity.PKDBName} = ${entity.table}.${entity.PKDBName}";
+
+			private static final String _FILTER_SQL_COUNT_${entity.alias?upper_case}_WHERE = "SELECT COUNT(DISTINCT ${entity.alias}.${entity.PKDBName}) AS COUNT_VALUE FROM ${entity.table} ${entity.alias} WHERE ";
+
+			private static final String _FILTER_ENTITY_ALIAS = "${entity.alias}";
+
+			private static final String _FILTER_ENTITY_TABLE = "${entity.table}";
+		</#if>
 	</#if>
 
 	private static final String _ORDER_BY_ENTITY_ALIAS = "${entity.alias}.";
 
-	<#if entity.isPermissionCheckEnabled()>
+	<#if entity.isPermissionCheckEnabled() && !entity.isPermissionedModel()>
 		private static final String _ORDER_BY_ENTITY_TABLE = "${entity.table}.";
 	</#if>
 
@@ -3893,10 +4184,12 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 
 	private static ${entity.name} _null${entity.name} = new ${entity.name}Impl() {
 
+		@Override
 		public Object clone() {
 			return this;
 		}
 
+		@Override
 		public CacheModel<${entity.name}> toCacheModel() {
 			return _null${entity.name}CacheModel;
 		}

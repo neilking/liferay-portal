@@ -43,7 +43,7 @@ import com.liferay.portlet.softwarecatalog.model.SCProductScreenshot;
 import com.liferay.portlet.softwarecatalog.service.SCProductEntryServiceUtil;
 import com.liferay.portlet.softwarecatalog.service.SCProductScreenshotLocalServiceUtil;
 
-import java.io.File;
+import java.io.InputStream;
 
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -144,33 +144,33 @@ public class EditProductEntryAction extends PortletAction {
 		SCProductEntryServiceUtil.deleteProductEntry(productEntryId);
 	}
 
-	protected List<byte[]> getFullImages(UploadPortletRequest uploadRequest)
+	protected List<byte[]> getFullImages(
+			UploadPortletRequest uploadPortletRequest)
 		throws Exception {
 
-		return getImages(uploadRequest, "fullImage");
+		return getImages(uploadPortletRequest, "fullImage");
 	}
 
 	protected List<byte[]> getImages(
-			UploadPortletRequest uploadRequest, String imagePrefix)
+			UploadPortletRequest uploadPortletRequest, String imagePrefix)
 		throws Exception {
 
 		List<byte[]> images = new ArrayList<byte[]>();
 
 		for (String name :
-				getSortedParameterNames(uploadRequest, imagePrefix)) {
+				getSortedParameterNames(uploadPortletRequest, imagePrefix)) {
 
 			int priority = GetterUtil.getInteger(
 				name.substring(imagePrefix.length(), name.length()));
 
-			File file = uploadRequest.getFile(name);
-			byte[] bytes = FileUtil.getBytes(file);
-
 			boolean preserveScreenshot = ParamUtil.getBoolean(
-				uploadRequest, "preserveScreenshot" + priority);
+				uploadPortletRequest, "preserveScreenshot" + priority);
+
+			byte[] bytes = null;
 
 			if (preserveScreenshot) {
-				SCProductScreenshot productScreenshot = getProductScreenshot(
-					uploadRequest, priority);
+				SCProductScreenshot productScreenshot =
+					getProductScreenshot(uploadPortletRequest, priority);
 
 				Image image = null;
 
@@ -185,6 +185,14 @@ public class EditProductEntryAction extends PortletAction {
 
 				bytes = image.getTextObj();
 			}
+			else {
+				InputStream inputStream = uploadPortletRequest.getFileAsStream(
+					name);
+
+				if (inputStream != null) {
+					bytes = FileUtil.getBytes(inputStream);
+				}
+			}
 
 			if ((bytes != null) && (bytes.length > 0)) {
 				images.add(bytes);
@@ -198,11 +206,11 @@ public class EditProductEntryAction extends PortletAction {
 	}
 
 	protected SCProductScreenshot getProductScreenshot(
-			UploadPortletRequest uploadRequest, int priority)
+			UploadPortletRequest uploadPortletRequest, int priority)
 		throws Exception {
 
 		long productEntryId = ParamUtil.getLong(
-			uploadRequest, "productEntryId");
+			uploadPortletRequest, "productEntryId");
 
 		try {
 			return SCProductScreenshotLocalServiceUtil.getProductScreenshot(
@@ -214,12 +222,12 @@ public class EditProductEntryAction extends PortletAction {
 	}
 
 	protected List<String> getSortedParameterNames(
-			UploadPortletRequest uploadRequest, String imagePrefix)
+			UploadPortletRequest uploadPortletRequest, String imagePrefix)
 		throws Exception {
 
 		List<String> parameterNames = new ArrayList<String>();
 
-		Enumeration<String> enu = uploadRequest.getParameterNames();
+		Enumeration<String> enu = uploadPortletRequest.getParameterNames();
 
 		while (enu.hasMoreElements()) {
 			String name = enu.nextElement();
@@ -232,17 +240,18 @@ public class EditProductEntryAction extends PortletAction {
 		return ListUtil.sort(parameterNames);
 	}
 
-	protected List<byte[]> getThumbnails(UploadPortletRequest uploadRequest)
+	protected List<byte[]> getThumbnails(
+			UploadPortletRequest uploadPortletRequest)
 		throws Exception {
 
-		return getImages(uploadRequest, "thumbnail");
+		return getImages(uploadPortletRequest, "thumbnail");
 	}
 
 	protected void updateProductEntry(ActionRequest actionRequest)
 		throws Exception {
 
-		UploadPortletRequest uploadRequest = PortalUtil.getUploadPortletRequest(
-			actionRequest);
+		UploadPortletRequest uploadPortletRequest =
+			PortalUtil.getUploadPortletRequest(actionRequest);
 
 		long productEntryId = ParamUtil.getLong(
 			actionRequest, "productEntryId");
@@ -262,8 +271,8 @@ public class EditProductEntryAction extends PortletAction {
 
 		long[] licenseIds = ParamUtil.getLongValues(actionRequest, "licenses");
 
-		List<byte[]> thumbnails = getThumbnails(uploadRequest);
-		List<byte[]> fullImages = getFullImages(uploadRequest);
+		List<byte[]> thumbnails = getThumbnails(uploadPortletRequest);
+		List<byte[]> fullImages = getFullImages(uploadPortletRequest);
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			SCProductEntry.class.getName(), actionRequest);

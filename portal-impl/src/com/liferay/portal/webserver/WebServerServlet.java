@@ -16,21 +16,32 @@ package com.liferay.portal.webserver;
 
 import com.liferay.portal.NoSuchGroupException;
 import com.liferay.portal.freemarker.FreeMarkerUtil;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.freemarker.FreeMarkerContext;
 import com.liferay.portal.kernel.freemarker.FreeMarkerEngineUtil;
+import com.liferay.portal.kernel.image.ImageBag;
+import com.liferay.portal.kernel.image.ImageProcessorUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.RepositoryException;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.repository.model.Folder;
+import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.servlet.PortalSessionThreadLocal;
+import com.liferay.portal.kernel.servlet.ServletResponseUtil;
+import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.ReleaseInfo;
+import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -38,7 +49,10 @@ import com.liferay.portal.kernel.util.Validator_IW;
 import com.liferay.portal.kernel.webdav.WebDAVUtil;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
+import com.liferay.portal.model.Image;
+import com.liferay.portal.model.ImageConstants;
 import com.liferay.portal.model.User;
+import com.liferay.portal.model.impl.ImageImpl;
 import com.liferay.portal.security.auth.PrincipalException;
 import com.liferay.portal.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.security.permission.PermissionChecker;
@@ -46,21 +60,28 @@ import com.liferay.portal.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.security.permission.PermissionThreadLocal;
 import com.liferay.portal.service.CompanyLocalServiceUtil;
 import com.liferay.portal.service.GroupLocalServiceUtil;
+import com.liferay.portal.service.ImageLocalServiceUtil;
+import com.liferay.portal.service.ImageServiceUtil;
 import com.liferay.portal.service.UserLocalServiceUtil;
 import com.liferay.portal.util.Portal;
 import com.liferay.portal.util.PortalUtil;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.documentlibrary.NoSuchFileEntryException;
 import com.liferay.portlet.documentlibrary.NoSuchFolderException;
+import com.liferay.portlet.documentlibrary.model.DLFileEntry;
 import com.liferay.portlet.documentlibrary.model.DLFileShortcut;
 import com.liferay.portlet.documentlibrary.model.DLFolderConstants;
 import com.liferay.portlet.documentlibrary.service.DLAppLocalServiceUtil;
 import com.liferay.portlet.documentlibrary.service.DLAppServiceUtil;
+import com.liferay.portlet.documentlibrary.service.DLFileEntryServiceUtil;
 import com.liferay.portlet.documentlibrary.util.AudioProcessor;
 import com.liferay.portlet.documentlibrary.util.DLUtil;
 import com.liferay.portlet.documentlibrary.util.DocumentConversionUtil;
+import com.liferay.portlet.documentlibrary.util.ImageProcessor;
 import com.liferay.portlet.documentlibrary.util.PDFProcessor;
 import com.liferay.portlet.documentlibrary.util.VideoProcessor;
-import com.liferay.util.servlet.ServletResponseUtil;
+
+import java.awt.image.RenderedImage;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -70,8 +91,10 @@ import java.io.InputStream;
 import java.text.Format;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -97,7 +120,7 @@ public class WebServerServlet extends HttpServlet {
 
 			String path = HttpUtil.fixPath(request.getPathInfo());
 
-			String[] pathArray = StringUtil.split(path, StringPool.SLASH);
+			String[] pathArray = StringUtil.split(path, CharPool.SLASH);
 
 			if (pathArray.length == 0) {
 				return true;
@@ -139,6 +162,14 @@ public class WebServerServlet extends HttpServlet {
 	}
 
 	@Override
+	public void init(ServletConfig servletConfig) throws ServletException {
+		super.init(servletConfig);
+
+		_lastModified = GetterUtil.getBoolean(
+			servletConfig.getInitParameter("last_modified"), true);
+	}
+
+	@Override
 	public void service(
 			HttpServletRequest request, HttpServletResponse response)
 		throws IOException, ServletException {
@@ -157,8 +188,30 @@ public class WebServerServlet extends HttpServlet {
 
 			PermissionThreadLocal.setPermissionChecker(permissionChecker);
 
+			if (_lastModified) {
+				long lastModified = getLastModified(request);
+
+				if (lastModified > 0) {
+					long ifModifiedSince = request.getDateHeader(
+						HttpHeaders.IF_MODIFIED_SINCE);
+
+					if ((ifModifiedSince > 0) &&
+						(ifModifiedSince == lastModified)) {
+
+						response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+
+						return;
+					}
+				}
+
+				if (lastModified > 0) {
+					response.setDateHeader(
+						HttpHeaders.LAST_MODIFIED, lastModified);
+				}
+			}
+
 			String path = HttpUtil.fixPath(request.getPathInfo());
-			String[] pathArray = StringUtil.split(path, StringPool.SLASH);
+			String[] pathArray = StringUtil.split(path, CharPool.SLASH);
 
 			if (pathArray.length == 0) {
 				sendGroups(
@@ -170,10 +223,21 @@ public class WebServerServlet extends HttpServlet {
 					sendFile(request, response, user, pathArray);
 				}
 				else {
-					sendDocumentLibrary(
-						request, response, user,
-						request.getServletPath() + StringPool.SLASH + path,
-						pathArray);
+					if (isLegacyImageGalleryImageId(request, response)) {
+						return;
+					}
+
+					Image image = getImage(request, true);
+
+					if (image != null) {
+						writeImage(image, request, response);
+					}
+					else {
+						sendDocumentLibrary(
+							request, response, user,
+							request.getServletPath() + StringPool.SLASH + path,
+							pathArray);
+					}
 				}
 			}
 		}
@@ -186,6 +250,79 @@ public class WebServerServlet extends HttpServlet {
 		}
 		catch (Exception e) {
 			PortalUtil.sendError(e, request, response);
+		}
+	}
+
+	protected boolean isLegacyImageGalleryImageId(
+		HttpServletRequest request, HttpServletResponse response) {
+
+		try {
+			long imageId = getImageId(request);
+
+			if (imageId == 0) {
+				return false;
+			}
+
+			DLFileEntry dlFileEntry =
+				DLFileEntryServiceUtil.fetchFileEntryByImageId(imageId);
+
+			if (dlFileEntry == null) {
+				return false;
+			}
+
+			StringBundler sb = new StringBundler(9);
+
+			sb.append("/documents/");
+			sb.append(dlFileEntry.getGroupId());
+			sb.append(StringPool.SLASH);
+			sb.append(dlFileEntry.getFolderId());
+			sb.append(StringPool.SLASH);
+			sb.append(
+				HttpUtil.encodeURL(HtmlUtil.unescape(dlFileEntry.getTitle())));
+			sb.append("?version=");
+			sb.append(dlFileEntry.getVersion());
+
+			if (imageId == dlFileEntry.getSmallImageId()) {
+				sb.append("&imageThumbnail=1");
+			}
+			else if (imageId == dlFileEntry.getSmallImageId()) {
+				sb.append("&imageThumbnail=2");
+			}
+			else if (imageId == dlFileEntry.getSmallImageId()) {
+				sb.append("&imageThumbnail=3");
+			}
+
+			response.setHeader(HttpHeaders.LOCATION, sb.toString());
+			response.setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
+
+			return true;
+		}
+		catch (Exception e) {
+		}
+
+		return false;
+	}
+
+	protected Image getDefaultImage(HttpServletRequest request, long imageId) {
+		String path = GetterUtil.getString(request.getPathInfo());
+
+		if (path.startsWith("/company_logo")) {
+			return ImageLocalServiceUtil.getDefaultCompanyLogo();
+		}
+		else if (path.startsWith("/organization_logo")) {
+			return ImageLocalServiceUtil.getDefaultOrganizationLogo();
+		}
+		else if (path.startsWith("/user_female_portrait")) {
+			return ImageLocalServiceUtil.getDefaultUserFemalePortrait();
+		}
+		else if (path.startsWith("/user_male_portrait")) {
+			return ImageLocalServiceUtil.getDefaultUserMalePortrait();
+		}
+		else if (path.startsWith("/user_portrait")) {
+			return ImageLocalServiceUtil.getDefaultUserMalePortrait();
+		}
+		else {
+			return null;
 		}
 	}
 
@@ -208,10 +345,257 @@ public class WebServerServlet extends HttpServlet {
 		else {
 			long groupId = GetterUtil.getLong(pathArray[0]);
 			long folderId = GetterUtil.getLong(pathArray[1]);
+
 			String fileName = HttpUtil.decodeURL(pathArray[2], true);
+
+			if (fileName.contains(StringPool.QUESTION)) {
+				fileName = fileName.substring(
+					0, fileName.indexOf(StringPool.QUESTION));
+			}
 
 			return DLAppServiceUtil.getFileEntry(groupId, folderId, fileName);
 		}
+	}
+
+	protected Image getImage(
+			HttpServletRequest request, boolean getDefault)
+		throws PortalException, SystemException {
+
+		Image image = null;
+
+		long imageId = getImageId(request);
+
+		if (imageId > 0) {
+			String path = GetterUtil.getString(request.getPathInfo());
+
+			if (path.startsWith("/user_female_portrait") ||
+				path.startsWith("/user_male_portrait") ||
+				path.startsWith("/user_portrait")) {
+
+				image = ImageServiceUtil.getImage(imageId);
+
+				image = getUserPortraitImageResized(image, imageId);
+			}
+		}
+		else {
+			String uuid = ParamUtil.getString(request, "uuid");
+			long groupId = ParamUtil.getLong(request, "groupId");
+			boolean igSmallImage = ParamUtil.getBoolean(
+				request, "igSmallImage");
+
+			if (Validator.isNotNull(uuid) && (groupId > 0)) {
+				try {
+					FileEntry fileEntry =
+						DLAppServiceUtil.getFileEntryByUuidAndGroupId(
+							uuid, groupId);
+
+					image = convertFileEntry(igSmallImage, fileEntry);
+				}
+				catch (Exception e) {
+				}
+			}
+		}
+
+		if (getDefault) {
+			if (image == null) {
+				if (_log.isWarnEnabled()) {
+					_log.warn("Get a default image for " + imageId);
+				}
+
+				image = getDefaultImage(request, imageId);
+			}
+		}
+
+		return image;
+	}
+
+	protected Image convertFileEntry(boolean smallImage, FileEntry fileEntry)
+		throws PortalException, SystemException {
+
+		try {
+			Image image = new ImageImpl();
+
+			image.setModifiedDate(fileEntry.getModifiedDate());
+
+			InputStream is = null;
+
+			if (smallImage) {
+				is = ImageProcessor.getThumbnailAsStream(
+					fileEntry.getFileVersion());
+			}
+			else {
+				is = fileEntry.getContentStream();
+			}
+
+			byte[] bytes = FileUtil.getBytes(is);
+
+			image.setTextObj(bytes);
+
+			return image;
+		}
+		catch (PortalException pe) {
+			throw pe;
+		}
+		catch (SystemException se) {
+			throw se;
+		}
+		catch (Exception e) {
+			throw new SystemException(e);
+		}
+	}
+
+	protected byte[] getImageBytes(HttpServletRequest request, Image image) {
+		try {
+			if (!PropsValues.IMAGE_AUTO_SCALE) {
+				return image.getTextObj();
+			}
+
+			ImageBag imageBag = null;
+
+			if (image.getImageId() == 0) {
+				imageBag = ImageProcessorUtil.read(image.getTextObj());
+
+				RenderedImage renderedImage = imageBag.getRenderedImage();
+
+				image.setHeight(renderedImage.getHeight());
+				image.setWidth(renderedImage.getWidth());
+			}
+
+			int height = ParamUtil.getInteger(
+				request, "height", image.getHeight());
+			int width = ParamUtil.getInteger(
+				request, "width", image.getWidth());
+
+			if ((height >= image.getHeight()) && (width >= image.getWidth())) {
+				return image.getTextObj();
+			}
+
+			if (image.getImageId() != 0) {
+				imageBag = ImageProcessorUtil.read(image.getTextObj());
+			}
+
+			RenderedImage renderedImage = ImageProcessorUtil.scale(
+				imageBag.getRenderedImage(), height, width);
+
+			return ImageProcessorUtil.getBytes(
+				renderedImage, imageBag.getType());
+		}
+		catch (Exception e) {
+			if (_log.isWarnEnabled()) {
+				_log.warn("Error scaling image " + image.getImageId(), e);
+			}
+		}
+
+		return image.getTextObj();
+	}
+
+	protected long getImageId(HttpServletRequest request) {
+
+		// The image id may be passed in as image_id, img_id, or i_id
+
+		long imageId = ParamUtil.getLong(request, "image_id");
+
+		if (imageId <= 0) {
+			imageId = ParamUtil.getLong(request, "img_id");
+		}
+
+		if (imageId <= 0) {
+			imageId = ParamUtil.getLong(request, "i_id");
+		}
+
+		if (imageId <= 0) {
+			long companyId = ParamUtil.getLong(request, "companyId");
+			String screenName = ParamUtil.getString(request, "screenName");
+
+			try {
+				if ((companyId > 0) && Validator.isNotNull(screenName)) {
+					User user = UserLocalServiceUtil.getUserByScreenName(
+						companyId, screenName);
+
+					imageId = user.getPortraitId();
+				}
+			}
+			catch (Exception e) {
+			}
+		}
+
+		return imageId;
+	}
+
+	@Override
+	protected long getLastModified(HttpServletRequest request) {
+		try {
+			Date modifiedDate = null;
+
+			Image image = getImage(request, true);
+
+			if (image != null) {
+				modifiedDate = image.getModifiedDate();
+			}
+			else {
+				String path = HttpUtil.fixPath(request.getPathInfo());
+
+				String[] pathArray = StringUtil.split(path, CharPool.SLASH);
+
+				if (pathArray[0].equals("language")) {
+					return -1;
+				}
+
+				FileEntry fileEntry = null;
+
+				try {
+					fileEntry = getFileEntry(pathArray);
+				}
+				catch (Exception e) {
+				}
+
+				if (fileEntry == null) {
+					return -1;
+				}
+				else {
+					modifiedDate = fileEntry.getModifiedDate();
+				}
+			}
+
+			if (modifiedDate == null) {
+				modifiedDate = PortalUtil.getUptime();
+			}
+
+			// Round down and remove milliseconds
+
+			return (modifiedDate.getTime() / 1000) * 1000;
+		}
+		catch (PrincipalException pe) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(pe, pe);
+			}
+		}
+		catch (Exception e) {
+			_log.error(e, e);
+		}
+
+		return -1;
+	}
+
+	protected Image getUserPortraitImageResized(Image image, long imageId)
+		throws PortalException, SystemException {
+
+		if (image == null) {
+			return null;
+		}
+
+		if ((image.getHeight() > PropsValues.USERS_IMAGE_MAX_HEIGHT) ||
+			(image.getWidth() > PropsValues.USERS_IMAGE_MAX_WIDTH)) {
+
+			User user = UserLocalServiceUtil.getUserByPortraitId(imageId);
+
+			UserLocalServiceUtil.updatePortrait(
+				user.getUserId(), image.getTextObj());
+
+			return ImageLocalServiceUtil.getImage(imageId);
+		}
+
+		return image;
 	}
 
 	protected void processPrincipalException(
@@ -338,34 +722,26 @@ public class WebServerServlet extends HttpServlet {
 			if (Validator.isNotNull(fileEntry.getVersion())) {
 				version = fileEntry.getVersion();
 			}
-			else {
-				throw new NoSuchFileEntryException();
-			}
 		}
 
 		String tempFileId = DLUtil.getTempFileId(
 			fileEntry.getFileEntryId(), version);
 
-		InputStream inputStream = fileEntry.getContentStream(version);
-		long contentLength = 0;
-
 		FileVersion fileVersion = fileEntry.getFileVersion(version);
 
 		String fileName = fileVersion.getTitle();
 
-		String extension = GetterUtil.getString(
-			FileUtil.getExtension(fileName));
+		String extension = fileVersion.getExtension();
 
-		if (Validator.isNull(extension) ||
-			!extension.equals(fileVersion.getExtension())) {
-
-			fileName += StringPool.PERIOD + fileVersion.getExtension();
+		if (!fileName.endsWith(StringPool.PERIOD + extension)) {
+			fileName += StringPool.PERIOD + extension;
 		}
 
 		boolean converted = false;
 
 		String targetExtension = ParamUtil.getString(
 			request, "targetExtension");
+		int imageThumbnail = ParamUtil.getInteger(request, "imageThumbnail");
 		boolean documentThumbnail = ParamUtil.getBoolean(
 			request, "documentThumbnail");
 		int previewFileIndex = ParamUtil.getInteger(
@@ -375,89 +751,97 @@ public class WebServerServlet extends HttpServlet {
 		boolean videoThumbnail = ParamUtil.getBoolean(
 			request, "videoThumbnail");
 
-		if (Validator.isNotNull(targetExtension)) {
-			File convertedFile = DocumentConversionUtil.convert(
-				tempFileId, inputStream, extension, targetExtension);
+		InputStream inputStream = null;
+		long contentLength = 0;
 
-			if (convertedFile != null) {
-				fileName = FileUtil.stripExtension(fileName).concat(
-					StringPool.PERIOD).concat(targetExtension);
-				inputStream = new FileInputStream(convertedFile);
-				contentLength = convertedFile.length();
+		if ((imageThumbnail > 0) && (imageThumbnail < 3)) {
+			fileName = FileUtil.stripExtension(fileName).concat(
+				StringPool.PERIOD).concat(fileVersion.getExtension());
 
-				converted = true;
+			if (imageThumbnail == 1) {
+				inputStream = ImageProcessor.getThumbnailAsStream(fileVersion);
+				contentLength = ImageProcessor.getThumbnailFileSize(
+					fileVersion);
 			}
+			else if (imageThumbnail == 2) {
+				inputStream = ImageProcessor.getCustom1AsStream(fileVersion);
+				contentLength = ImageProcessor.getCustom1FileSize(fileVersion);
+			}
+			else if (imageThumbnail == 3) {
+				inputStream = ImageProcessor.getCustom2AsStream(fileVersion);
+				contentLength = ImageProcessor.getCustom2FileSize(fileVersion);
+			}
+
+			converted = true;
 		}
 		else if (documentThumbnail) {
 			fileName = FileUtil.stripExtension(fileName).concat(
 				StringPool.PERIOD).concat(PDFProcessor.THUMBNAIL_TYPE);
-
-			File thumbnailFile = PDFProcessor.getThumbnailFile(tempFileId);
-
-			inputStream = new FileInputStream(thumbnailFile);
-			contentLength = thumbnailFile.length();
+			inputStream = PDFProcessor.getThumbnailAsStream(fileVersion);
+			contentLength = PDFProcessor.getThumbnailFileSize(fileVersion);
 
 			converted = true;
 		}
 		else if (previewFileIndex > 0) {
 			fileName = FileUtil.stripExtension(fileName).concat(
 				StringPool.PERIOD).concat(PDFProcessor.PREVIEW_TYPE);
-
-			File previewFile = PDFProcessor.getPreviewFile(
-				tempFileId, previewFileIndex);
-
-			inputStream = new FileInputStream(previewFile);
-			contentLength = previewFile.length();
+			inputStream = PDFProcessor.getPreviewAsStream(
+				fileVersion, previewFileIndex);
+			contentLength = PDFProcessor.getPreviewFileSize(
+				fileVersion, previewFileIndex);
 
 			converted = true;
 		}
 		else if (audioPreview) {
 			fileName = FileUtil.stripExtension(fileName).concat(
 				StringPool.PERIOD).concat(AudioProcessor.PREVIEW_TYPE);
-
-			File previewFile = AudioProcessor.getPreviewFile(tempFileId);
-
-			inputStream = new FileInputStream(previewFile);
-			contentLength = previewFile.length();
+			inputStream = AudioProcessor.getPreviewAsStream(fileVersion);
+			contentLength = AudioProcessor.getPreviewFileSize(fileVersion);
 
 			converted = true;
 		}
 		else if (videoPreview) {
 			fileName = FileUtil.stripExtension(fileName).concat(
 				StringPool.PERIOD).concat(VideoProcessor.PREVIEW_TYPE);
-
-			File previewFile = VideoProcessor.getPreviewFile(tempFileId);
-
-			inputStream = new FileInputStream(previewFile);
-			contentLength = previewFile.length();
+			inputStream = VideoProcessor.getPreviewAsStream(fileVersion);
+			contentLength = VideoProcessor.getPreviewFileSize(fileVersion);
 
 			converted = true;
 		}
 		else if (videoThumbnail) {
 			fileName = FileUtil.stripExtension(fileName).concat(
 				StringPool.PERIOD).concat(VideoProcessor.THUMBNAIL_TYPE);
-
-			File thumbnailFile = VideoProcessor.getThumbnailFile(
-				tempFileId);
-
-			inputStream = new FileInputStream(thumbnailFile);
-			contentLength = thumbnailFile.length();
+			inputStream = VideoProcessor.getThumbnailAsStream(fileVersion);
+			contentLength = VideoProcessor.getThumbnailFileSize(fileVersion);
 
 			converted = true;
 		}
+		else {
+			inputStream = fileVersion.getContentStream(true);
+			contentLength = fileVersion.getSize();
 
-		String contentType = fileEntry.getMimeType(version);
+			if (Validator.isNotNull(targetExtension)) {
+				File convertedFile = DocumentConversionUtil.convert(
+					tempFileId, inputStream, extension, targetExtension);
 
-		if (!converted) {
-			if (DLUtil.compareVersions(version, fileEntry.getVersion()) >= 0) {
-				contentLength = fileEntry.getSize();
-			}
-			else {
-				contentLength = fileVersion.getSize();
+				if (convertedFile != null) {
+					fileName = FileUtil.stripExtension(fileName).concat(
+						StringPool.PERIOD).concat(targetExtension);
+					inputStream = new FileInputStream(convertedFile);
+					contentLength = convertedFile.length();
+
+					converted = true;
+				}
 			}
 		}
-		else {
+
+		String contentType = null;
+
+		if (converted) {
 			contentType = MimeTypesUtil.getContentType(fileName);
+		}
+		else {
+			contentType = fileVersion.getMimeType();
 		}
 
 		ServletResponseUtil.sendFile(
@@ -522,6 +906,43 @@ public class WebServerServlet extends HttpServlet {
 		response.setContentType(ContentTypes.TEXT_HTML_UTF8);
 
 		ServletResponseUtil.write(response, html);
+	}
+
+	protected void writeImage(
+		Image image, HttpServletRequest request, HttpServletResponse response) {
+
+		if (image == null) {
+			return;
+		}
+
+		String contentType = null;
+
+		String type = image.getType();
+
+		if (!type.equals(ImageConstants.TYPE_NOT_AVAILABLE)) {
+			contentType = MimeTypesUtil.getContentType("A." + type);
+
+			response.setContentType(contentType);
+		}
+
+		String fileName = ParamUtil.getString(request, "fileName");
+
+		try {
+			byte[] bytes = getImageBytes(request, image);
+
+			if (Validator.isNotNull(fileName)) {
+				ServletResponseUtil.sendFile(
+					request, response, fileName, bytes, contentType);
+			}
+			else {
+				ServletResponseUtil.write(response, bytes);
+			}
+		}
+		catch (Exception e) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(e, e);
+			}
+		}
 	}
 
 	private static void _checkFileEntry(String[] pathArray)
@@ -612,5 +1033,9 @@ public class WebServerServlet extends HttpServlet {
 
 	private static Format _dateFormat =
 		FastDateFormatFactoryUtil.getSimpleDateFormat(_DATE_FORMAT_PATTERN);
+
+	private static Log _log = LogFactoryUtil.getLog(WebServerServlet.class);
+
+	private boolean _lastModified = true;
 
 }

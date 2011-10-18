@@ -15,13 +15,14 @@
 package com.liferay.portlet.shopping.action;
 
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.security.auth.PrincipalException;
 import com.liferay.portal.struts.PortletAction;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.WebKeys;
+import com.liferay.portlet.shopping.AmazonException;
 import com.liferay.portlet.shopping.service.ShoppingItemServiceUtil;
 
 import javax.portlet.ActionRequest;
@@ -80,9 +81,14 @@ public class AddBookItemsAction extends PortletAction {
 		long categoryId = ParamUtil.getLong(actionRequest, "categoryId");
 		String[] isbns = StringUtil.split(
 			ParamUtil.getString(actionRequest, "isbns").toUpperCase(),
-			StringPool.SPACE);
+			CharPool.SPACE);
 
-		ShoppingItemServiceUtil.addBookItems(groupId, categoryId, isbns);
+		try {
+			ShoppingItemServiceUtil.addBookItems(groupId, categoryId, isbns);
+		}
+		catch (AmazonException ae) {
+			 SessionErrors.add(actionRequest, ae.getClass().getName());
+		}
 	}
 
 }

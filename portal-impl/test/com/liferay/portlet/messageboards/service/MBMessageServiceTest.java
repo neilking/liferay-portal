@@ -28,6 +28,8 @@ import com.liferay.portlet.messageboards.model.MBCategory;
 import com.liferay.portlet.messageboards.model.MBCategoryConstants;
 import com.liferay.portlet.messageboards.model.MBMessageConstants;
 
+import java.io.InputStream;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,7 +64,7 @@ public class MBMessageServiceTest extends BaseServiceTestCase {
 		boolean mailingListActive = false;
 
 		Group group = GroupLocalServiceUtil.getGroup(
-			TestPropsValues.COMPANY_ID, GroupConstants.GUEST);
+			TestPropsValues.getCompanyId(), GroupConstants.GUEST);
 
 		ServiceContext serviceContext = new ServiceContext();
 
@@ -93,9 +95,7 @@ public class MBMessageServiceTest extends BaseServiceTestCase {
 	}
 
 	public void testAddMessagesConcurrently() throws Exception {
-		int threadCount = 5;
-
-		DoAsUserThread[] doAsUserThreads = new DoAsUserThread[threadCount];
+		DoAsUserThread[] doAsUserThreads = new DoAsUserThread[THREAD_COUNT];
 
 		for (int i = 0; i < doAsUserThreads.length; i++) {
 			String subject = "Test Message " + i;
@@ -120,9 +120,9 @@ public class MBMessageServiceTest extends BaseServiceTestCase {
 		}
 
 		assertTrue(
-			"Only " + successCount + " out of " + threadCount +
+			"Only " + successCount + " out of " + THREAD_COUNT +
 				" threads added messages successfully",
-			successCount == threadCount);
+			successCount == THREAD_COUNT);
 	}
 
 	private MBCategory _category;
@@ -144,8 +144,8 @@ public class MBMessageServiceTest extends BaseServiceTestCase {
 		@Override
 		protected void doRun() throws Exception {
 			String body = "This is a test message.";
-			List<ObjectValuePair<String, byte[]>> files =
-				new ArrayList<ObjectValuePair<String, byte[]>>();
+			List<ObjectValuePair<String, InputStream>> inputStreamOVPs =
+				new ArrayList<ObjectValuePair<String, InputStream>>();
 			boolean anonymous = false;
 			double priority = 0.0;
 			boolean allowPingbacks = false;
@@ -157,8 +157,8 @@ public class MBMessageServiceTest extends BaseServiceTestCase {
 
 			MBMessageServiceUtil.addMessage(
 				_category.getGroupId(), _category.getCategoryId(), _subject,
-				body, MBMessageConstants.DEFAULT_FORMAT, files, anonymous,
-				priority, allowPingbacks, serviceContext);
+				body, MBMessageConstants.DEFAULT_FORMAT, inputStreamOVPs,
+				anonymous, priority, allowPingbacks, serviceContext);
 		}
 
 		private String _subject;

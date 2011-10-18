@@ -17,6 +17,7 @@ package com.liferay.portal.model.impl;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.CacheModel;
@@ -29,8 +30,6 @@ import com.liferay.portlet.expando.model.ExpandoBridge;
 import com.liferay.portlet.expando.util.ExpandoBridgeFactoryUtil;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Proxy;
 
 import java.sql.Types;
 
@@ -76,6 +75,11 @@ public class PermissionModelImpl extends BaseModelImpl<Permission>
 	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
 				"value.object.finder.cache.enabled.com.liferay.portal.model.Permission"),
 			true);
+	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.column.bitmask.enabled.com.liferay.portal.model.Permission"),
+			true);
+	public static long ACTIONID_COLUMN_BITMASK = 1L;
+	public static long RESOURCEID_COLUMN_BITMASK = 2L;
 
 	/**
 	 * Converts the soap model instance into a normal model instance.
@@ -110,20 +114,30 @@ public class PermissionModelImpl extends BaseModelImpl<Permission>
 		return models;
 	}
 
-	public Class<?> getModelClass() {
-		return Permission.class;
-	}
-
-	public String getModelClassName() {
-		return Permission.class.getName();
-	}
-
-	public static final String MAPPING_TABLE_GROUPS_PERMISSIONS_NAME = com.liferay.portal.model.impl.GroupModelImpl.MAPPING_TABLE_GROUPS_PERMISSIONS_NAME;
-	public static final boolean FINDER_CACHE_ENABLED_GROUPS_PERMISSIONS = com.liferay.portal.model.impl.GroupModelImpl.FINDER_CACHE_ENABLED_GROUPS_PERMISSIONS;
-	public static final String MAPPING_TABLE_ROLES_PERMISSIONS_NAME = com.liferay.portal.model.impl.RoleModelImpl.MAPPING_TABLE_ROLES_PERMISSIONS_NAME;
-	public static final boolean FINDER_CACHE_ENABLED_ROLES_PERMISSIONS = com.liferay.portal.model.impl.RoleModelImpl.FINDER_CACHE_ENABLED_ROLES_PERMISSIONS;
-	public static final String MAPPING_TABLE_USERS_PERMISSIONS_NAME = com.liferay.portal.model.impl.UserModelImpl.MAPPING_TABLE_USERS_PERMISSIONS_NAME;
-	public static final boolean FINDER_CACHE_ENABLED_USERS_PERMISSIONS = com.liferay.portal.model.impl.UserModelImpl.FINDER_CACHE_ENABLED_USERS_PERMISSIONS;
+	public static final String MAPPING_TABLE_GROUPS_PERMISSIONS_NAME = "Groups_Permissions";
+	public static final Object[][] MAPPING_TABLE_GROUPS_PERMISSIONS_COLUMNS = {
+			{ "groupId", Types.BIGINT },
+			{ "permissionId", Types.BIGINT }
+		};
+	public static final String MAPPING_TABLE_GROUPS_PERMISSIONS_SQL_CREATE = "create table Groups_Permissions (groupId LONG not null,permissionId LONG not null,primary key (groupId, permissionId))";
+	public static final boolean FINDER_CACHE_ENABLED_GROUPS_PERMISSIONS = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.finder.cache.enabled.Groups_Permissions"), true);
+	public static final String MAPPING_TABLE_ROLES_PERMISSIONS_NAME = "Roles_Permissions";
+	public static final Object[][] MAPPING_TABLE_ROLES_PERMISSIONS_COLUMNS = {
+			{ "roleId", Types.BIGINT },
+			{ "permissionId", Types.BIGINT }
+		};
+	public static final String MAPPING_TABLE_ROLES_PERMISSIONS_SQL_CREATE = "create table Roles_Permissions (roleId LONG not null,permissionId LONG not null,primary key (roleId, permissionId))";
+	public static final boolean FINDER_CACHE_ENABLED_ROLES_PERMISSIONS = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.finder.cache.enabled.Roles_Permissions"), true);
+	public static final String MAPPING_TABLE_USERS_PERMISSIONS_NAME = "Users_Permissions";
+	public static final Object[][] MAPPING_TABLE_USERS_PERMISSIONS_COLUMNS = {
+			{ "userId", Types.BIGINT },
+			{ "permissionId", Types.BIGINT }
+		};
+	public static final String MAPPING_TABLE_USERS_PERMISSIONS_SQL_CREATE = "create table Users_Permissions (userId LONG not null,permissionId LONG not null,primary key (userId, permissionId))";
+	public static final boolean FINDER_CACHE_ENABLED_USERS_PERMISSIONS = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.finder.cache.enabled.Users_Permissions"), true);
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(com.liferay.portal.util.PropsUtil.get(
 				"lock.expiration.time.com.liferay.portal.model.Permission"));
 
@@ -144,6 +158,14 @@ public class PermissionModelImpl extends BaseModelImpl<Permission>
 
 	public void setPrimaryKeyObj(Serializable primaryKeyObj) {
 		setPrimaryKey(((Long)primaryKeyObj).longValue());
+	}
+
+	public Class<?> getModelClass() {
+		return Permission.class;
+	}
+
+	public String getModelClassName() {
+		return Permission.class.getName();
 	}
 
 	@JSON
@@ -175,6 +197,8 @@ public class PermissionModelImpl extends BaseModelImpl<Permission>
 	}
 
 	public void setActionId(String actionId) {
+		_columnBitmask |= ACTIONID_COLUMN_BITMASK;
+
 		if (_originalActionId == null) {
 			_originalActionId = _actionId;
 		}
@@ -192,6 +216,8 @@ public class PermissionModelImpl extends BaseModelImpl<Permission>
 	}
 
 	public void setResourceId(long resourceId) {
+		_columnBitmask |= RESOURCEID_COLUMN_BITMASK;
+
 		if (!_setOriginalResourceId) {
 			_setOriginalResourceId = true;
 
@@ -205,20 +231,19 @@ public class PermissionModelImpl extends BaseModelImpl<Permission>
 		return _originalResourceId;
 	}
 
+	public long getColumnBitmask() {
+		return _columnBitmask;
+	}
+
 	@Override
 	public Permission toEscapedModel() {
-		if (isEscapedModel()) {
-			return (Permission)this;
+		if (_escapedModelProxy == null) {
+			_escapedModelProxy = (Permission)ProxyUtil.newProxyInstance(_classLoader,
+					_escapedModelProxyInterfaces,
+					new AutoEscapeBeanHandler(this));
 		}
-		else {
-			if (_escapedModelProxy == null) {
-				_escapedModelProxy = (Permission)Proxy.newProxyInstance(_classLoader,
-						_escapedModelProxyInterfaces,
-						new AutoEscapeBeanHandler(this));
-			}
 
-			return _escapedModelProxy;
-		}
+		return _escapedModelProxy;
 	}
 
 	@Override
@@ -303,6 +328,8 @@ public class PermissionModelImpl extends BaseModelImpl<Permission>
 		permissionModelImpl._originalResourceId = permissionModelImpl._resourceId;
 
 		permissionModelImpl._setOriginalResourceId = false;
+
+		permissionModelImpl._columnBitmask = 0;
 	}
 
 	@Override
@@ -384,5 +411,6 @@ public class PermissionModelImpl extends BaseModelImpl<Permission>
 	private long _originalResourceId;
 	private boolean _setOriginalResourceId;
 	private transient ExpandoBridge _expandoBridge;
+	private long _columnBitmask;
 	private Permission _escapedModelProxy;
 }

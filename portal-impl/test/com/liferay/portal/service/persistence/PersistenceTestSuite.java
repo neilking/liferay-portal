@@ -52,8 +52,6 @@ import com.liferay.portlet.expando.service.persistence.ExpandoColumnPersistenceT
 import com.liferay.portlet.expando.service.persistence.ExpandoRowPersistenceTest;
 import com.liferay.portlet.expando.service.persistence.ExpandoTablePersistenceTest;
 import com.liferay.portlet.expando.service.persistence.ExpandoValuePersistenceTest;
-import com.liferay.portlet.imagegallery.service.persistence.IGFolderPersistenceTest;
-import com.liferay.portlet.imagegallery.service.persistence.IGImagePersistenceTest;
 import com.liferay.portlet.journal.service.persistence.JournalArticleImagePersistenceTest;
 import com.liferay.portlet.journal.service.persistence.JournalArticlePersistenceTest;
 import com.liferay.portlet.journal.service.persistence.JournalArticleResourcePersistenceTest;
@@ -65,10 +63,14 @@ import com.liferay.portlet.messageboards.service.persistence.MBBanPersistenceTes
 import com.liferay.portlet.messageboards.service.persistence.MBCategoryPersistenceTest;
 import com.liferay.portlet.messageboards.service.persistence.MBDiscussionPersistenceTest;
 import com.liferay.portlet.messageboards.service.persistence.MBMailingListPersistenceTest;
-import com.liferay.portlet.messageboards.service.persistence.MBMessageFlagPersistenceTest;
 import com.liferay.portlet.messageboards.service.persistence.MBMessagePersistenceTest;
 import com.liferay.portlet.messageboards.service.persistence.MBStatsUserPersistenceTest;
+import com.liferay.portlet.messageboards.service.persistence.MBThreadFlagPersistenceTest;
 import com.liferay.portlet.messageboards.service.persistence.MBThreadPersistenceTest;
+import com.liferay.portlet.mobiledevicerules.service.persistence.MDRActionPersistenceTest;
+import com.liferay.portlet.mobiledevicerules.service.persistence.MDRRuleGroupInstancePersistenceTest;
+import com.liferay.portlet.mobiledevicerules.service.persistence.MDRRuleGroupPersistenceTest;
+import com.liferay.portlet.mobiledevicerules.service.persistence.MDRRulePersistenceTest;
 import com.liferay.portlet.polls.service.persistence.PollsChoicePersistenceTest;
 import com.liferay.portlet.polls.service.persistence.PollsQuestionPersistenceTest;
 import com.liferay.portlet.polls.service.persistence.PollsVotePersistenceTest;
@@ -82,7 +84,11 @@ import com.liferay.portlet.shopping.service.persistence.ShoppingItemPersistenceT
 import com.liferay.portlet.shopping.service.persistence.ShoppingItemPricePersistenceTest;
 import com.liferay.portlet.shopping.service.persistence.ShoppingOrderItemPersistenceTest;
 import com.liferay.portlet.shopping.service.persistence.ShoppingOrderPersistenceTest;
+import com.liferay.portlet.social.service.persistence.SocialActivityAchievementPersistenceTest;
+import com.liferay.portlet.social.service.persistence.SocialActivityCounterPersistenceTest;
+import com.liferay.portlet.social.service.persistence.SocialActivityLimitPersistenceTest;
 import com.liferay.portlet.social.service.persistence.SocialActivityPersistenceTest;
+import com.liferay.portlet.social.service.persistence.SocialActivitySettingPersistenceTest;
 import com.liferay.portlet.social.service.persistence.SocialEquityAssetEntryPersistenceTest;
 import com.liferay.portlet.social.service.persistence.SocialEquityGroupSettingPersistenceTest;
 import com.liferay.portlet.social.service.persistence.SocialEquityHistoryPersistenceTest;
@@ -153,9 +159,12 @@ public class PersistenceTestSuite extends TestSuite {
 		testSuite.addTestSuite(RepositoryEntryPersistenceTest.class);
 		testSuite.addTestSuite(RepositoryPersistenceTest.class);
 		testSuite.addTestSuite(ResourceActionPersistenceTest.class);
+		testSuite.addTestSuite(ResourceBlockPermissionPersistenceTest.class);
+		testSuite.addTestSuite(ResourceBlockPersistenceTest.class);
 		testSuite.addTestSuite(ResourceCodePersistenceTest.class);
 		testSuite.addTestSuite(ResourcePermissionPersistenceTest.class);
 		testSuite.addTestSuite(ResourcePersistenceTest.class);
+		testSuite.addTestSuite(ResourceTypePermissionPersistenceTest.class);
 		testSuite.addTestSuite(RolePersistenceTest.class);
 		testSuite.addTestSuite(ServiceComponentPersistenceTest.class);
 		testSuite.addTestSuite(ShardPersistenceTest.class);
@@ -222,9 +231,6 @@ public class PersistenceTestSuite extends TestSuite {
 		testSuite.addTestSuite(ExpandoTablePersistenceTest.class);
 		testSuite.addTestSuite(ExpandoValuePersistenceTest.class);
 
-		testSuite.addTestSuite(IGFolderPersistenceTest.class);
-		testSuite.addTestSuite(IGImagePersistenceTest.class);
-
 		testSuite.addTestSuite(JournalArticleImagePersistenceTest.class);
 		testSuite.addTestSuite(JournalArticlePersistenceTest.class);
 		testSuite.addTestSuite(JournalArticleResourcePersistenceTest.class);
@@ -237,10 +243,15 @@ public class PersistenceTestSuite extends TestSuite {
 		testSuite.addTestSuite(MBCategoryPersistenceTest.class);
 		testSuite.addTestSuite(MBDiscussionPersistenceTest.class);
 		testSuite.addTestSuite(MBMailingListPersistenceTest.class);
-		testSuite.addTestSuite(MBMessageFlagPersistenceTest.class);
 		testSuite.addTestSuite(MBMessagePersistenceTest.class);
 		testSuite.addTestSuite(MBStatsUserPersistenceTest.class);
+		testSuite.addTestSuite(MBThreadFlagPersistenceTest.class);
 		testSuite.addTestSuite(MBThreadPersistenceTest.class);
+
+		testSuite.addTestSuite(MDRActionPersistenceTest.class);
+		testSuite.addTestSuite(MDRRuleGroupInstancePersistenceTest.class);
+		testSuite.addTestSuite(MDRRuleGroupPersistenceTest.class);
+		testSuite.addTestSuite(MDRRulePersistenceTest.class);
 
 		testSuite.addTestSuite(PollsChoicePersistenceTest.class);
 		testSuite.addTestSuite(PollsQuestionPersistenceTest.class);
@@ -258,7 +269,11 @@ public class PersistenceTestSuite extends TestSuite {
 		testSuite.addTestSuite(ShoppingOrderItemPersistenceTest.class);
 		testSuite.addTestSuite(ShoppingOrderPersistenceTest.class);
 
+		testSuite.addTestSuite(SocialActivityAchievementPersistenceTest.class);
+		testSuite.addTestSuite(SocialActivityCounterPersistenceTest.class);
+		testSuite.addTestSuite(SocialActivityLimitPersistenceTest.class);
 		testSuite.addTestSuite(SocialActivityPersistenceTest.class);
+		testSuite.addTestSuite(SocialActivitySettingPersistenceTest.class);
 		testSuite.addTestSuite(SocialEquityAssetEntryPersistenceTest.class);
 		testSuite.addTestSuite(SocialEquityGroupSettingPersistenceTest.class);
 		testSuite.addTestSuite(SocialEquityHistoryPersistenceTest.class);

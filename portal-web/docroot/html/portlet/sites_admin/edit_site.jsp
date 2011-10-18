@@ -17,7 +17,9 @@
 <%@ include file="/html/portlet/sites_admin/init.jsp" %>
 
 <%
-String redirect = ParamUtil.getString(request, "redirect");
+String viewOrganizationsRedirect = ParamUtil.getString(request, "viewOrganizationsRedirect");
+String redirect = ParamUtil.getString(request, "redirect", viewOrganizationsRedirect);
+String closeRedirect = ParamUtil.getString(request, "closeRedirect");
 
 Group group = (Group)request.getAttribute(WebKeys.GROUP);
 
@@ -49,8 +51,6 @@ if (group != null) {
 
 	liveGroupId = liveGroup.getGroupId();
 
-	stagingGroupId = 0;
-
 	if (stagingGroup != null) {
 		stagingGroupId = stagingGroup.getGroupId();
 	}
@@ -60,9 +60,6 @@ if (group != null) {
 else {
 	liveGroupTypeSettings = new UnicodeProperties();
 }
-
-
-String friendlyURL = BeanParamUtil.getString(group, request, "friendlyURL");
 
 LayoutSetPrototype layoutSetPrototype = null;
 
@@ -118,10 +115,10 @@ else if (layoutSetPrototype != null) {
 <aui:form action="<%= editSiteURL %>" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "saveGroup();" %>'>
 	<aui:input name="<%= Constants.CMD %>" type="hidden" />
 	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
+	<aui:input name="closeRedirect" type="hidden" value="<%= closeRedirect %>" />
 	<aui:input name="groupId" type="hidden" value="<%= groupId %>" />
 	<aui:input name="liveGroupId" type="hidden" value="<%= liveGroupId %>" />
 	<aui:input name="stagingGroupId" type="hidden" value="<%= stagingGroupId %>" />
-	<aui:input name="friendlyURL" type="hidden" value="<%= friendlyURL %>" />
 
 	<%
 	request.setAttribute("site.group", group);

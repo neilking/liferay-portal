@@ -23,7 +23,8 @@ package com.liferay.portal.model;
  * @see       ResourcePermission
  * @generated
  */
-public class ResourcePermissionWrapper implements ResourcePermission {
+public class ResourcePermissionWrapper implements ResourcePermission,
+	ModelWrapper<ResourcePermission> {
 	public ResourcePermissionWrapper(ResourcePermission resourcePermission) {
 		_resourcePermission = resourcePermission;
 	}
@@ -218,10 +219,6 @@ public class ResourcePermissionWrapper implements ResourcePermission {
 		return _resourcePermission.isEscapedModel();
 	}
 
-	public void setEscapedModel(boolean escapedModel) {
-		_resourcePermission.setEscapedModel(escapedModel);
-	}
-
 	public java.io.Serializable getPrimaryKeyObj() {
 		return _resourcePermission.getPrimaryKeyObj();
 	}
@@ -276,7 +273,18 @@ public class ResourcePermissionWrapper implements ResourcePermission {
 		_resourcePermission.persist();
 	}
 
+	public boolean hasActionId(java.lang.String actionId) {
+		return _resourcePermission.hasActionId(actionId);
+	}
+
+	/**
+	 * @deprecated Renamed to {@link #getWrappedModel}
+	 */
 	public ResourcePermission getWrappedResourcePermission() {
+		return _resourcePermission;
+	}
+
+	public ResourcePermission getWrappedModel() {
 		return _resourcePermission;
 	}
 

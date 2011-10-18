@@ -22,7 +22,7 @@ import com.liferay.portalweb.portal.util.RuntimeVariables;
  */
 public class PostNewMBCategoryThreadMessageTest extends BaseTestCase {
 	public void testPostNewMBCategoryThreadMessage() throws Exception {
-		selenium.open("/web/guest/home/");
+		selenium.open("/web/site-name");
 
 		for (int second = 0;; second++) {
 			if (second >= 60) {
@@ -30,7 +30,7 @@ public class PostNewMBCategoryThreadMessageTest extends BaseTestCase {
 			}
 
 			try {
-				if (selenium.isVisible("link=Message Boards Test Page")) {
+				if (selenium.isElementPresent("link=Message Boards Test Page")) {
 					break;
 				}
 			}
@@ -58,8 +58,29 @@ public class PostNewMBCategoryThreadMessageTest extends BaseTestCase {
 		selenium.type("//input[@id='_19_subject']",
 			RuntimeVariables.replace("MB Message Subject"));
 		selenium.saveScreenShotAndSource();
-		selenium.type("//textarea[@id='_19_editor']",
-			RuntimeVariables.replace("MB Message Body"));
+		Thread.sleep(5000);
+
+		for (int second = 0;; second++) {
+			if (second >= 60) {
+				fail("timeout");
+			}
+
+			try {
+				if (selenium.isVisible(
+							"//td[@id='cke_contents__19_editor']/iframe")) {
+					break;
+				}
+			}
+			catch (Exception e) {
+			}
+
+			Thread.sleep(1000);
+		}
+
+		selenium.saveScreenShotAndSource();
+		selenium.selectFrame("//td[@id='cke_contents__19_editor']/iframe");
+		selenium.type("//body", RuntimeVariables.replace("MB Message Body"));
+		selenium.selectFrame("relative=top");
 		selenium.saveScreenShotAndSource();
 		selenium.clickAt("//input[@value='Publish']",
 			RuntimeVariables.replace("Publish"));
@@ -68,6 +89,26 @@ public class PostNewMBCategoryThreadMessageTest extends BaseTestCase {
 		assertEquals(RuntimeVariables.replace(
 				"Your request completed successfully."),
 			selenium.getText("//div[@class='portlet-msg-success']"));
+		selenium.clickAt("//a[@id='_19_TabsBack']",
+			RuntimeVariables.replace("\u00ab Back to MB Category Name"));
+
+		for (int second = 0;; second++) {
+			if (second >= 60) {
+				fail("timeout");
+			}
+
+			try {
+				if (selenium.isVisible("//td[1]/a")) {
+					break;
+				}
+			}
+			catch (Exception e) {
+			}
+
+			Thread.sleep(1000);
+		}
+
+		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace("MB Message Subject"),
 			selenium.getText("//td[1]/a"));
 		assertEquals(RuntimeVariables.replace(""), selenium.getText("//td[2]/a"));
@@ -75,7 +116,7 @@ public class PostNewMBCategoryThreadMessageTest extends BaseTestCase {
 			selenium.getText("//td[3]/a"));
 		assertEquals(RuntimeVariables.replace("1"),
 			selenium.getText("//td[4]/a"));
-		assertEquals(RuntimeVariables.replace("0"),
+		assertEquals(RuntimeVariables.replace("1"),
 			selenium.getText("//td[5]/a"));
 		assertTrue(selenium.isPartialText("//td[6]/a", "By: Joe Bloggs"));
 		selenium.clickAt("//td[1]/a",
@@ -87,7 +128,7 @@ public class PostNewMBCategoryThreadMessageTest extends BaseTestCase {
 		assertEquals(RuntimeVariables.replace("MB Message Subject"),
 			selenium.getText("//div[@class='subject']/a/strong"));
 		assertEquals(RuntimeVariables.replace("Joe Bloggs"),
-			selenium.getText("//a[@class='user-name']"));
+			selenium.getText("//span[@class='user-name']"));
 		assertEquals(RuntimeVariables.replace("MB Message Body"),
 			selenium.getText("//div[@class='thread-body']"));
 	}

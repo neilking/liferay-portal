@@ -88,6 +88,13 @@ public class EditScopeAction extends EditConfigurationAction {
 				actionRequest,
 				portletConfig.getPortletName() + ".doConfigure");
 
+			String portletResource = ParamUtil.getString(
+				actionRequest, "portletResource");
+
+			SessionMessages.add(
+				actionRequest, portletConfig.getPortletName() + ".doRefresh",
+				portletResource);
+
 			String redirect = PortalUtil.escapeRedirect(
 				ParamUtil.getString(actionRequest, "redirect"));
 
@@ -183,7 +190,7 @@ public class EditScopeAction extends EditConfigurationAction {
 				layout, portlet.getPortletId());
 
 		String scopeType = GetterUtil.getString(
-			preferences.getValue("lfr-scope-type", null));
+			preferences.getValue("lfrScopeType", null));
 
 		if (Validator.isNull(scopeType)) {
 			return null;
@@ -257,7 +264,7 @@ public class EditScopeAction extends EditConfigurationAction {
 
 		String scopeType = ParamUtil.getString(actionRequest, "scopeType");
 
-		preferences.setValue("lfr-scope-type", scopeType);
+		preferences.setValue("lfrScopeType", scopeType);
 
 		String scopeLayoutUuid = ParamUtil.getString(
 			actionRequest, "scopeLayoutUuid");
@@ -285,10 +292,10 @@ public class EditScopeAction extends EditConfigurationAction {
 
 		if (!newPortletTitle.equals(portletTitle)) {
 			preferences.setValue(
-				"portlet-setup-title-" + themeDisplay.getLanguageId(),
+				"portletSetupTitle_" + themeDisplay.getLanguageId(),
 				newPortletTitle);
 			preferences.setValue(
-				"portlet-setup-use-custom-title", Boolean.TRUE.toString());
+				"portletSetupUseCustomTitle", Boolean.TRUE.toString());
 		}
 
 		preferences.store();

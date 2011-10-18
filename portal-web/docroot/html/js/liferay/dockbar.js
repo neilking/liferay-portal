@@ -1,6 +1,8 @@
 AUI().add(
 	'liferay-dockbar',
 	function(A) {
+		var Lang = A.Lang;
+
 		var LayoutConfiguration = Liferay.LayoutConfiguration;
 		var Portlet = Liferay.Portlet;
 		var Util = Liferay.Util;
@@ -384,6 +386,8 @@ AUI().add(
 					}
 				);
 
+				Liferay.Util.toggleControls(dockBar);
+
 				var MenuManager = new A.OverlayManager(
 					{
 						zIndexBase: 100000
@@ -512,9 +516,9 @@ AUI().add(
 
 				instance.addMenu(
 					{
-						boundingBox: '#' + namespace + 'myPlacesContainer',
-						name: 'myPlaces',
-						trigger: '#' + namespace + 'myPlaces'
+						boundingBox: '#' + namespace + 'mySitesContainer',
+						name: 'mySites',
+						trigger: '#' + namespace + 'mySites'
 					}
 				);
 
@@ -530,10 +534,7 @@ AUI().add(
 					);
 				}
 
-				var isStaging = BODY.hasClass('staging') || BODY.hasClass('remote-staging');
-				var isLiveView = BODY.hasClass('live-view');
-
-				if (isStaging || isLiveView) {
+				if (BODY.hasClass('staging') || BODY.hasClass('live-view')) {
 					instance.addMenu(
 						{
 							boundingBox: '#' + namespace + 'stagingContainer',
@@ -609,17 +610,34 @@ AUI().add(
 						function(event) {
 							event.preventDefault();
 
+							var fullDialog = event.currentTarget.ancestor('li').hasClass('full-dialog');
+
 							manageContent.hide();
 
-							instance._openWindow(
-								{
-									dialog: {
-										align: Util.Window.ALIGN_CENTER,
-										width: 960
-									}
-								},
-								event.currentTarget
-							);
+							var width = 960;
+
+							if (fullDialog) {
+								width = '90%';
+							}
+
+							var dialog = Liferay.Util.getWindow('manageContentDialog');
+
+							if (!dialog) {
+								instance._openWindow(
+									{
+										dialog: {
+											align: Util.Window.ALIGN_CENTER,
+											modal: fullDialog,
+											width: width
+										},
+										id: 'manageContentDialog'
+									},
+									event.currentTarget
+								);
+							}
+							else {
+								dialog.show();
+							}
 						},
 						'.use-dialog a'
 					);
@@ -631,7 +649,7 @@ AUI().add(
 					if (!manageCustomizationLink.hasClass('disabled')) {
 						instance._controls = dockBar.one('.layout-customizable-controls');
 
-						var columns = A.all('.portlet-column');
+						var columns = A.all('.portlet-column .portlet-dropzone:not(.portlet-dropzone-disabled)');
 
 						BODY.delegate('click', instance._onChangeCustomization, '.layout-customizable-checkbox', instance);
 
@@ -642,7 +660,7 @@ AUI().add(
 
 								columns.each(
 									function(item, index, collection) {
-										var overlayMask = item.getData('customizatonControls');
+										var overlayMask = item.getData('customizationControls');
 
 										if (!overlayMask) {
 											overlayMask = instance._createCustomizationMask(item);
@@ -651,6 +669,23 @@ AUI().add(
 										overlayMask.toggle();
 									}
 								);
+							}
+						);
+
+						Liferay.publish(
+							'updatedLayout',
+							{
+								defaultFn: function(event) {
+									columns.each(
+										function(item, index, collection) {
+											var overlayMask = item.getData('customizationControls');
+
+											if (overlayMask) {
+												item.setData('customizationControls', null);
+											}
+										}
+									);
+								}
 							}
 						);
 					}
@@ -664,14 +699,26 @@ AUI().add(
 						function(event) {
 							event.preventDefault();
 
+							var currentTarget = event.currentTarget;
+
+							var controlPanelCategory = Lang.trim(currentTarget.attr('data-controlPanelCategory'));
+
+							var uri = currentTarget.attr('href');
+							var title = currentTarget.attr('title');
+
+							if (controlPanelCategory) {
+								uri = Liferay.Util.addParams('controlPanelCategory=' + controlPanelCategory, uri) || uri;
+							}
+
 							instance._openWindow(
 								{
 									dialog: {
 										align: Util.Window.ALIGN_CENTER,
 										width: 960
-									}
-								},
-								event.currentTarget
+									},
+									title: title,
+									uri: uri
+								}
 							);
 						},
 						'a.use-dialog'
@@ -723,13 +770,16 @@ AUI().add(
 			},
 
 			_openWindow: function(config, item) {
-				var defaultParams = {
-					id: item.guid(),
-					title: item.attr('title'),
-					uri: item.attr('href')
-				};
-
-				A.mix(config, defaultParams);
+				if (item) {
+					A.mix(
+						config,
+						{
+							id: item.guid(),
+							title: item.attr('title'),
+							uri: item.attr('href')
+						}
+					);
+				}
 
 				Util.openWindow(config);
 			},

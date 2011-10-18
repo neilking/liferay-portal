@@ -31,7 +31,7 @@ public class AdvancedSearchOrganizationStreetTest extends BaseTestCase {
 				selenium.open("/web/guest/home/");
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
@@ -46,15 +46,12 @@ public class AdvancedSearchOrganizationStreetTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
 				selenium.clickAt("link=Directory Test Page",
-					RuntimeVariables.replace(""));
+					RuntimeVariables.replace("Directory Test Page"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
 				selenium.clickAt("link=Organizations",
-					RuntimeVariables.replace(""));
+					RuntimeVariables.replace("Organizations"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
 
 				boolean advancedVisible = selenium.isVisible(
 						"link=Advanced \u00bb");
@@ -66,17 +63,18 @@ public class AdvancedSearchOrganizationStreetTest extends BaseTestCase {
 				}
 
 				selenium.clickAt("link=Advanced \u00bb",
-					RuntimeVariables.replace(""));
+					RuntimeVariables.replace("Advanced \u00bb"));
 
 			case 2:
 
 				for (int second = 0;; second++) {
-					if (second >= 60) {
+					if (second >= 90) {
 						fail("timeout");
 					}
 
 					try {
-						if (selenium.isVisible("_11_andOperator")) {
+						if (selenium.isVisible(
+									"//select[@id='_11_andOperator']")) {
 							break;
 						}
 					}
@@ -86,32 +84,27 @@ public class AdvancedSearchOrganizationStreetTest extends BaseTestCase {
 					Thread.sleep(1000);
 				}
 
-				selenium.saveScreenShotAndSource();
-				selenium.select("_11_andOperator",
-					RuntimeVariables.replace("label=Any"));
-				selenium.type("_11_street",
+				selenium.select("//select[@id='_11_andOperator']",
+					RuntimeVariables.replace("Any"));
+				selenium.type("//input[@id='_11_street']",
 					RuntimeVariables.replace("12345 Test Street"));
-				selenium.saveScreenShotAndSource();
-				selenium.clickAt("//div[2]/span[2]/span/input",
+				selenium.clickAt("//input[@value='Search']",
 					RuntimeVariables.replace("Search"));
 				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
-				selenium.type("_11_street", RuntimeVariables.replace(""));
-				selenium.saveScreenShotAndSource();
-				assertTrue(selenium.isElementPresent("link=Test Organization"));
-				selenium.type("_11_street",
-					RuntimeVariables.replace("123456 Test1 Street1"));
-				selenium.saveScreenShotAndSource();
-				selenium.clickAt("//div[2]/span[2]/span/input",
-					RuntimeVariables.replace("Search"));
-				selenium.waitForPageToLoad("30000");
-				selenium.saveScreenShotAndSource();
-				selenium.type("_11_street", RuntimeVariables.replace(""));
-				selenium.saveScreenShotAndSource();
-				selenium.select("_11_andOperator",
-					RuntimeVariables.replace("label=All"));
-				selenium.clickAt("link=\u00ab Basic",
+				selenium.type("//input[@id='_11_street']",
 					RuntimeVariables.replace(""));
+				assertTrue(selenium.isElementPresent("link=Test Organization"));
+				selenium.type("//input[@id='_11_street']",
+					RuntimeVariables.replace("123456 Test1 Street1"));
+				selenium.clickAt("//input[@value='Search']",
+					RuntimeVariables.replace("Search"));
+				selenium.waitForPageToLoad("30000");
+				selenium.type("//input[@id='_11_street']",
+					RuntimeVariables.replace(""));
+				selenium.select("//select[@id='_11_andOperator']",
+					RuntimeVariables.replace("All"));
+				selenium.clickAt("link=\u00ab Basic",
+					RuntimeVariables.replace("\u00ab Basic"));
 				assertFalse(selenium.isTextPresent("Test Organization"));
 
 			case 100:

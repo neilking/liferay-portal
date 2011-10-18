@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.asset.service;
 
+import com.liferay.portal.service.ServiceWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link AssetEntryLocalService}.
@@ -23,7 +25,8 @@ package com.liferay.portlet.asset.service;
  * @see       AssetEntryLocalService
  * @generated
  */
-public class AssetEntryLocalServiceWrapper implements AssetEntryLocalService {
+public class AssetEntryLocalServiceWrapper implements AssetEntryLocalService,
+	ServiceWrapper<AssetEntryLocalService> {
 	public AssetEntryLocalServiceWrapper(
 		AssetEntryLocalService assetEntryLocalService) {
 		_assetEntryLocalService = assetEntryLocalService;
@@ -263,6 +266,17 @@ public class AssetEntryLocalServiceWrapper implements AssetEntryLocalService {
 		_assetEntryLocalService.deleteEntry(className, classPK);
 	}
 
+	public com.liferay.portlet.asset.model.AssetEntry fetchEntry(long entryId)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _assetEntryLocalService.fetchEntry(entryId);
+	}
+
+	public com.liferay.portlet.asset.model.AssetEntry fetchEntry(
+		java.lang.String className, long classPK)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _assetEntryLocalService.fetchEntry(className, classPK);
+	}
+
 	public java.util.List<com.liferay.portlet.asset.model.AssetEntry> getAncestorEntries(
 		long entryId)
 		throws com.liferay.portal.kernel.exception.PortalException,
@@ -361,19 +375,18 @@ public class AssetEntryLocalServiceWrapper implements AssetEntryLocalService {
 			start, end);
 	}
 
-	public void incrementViewCounter(long userId, java.lang.String className,
-		long classPK)
+	public com.liferay.portlet.asset.model.AssetEntry incrementViewCounter(
+		long userId, java.lang.String className, long classPK, int increment)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
-		_assetEntryLocalService.incrementViewCounter(userId, className, classPK);
+		return _assetEntryLocalService.incrementViewCounter(userId, className,
+			classPK, increment);
 	}
 
-	public void incrementViewCounter(long userId, java.lang.String className,
-		long classPK, int increment)
-		throws com.liferay.portal.kernel.exception.PortalException,
-			com.liferay.portal.kernel.exception.SystemException {
-		_assetEntryLocalService.incrementViewCounter(userId, className,
-			classPK, increment);
+	public void reindex(
+		java.util.List<com.liferay.portlet.asset.model.AssetEntry> entries)
+		throws com.liferay.portal.kernel.exception.PortalException {
+		_assetEntryLocalService.reindex(entries);
 	}
 
 	public com.liferay.portal.kernel.search.Hits search(long companyId,
@@ -430,7 +443,7 @@ public class AssetEntryLocalServiceWrapper implements AssetEntryLocalService {
 
 	public com.liferay.portlet.asset.model.AssetEntry updateEntry(long userId,
 		long groupId, java.lang.String className, long classPK,
-		java.lang.String classUuid, long[] categoryIds,
+		java.lang.String classUuid, long classTypeId, long[] categoryIds,
 		java.lang.String[] tagNames, boolean visible, java.util.Date startDate,
 		java.util.Date endDate, java.util.Date publishDate,
 		java.util.Date expirationDate, java.lang.String mimeType,
@@ -441,9 +454,9 @@ public class AssetEntryLocalServiceWrapper implements AssetEntryLocalService {
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		return _assetEntryLocalService.updateEntry(userId, groupId, className,
-			classPK, classUuid, categoryIds, tagNames, visible, startDate,
-			endDate, publishDate, expirationDate, mimeType, title, description,
-			summary, url, layoutUuid, height, width, priority, sync);
+			classPK, classUuid, classTypeId, categoryIds, tagNames, visible,
+			startDate, endDate, publishDate, expirationDate, mimeType, title,
+			description, summary, url, layoutUuid, height, width, priority, sync);
 	}
 
 	public com.liferay.portlet.asset.model.AssetEntry updateVisible(
@@ -461,12 +474,26 @@ public class AssetEntryLocalServiceWrapper implements AssetEntryLocalService {
 			tagNames);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public AssetEntryLocalService getWrappedAssetEntryLocalService() {
 		return _assetEntryLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedAssetEntryLocalService(
 		AssetEntryLocalService assetEntryLocalService) {
+		_assetEntryLocalService = assetEntryLocalService;
+	}
+
+	public AssetEntryLocalService getWrappedService() {
+		return _assetEntryLocalService;
+	}
+
+	public void setWrappedService(AssetEntryLocalService assetEntryLocalService) {
 		_assetEntryLocalService = assetEntryLocalService;
 	}
 

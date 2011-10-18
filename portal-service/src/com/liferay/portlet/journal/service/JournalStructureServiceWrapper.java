@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.journal.service;
 
+import com.liferay.portal.service.ServiceWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link JournalStructureService}.
@@ -23,7 +25,8 @@ package com.liferay.portlet.journal.service;
  * @see       JournalStructureService
  * @generated
  */
-public class JournalStructureServiceWrapper implements JournalStructureService {
+public class JournalStructureServiceWrapper implements JournalStructureService,
+	ServiceWrapper<JournalStructureService> {
 	public JournalStructureServiceWrapper(
 		JournalStructureService journalStructureService) {
 		_journalStructureService = journalStructureService;
@@ -31,13 +34,15 @@ public class JournalStructureServiceWrapper implements JournalStructureService {
 
 	public com.liferay.portlet.journal.model.JournalStructure addStructure(
 		long groupId, java.lang.String structureId, boolean autoStructureId,
-		java.lang.String parentStructureId, java.lang.String name,
-		java.lang.String description, java.lang.String xsd,
+		java.lang.String parentStructureId,
+		java.util.Map<java.util.Locale, java.lang.String> nameMap,
+		java.util.Map<java.util.Locale, java.lang.String> descriptionMap,
+		java.lang.String xsd,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		return _journalStructureService.addStructure(groupId, structureId,
-			autoStructureId, parentStructureId, name, description, xsd,
+			autoStructureId, parentStructureId, nameMap, descriptionMap, xsd,
 			serviceContext);
 	}
 
@@ -104,20 +109,37 @@ public class JournalStructureServiceWrapper implements JournalStructureService {
 
 	public com.liferay.portlet.journal.model.JournalStructure updateStructure(
 		long groupId, java.lang.String structureId,
-		java.lang.String parentStructureId, java.lang.String name,
-		java.lang.String description, java.lang.String xsd,
+		java.lang.String parentStructureId,
+		java.util.Map<java.util.Locale, java.lang.String> nameMap,
+		java.util.Map<java.util.Locale, java.lang.String> descriptionMap,
+		java.lang.String xsd,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		return _journalStructureService.updateStructure(groupId, structureId,
-			parentStructureId, name, description, xsd, serviceContext);
+			parentStructureId, nameMap, descriptionMap, xsd, serviceContext);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public JournalStructureService getWrappedJournalStructureService() {
 		return _journalStructureService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedJournalStructureService(
+		JournalStructureService journalStructureService) {
+		_journalStructureService = journalStructureService;
+	}
+
+	public JournalStructureService getWrappedService() {
+		return _journalStructureService;
+	}
+
+	public void setWrappedService(
 		JournalStructureService journalStructureService) {
 		_journalStructureService = journalStructureService;
 	}

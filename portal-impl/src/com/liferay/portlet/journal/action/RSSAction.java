@@ -37,7 +37,6 @@ import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.PortletKeys;
 import com.liferay.portal.util.WebKeys;
-import com.liferay.portlet.PortletRequestImpl;
 import com.liferay.portlet.PortletURLImpl;
 import com.liferay.portlet.journal.model.JournalArticle;
 import com.liferay.portlet.journal.model.JournalArticleDisplay;
@@ -164,7 +163,7 @@ public class RSSAction extends PortletAction {
 				}
 			}
 
-			syndContent.setType(RSSUtil.DEFAULT_ENTRY_TYPE);
+			syndContent.setType(RSSUtil.ENTRY_TYPE_DEFAULT);
 			syndContent.setValue(value);
 
 			syndEntry.setDescription(syndContent);
@@ -210,8 +209,7 @@ public class RSSAction extends PortletAction {
 			}
 
 			PortletURL entryURL = new PortletURLImpl(
-				(PortletRequestImpl)resourceRequest, portletId, plid,
-				PortletRequest.RENDER_PHASE);
+				resourceRequest, portletId, plid, PortletRequest.RENDER_PHASE);
 
 			entryURL.setParameter("struts_action", "/journal_content/view");
 			entryURL.setParameter(

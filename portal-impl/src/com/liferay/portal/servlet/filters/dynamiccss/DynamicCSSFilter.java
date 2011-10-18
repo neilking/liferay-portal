@@ -16,7 +16,9 @@ package com.liferay.portal.servlet.filters.dynamiccss;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.servlet.ServletContextUtil;
+import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.servlet.StringServletResponse;
 import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.ContentTypes;
@@ -25,12 +27,11 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.servlet.filters.BasePortalFilter;
 import com.liferay.portal.util.PropsUtil;
-import com.liferay.util.SystemProperties;
-import com.liferay.util.servlet.ServletResponseUtil;
 import com.liferay.util.servlet.filters.CacheResponseUtil;
 
 import java.io.File;
@@ -143,7 +144,8 @@ public class DynamicCSSFilter extends BasePortalFilter {
 
 				content = FileUtil.read(file);
 
-				dynamicContent = DynamicCSSUtil.parseSass(cssRealPath, content);
+				dynamicContent = DynamicCSSUtil.parseSass(
+					request, cssRealPath, content);
 
 				response.setContentType(ContentTypes.TEXT_CSS);
 
@@ -168,7 +170,8 @@ public class DynamicCSSFilter extends BasePortalFilter {
 
 				content = stringResponse.getString();
 
-				dynamicContent = DynamicCSSUtil.parseSass(cssRealPath, content);
+				dynamicContent = DynamicCSSUtil.parseSass(
+					request, cssRealPath, content);
 
 				FileUtil.write(
 					cacheContentTypeFile, stringResponse.getContentType());
@@ -184,7 +187,9 @@ public class DynamicCSSFilter extends BasePortalFilter {
 				_log.debug(content);
 			}
 
-			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			response.setHeader(
+				HttpHeaders.CACHE_CONTROL,
+				HttpHeaders.CACHE_CONTROL_NO_CACHE_VALUE);
 		}
 
 		if (dynamicContent != null) {

@@ -33,6 +33,7 @@ import com.liferay.portal.kernel.servlet.BrowserSnifferUtil;
 import com.liferay.portal.kernel.servlet.HeaderCacheServletResponse;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.servlet.PipingServletResponse;
+import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.servlet.StringServletResponse;
 import com.liferay.portal.kernel.upload.UploadServletRequest;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -46,6 +47,7 @@ import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ServerDetector;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.webdav.WebDAVStorage;
 import com.liferay.portal.kernel.xml.QName;
 import com.liferay.portal.model.Layout;
 import com.liferay.portal.model.LayoutConstants;
@@ -101,7 +103,6 @@ import com.liferay.portlet.ResourceResponseFactory;
 import com.liferay.portlet.ResourceResponseImpl;
 import com.liferay.portlet.StateAwareResponseImpl;
 import com.liferay.portlet.login.util.LoginUtil;
-import com.liferay.util.servlet.ServletResponseUtil;
 import com.liferay.util.servlet.filters.CacheResponseUtil;
 
 import java.io.InputStream;
@@ -204,6 +205,10 @@ public class LayoutAction extends Action {
 
 					authLoginURL = loginURL.toString();
 				}
+
+				authLoginURL = HttpUtil.setParameter(
+					authLoginURL, "p_p_id",
+					PropsValues.AUTH_LOGIN_PORTLET_NAME);
 
 				String currentURL = PortalUtil.getCurrentURL(request);
 
@@ -791,7 +796,7 @@ public class LayoutAction extends Action {
 				_log.debug("Content type " + contentType);
 			}
 
-			UploadServletRequest uploadRequest = null;
+			UploadServletRequest uploadServletRequest = null;
 
 			try {
 				if ((contentType != null) &&
@@ -805,9 +810,10 @@ public class LayoutAction extends Action {
 						((invokerPortletConfigImpl != null) &&
 						 (!invokerPortletConfigImpl.isWARFile()))) {
 
-						uploadRequest = new UploadServletRequestImpl(request);
+						uploadServletRequest = new UploadServletRequestImpl(
+							request);
 
-						request = uploadRequest;
+						request = uploadServletRequest;
 					}
 				}
 
@@ -873,8 +879,8 @@ public class LayoutAction extends Action {
 				}
 			}
 			finally {
-				if (uploadRequest != null) {
-					uploadRequest.cleanUp();
+				if (uploadServletRequest != null) {
+					uploadServletRequest.cleanUp();
 				}
 
 				ServiceContextThreadLocal.popServiceContext();
@@ -903,6 +909,15 @@ public class LayoutAction extends Action {
 			portletDisplay.setPortletName(portletConfig.getPortletName());
 			portletDisplay.setNamespace(
 				PortalUtil.getPortletNamespace(portletId));
+
+			WebDAVStorage webDAVStorage = portlet.getWebDAVStorageInstance();
+
+			if (webDAVStorage != null) {
+				portletDisplay.setWebDAVEnabled(true);
+			}
+			else {
+				portletDisplay.setWebDAVEnabled(false);
+			}
 
 			ResourceRequestImpl resourceRequestImpl =
 				ResourceRequestFactory.create(

@@ -17,6 +17,7 @@ package com.liferay.portal.model.impl;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.CacheModel;
@@ -29,8 +30,6 @@ import com.liferay.portlet.expando.model.ExpandoBridge;
 import com.liferay.portlet.expando.util.ExpandoBridgeFactoryUtil;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Proxy;
 
 import java.sql.Types;
 
@@ -66,9 +65,10 @@ public class CountryModelImpl extends BaseModelImpl<Country>
 			{ "a3", Types.VARCHAR },
 			{ "number_", Types.VARCHAR },
 			{ "idd_", Types.VARCHAR },
+			{ "zipRequired", Types.BOOLEAN },
 			{ "active_", Types.BOOLEAN }
 		};
-	public static final String TABLE_SQL_CREATE = "create table Country (countryId LONG not null primary key,name VARCHAR(75) null,a2 VARCHAR(75) null,a3 VARCHAR(75) null,number_ VARCHAR(75) null,idd_ VARCHAR(75) null,active_ BOOLEAN)";
+	public static final String TABLE_SQL_CREATE = "create table Country (countryId LONG not null primary key,name VARCHAR(75) null,a2 VARCHAR(75) null,a3 VARCHAR(75) null,number_ VARCHAR(75) null,idd_ VARCHAR(75) null,zipRequired BOOLEAN,active_ BOOLEAN)";
 	public static final String TABLE_SQL_DROP = "drop table Country";
 	public static final String ORDER_BY_JPQL = " ORDER BY country.name ASC";
 	public static final String ORDER_BY_SQL = " ORDER BY Country.name ASC";
@@ -81,6 +81,13 @@ public class CountryModelImpl extends BaseModelImpl<Country>
 	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
 				"value.object.finder.cache.enabled.com.liferay.portal.model.Country"),
 			true);
+	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.column.bitmask.enabled.com.liferay.portal.model.Country"),
+			true);
+	public static long A2_COLUMN_BITMASK = 1L;
+	public static long A3_COLUMN_BITMASK = 2L;
+	public static long ACTIVE_COLUMN_BITMASK = 4L;
+	public static long NAME_COLUMN_BITMASK = 8L;
 
 	/**
 	 * Converts the soap model instance into a normal model instance.
@@ -97,6 +104,7 @@ public class CountryModelImpl extends BaseModelImpl<Country>
 		model.setA3(soapModel.getA3());
 		model.setNumber(soapModel.getNumber());
 		model.setIdd(soapModel.getIdd());
+		model.setZipRequired(soapModel.getZipRequired());
 		model.setActive(soapModel.getActive());
 
 		return model;
@@ -116,14 +124,6 @@ public class CountryModelImpl extends BaseModelImpl<Country>
 		}
 
 		return models;
-	}
-
-	public Class<?> getModelClass() {
-		return Country.class;
-	}
-
-	public String getModelClassName() {
-		return Country.class.getName();
 	}
 
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(com.liferay.portal.util.PropsUtil.get(
@@ -148,6 +148,14 @@ public class CountryModelImpl extends BaseModelImpl<Country>
 		setPrimaryKey(((Long)primaryKeyObj).longValue());
 	}
 
+	public Class<?> getModelClass() {
+		return Country.class;
+	}
+
+	public String getModelClassName() {
+		return Country.class.getName();
+	}
+
 	@JSON
 	public long getCountryId() {
 		return _countryId;
@@ -168,6 +176,8 @@ public class CountryModelImpl extends BaseModelImpl<Country>
 	}
 
 	public void setName(String name) {
+		_columnBitmask |= NAME_COLUMN_BITMASK;
+
 		if (_originalName == null) {
 			_originalName = _name;
 		}
@@ -190,6 +200,8 @@ public class CountryModelImpl extends BaseModelImpl<Country>
 	}
 
 	public void setA2(String a2) {
+		_columnBitmask |= A2_COLUMN_BITMASK;
+
 		if (_originalA2 == null) {
 			_originalA2 = _a2;
 		}
@@ -212,6 +224,8 @@ public class CountryModelImpl extends BaseModelImpl<Country>
 	}
 
 	public void setA3(String a3) {
+		_columnBitmask |= A3_COLUMN_BITMASK;
+
 		if (_originalA3 == null) {
 			_originalA3 = _a3;
 		}
@@ -252,6 +266,19 @@ public class CountryModelImpl extends BaseModelImpl<Country>
 	}
 
 	@JSON
+	public boolean getZipRequired() {
+		return _zipRequired;
+	}
+
+	public boolean isZipRequired() {
+		return _zipRequired;
+	}
+
+	public void setZipRequired(boolean zipRequired) {
+		_zipRequired = zipRequired;
+	}
+
+	@JSON
 	public boolean getActive() {
 		return _active;
 	}
@@ -261,23 +288,34 @@ public class CountryModelImpl extends BaseModelImpl<Country>
 	}
 
 	public void setActive(boolean active) {
+		_columnBitmask |= ACTIVE_COLUMN_BITMASK;
+
+		if (!_setOriginalActive) {
+			_setOriginalActive = true;
+
+			_originalActive = _active;
+		}
+
 		_active = active;
+	}
+
+	public boolean getOriginalActive() {
+		return _originalActive;
+	}
+
+	public long getColumnBitmask() {
+		return _columnBitmask;
 	}
 
 	@Override
 	public Country toEscapedModel() {
-		if (isEscapedModel()) {
-			return (Country)this;
+		if (_escapedModelProxy == null) {
+			_escapedModelProxy = (Country)ProxyUtil.newProxyInstance(_classLoader,
+					_escapedModelProxyInterfaces,
+					new AutoEscapeBeanHandler(this));
 		}
-		else {
-			if (_escapedModelProxy == null) {
-				_escapedModelProxy = (Country)Proxy.newProxyInstance(_classLoader,
-						_escapedModelProxyInterfaces,
-						new AutoEscapeBeanHandler(this));
-			}
 
-			return _escapedModelProxy;
-		}
+		return _escapedModelProxy;
 	}
 
 	@Override
@@ -305,6 +343,7 @@ public class CountryModelImpl extends BaseModelImpl<Country>
 		countryImpl.setA3(getA3());
 		countryImpl.setNumber(getNumber());
 		countryImpl.setIdd(getIdd());
+		countryImpl.setZipRequired(getZipRequired());
 		countryImpl.setActive(getActive());
 
 		countryImpl.resetOriginalValues();
@@ -363,6 +402,12 @@ public class CountryModelImpl extends BaseModelImpl<Country>
 		countryModelImpl._originalA2 = countryModelImpl._a2;
 
 		countryModelImpl._originalA3 = countryModelImpl._a3;
+
+		countryModelImpl._originalActive = countryModelImpl._active;
+
+		countryModelImpl._setOriginalActive = false;
+
+		countryModelImpl._columnBitmask = 0;
 	}
 
 	@Override
@@ -411,6 +456,8 @@ public class CountryModelImpl extends BaseModelImpl<Country>
 			countryCacheModel.idd = null;
 		}
 
+		countryCacheModel.zipRequired = getZipRequired();
+
 		countryCacheModel.active = getActive();
 
 		return countryCacheModel;
@@ -418,7 +465,7 @@ public class CountryModelImpl extends BaseModelImpl<Country>
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(15);
+		StringBundler sb = new StringBundler(17);
 
 		sb.append("{countryId=");
 		sb.append(getCountryId());
@@ -432,6 +479,8 @@ public class CountryModelImpl extends BaseModelImpl<Country>
 		sb.append(getNumber());
 		sb.append(", idd=");
 		sb.append(getIdd());
+		sb.append(", zipRequired=");
+		sb.append(getZipRequired());
 		sb.append(", active=");
 		sb.append(getActive());
 		sb.append("}");
@@ -440,7 +489,7 @@ public class CountryModelImpl extends BaseModelImpl<Country>
 	}
 
 	public String toXmlString() {
-		StringBundler sb = new StringBundler(25);
+		StringBundler sb = new StringBundler(28);
 
 		sb.append("<model><model-name>");
 		sb.append("com.liferay.portal.model.Country");
@@ -471,6 +520,10 @@ public class CountryModelImpl extends BaseModelImpl<Country>
 		sb.append(getIdd());
 		sb.append("]]></column-value></column>");
 		sb.append(
+			"<column><column-name>zipRequired</column-name><column-value><![CDATA[");
+		sb.append(getZipRequired());
+		sb.append("]]></column-value></column>");
+		sb.append(
 			"<column><column-name>active</column-name><column-value><![CDATA[");
 		sb.append(getActive());
 		sb.append("]]></column-value></column>");
@@ -493,7 +546,11 @@ public class CountryModelImpl extends BaseModelImpl<Country>
 	private String _originalA3;
 	private String _number;
 	private String _idd;
+	private boolean _zipRequired;
 	private boolean _active;
+	private boolean _originalActive;
+	private boolean _setOriginalActive;
 	private transient ExpandoBridge _expandoBridge;
+	private long _columnBitmask;
 	private Country _escapedModelProxy;
 }

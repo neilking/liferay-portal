@@ -27,7 +27,6 @@ import com.liferay.portal.struts.PortletAction;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.WebKeys;
-import com.liferay.portlet.ActionRequestImpl;
 import com.liferay.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portlet.PortletURLImpl;
 import com.liferay.portlet.dynamicdatamapping.NoSuchTemplateException;
@@ -169,7 +168,7 @@ public class EditTemplateAction extends PortletAction {
 			actionRequest, "saveCallback");
 
 		PortletURLImpl portletURL = new PortletURLImpl(
-			(ActionRequestImpl)actionRequest, portletConfig.getPortletName(),
+			actionRequest, portletConfig.getPortletName(),
 			themeDisplay.getPlid(), PortletRequest.RENDER_PHASE);
 
 		portletURL.setWindowState(actionRequest.getWindowState());
@@ -194,24 +193,27 @@ public class EditTemplateAction extends PortletAction {
 	protected DDMTemplate updateTemplate(ActionRequest actionRequest)
 		throws Exception {
 
-		UploadPortletRequest uploadRequest = PortalUtil.getUploadPortletRequest(
-			actionRequest);
+		UploadPortletRequest uploadPortletRequest =
+			PortalUtil.getUploadPortletRequest(actionRequest);
 
-		long templateId = ParamUtil.getLong(uploadRequest, "templateId");
+		long templateId = ParamUtil.getLong(uploadPortletRequest, "templateId");
 
-		long groupId = ParamUtil.getLong(uploadRequest, "groupId");
-		long structureId = ParamUtil.getLong(uploadRequest, "structureId");
+		long groupId = ParamUtil.getLong(uploadPortletRequest, "groupId");
+		long structureId = ParamUtil.getLong(
+			uploadPortletRequest, "structureId");
 		Map<Locale, String> nameMap = LocalizationUtil.getLocalizationMap(
 			actionRequest, "name");
 		Map<Locale, String> descriptionMap =
 			LocalizationUtil.getLocalizationMap(actionRequest, "description");
-		String type = ParamUtil.getString(uploadRequest, "type");
+		String type = ParamUtil.getString(uploadPortletRequest, "type");
+		String mode = ParamUtil.getString(uploadPortletRequest, "mode");
 		String language = ParamUtil.getString(
-			uploadRequest, "language", DDMTemplateConstants.LANG_TYPE_VM);
+			uploadPortletRequest, "language",
+			DDMTemplateConstants.LANG_TYPE_VM);
 
-		String script = ParamUtil.getString(uploadRequest, "script");
+		String script = ParamUtil.getString(uploadPortletRequest, "script");
 		String scriptContent = JS.decodeURIComponent(
-			ParamUtil.getString(uploadRequest, "scriptContent"));
+			ParamUtil.getString(uploadPortletRequest, "scriptContent"));
 
 		if (Validator.isNull(script)) {
 			script = scriptContent;
@@ -228,12 +230,12 @@ public class EditTemplateAction extends PortletAction {
 
 			template = DDMTemplateServiceUtil.addTemplate(
 				groupId, structure.getStructureId(), nameMap, descriptionMap,
-				type, language, script, serviceContext);
+				type, mode, language, script, serviceContext);
 		}
 		else {
 			template = DDMTemplateServiceUtil.updateTemplate(
-				templateId, nameMap, descriptionMap, type, language, script,
-				serviceContext);
+				templateId, nameMap, descriptionMap, type, mode, language,
+				script, serviceContext);
 		}
 
 		String portletResource = ParamUtil.getString(

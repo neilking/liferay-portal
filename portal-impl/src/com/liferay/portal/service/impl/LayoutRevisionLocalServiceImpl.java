@@ -54,7 +54,7 @@ public class LayoutRevisionLocalServiceImpl
 
 		// Layout revision
 
-		User user = userLocalService.getUserById(userId);
+		User user = userPersistence.findByPrimaryKey(userId);
 		LayoutSetBranch layoutSetBranch =
 			layoutSetBranchPersistence.findByPrimaryKey(layoutSetBranchId);
 		parentLayoutRevisionId = getParentLayoutRevisionId(
@@ -529,7 +529,7 @@ public class LayoutRevisionLocalServiceImpl
 		}
 
 		if (parentLayoutRevision != null) {
-			return parentLayoutRevision.getParentLayoutRevisionId();
+			return parentLayoutRevision.getLayoutRevisionId();
 		}
 
 		return LayoutRevisionConstants.DEFAULT_PARENT_LAYOUT_REVISION_ID;

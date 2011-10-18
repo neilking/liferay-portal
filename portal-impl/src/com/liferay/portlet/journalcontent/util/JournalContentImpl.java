@@ -16,6 +16,7 @@ package com.liferay.portlet.journalcontent.util;
 
 import com.liferay.portal.kernel.cache.MultiVMPoolUtil;
 import com.liferay.portal.kernel.cache.PortalCache;
+import com.liferay.portal.kernel.lar.ImportExportThreadLocal;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -45,6 +46,10 @@ import org.apache.commons.lang.time.StopWatch;
 public class JournalContentImpl implements JournalContent {
 
 	public void clearCache() {
+		if (ImportExportThreadLocal.isImportInProcess()) {
+			return;
+		}
+
 		portalCache.removeAll();
 	}
 
@@ -308,11 +313,13 @@ public class JournalContentImpl implements JournalContent {
 		}
 	}
 
+	protected static final String CACHE_NAME = JournalContent.class.getName();
+
 	protected static Pattern lifecycleRenderPhasePatern = Pattern.compile(
 		"<lifecycle>\\s*RENDER_PHASE\\s*</lifecycle>");
 	protected static PortalCache portalCache = MultiVMPoolUtil.getCache(
 		CACHE_NAME);
 
-	private static Log _log = LogFactoryUtil.getLog(JournalContentUtil.class);
+	private static Log _log = LogFactoryUtil.getLog(JournalContentImpl.class);
 
 }

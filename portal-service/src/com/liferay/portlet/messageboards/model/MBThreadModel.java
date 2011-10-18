@@ -246,6 +246,27 @@ public interface MBThreadModel extends BaseModel<MBThread>, WorkflowedModel {
 	public void setPriority(double priority);
 
 	/**
+	 * Returns the question of this message boards thread.
+	 *
+	 * @return the question of this message boards thread
+	 */
+	public boolean getQuestion();
+
+	/**
+	 * Returns <code>true</code> if this message boards thread is question.
+	 *
+	 * @return <code>true</code> if this message boards thread is question; <code>false</code> otherwise
+	 */
+	public boolean isQuestion();
+
+	/**
+	 * Sets whether this message boards thread is question.
+	 *
+	 * @param question the question of this message boards thread
+	 */
+	public void setQuestion(boolean question);
+
+	/**
 	 * Returns the status of this message boards thread.
 	 *
 	 * @return the status of this message boards thread
@@ -359,8 +380,6 @@ public interface MBThreadModel extends BaseModel<MBThread>, WorkflowedModel {
 	public void setCachedModel(boolean cachedModel);
 
 	public boolean isEscapedModel();
-
-	public void setEscapedModel(boolean escapedModel);
 
 	public Serializable getPrimaryKeyObj();
 

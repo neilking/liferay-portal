@@ -22,10 +22,10 @@ import com.liferay.portalweb.portal.util.RuntimeVariables;
  */
 public class Member_AssertViewTest extends BaseTestCase {
 	public void testMember_AssertView() throws Exception {
-		selenium.open("/web/guest/home/");
+		selenium.open("/web/site-name/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -40,15 +40,13 @@ public class Member_AssertViewTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
 		selenium.clickAt("link=Announcements Permissions Page",
-			RuntimeVariables.replace(""));
+			RuntimeVariables.replace("Announcements Permissions Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 		assertTrue(selenium.isTextPresent("Test General Announcement"));
 		assertTrue(selenium.isTextPresent(
 				"This is a test General Announcement."));
 		assertTrue(selenium.isElementPresent("link=Mark as Read"));
-		assertFalse(selenium.isTextPresent("Test CA Announcement"));
+		assertFalse(selenium.isTextPresent("Test AA Announcement"));
 	}
 }

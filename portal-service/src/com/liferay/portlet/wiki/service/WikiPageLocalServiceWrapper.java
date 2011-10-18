@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.wiki.service;
 
+import com.liferay.portal.service.ServiceWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link WikiPageLocalService}.
@@ -23,7 +25,8 @@ package com.liferay.portlet.wiki.service;
  * @see       WikiPageLocalService
  * @generated
  */
-public class WikiPageLocalServiceWrapper implements WikiPageLocalService {
+public class WikiPageLocalServiceWrapper implements WikiPageLocalService,
+	ServiceWrapper<WikiPageLocalService> {
 	public WikiPageLocalServiceWrapper(
 		WikiPageLocalService wikiPageLocalService) {
 		_wikiPageLocalService = wikiPageLocalService;
@@ -281,6 +284,23 @@ public class WikiPageLocalServiceWrapper implements WikiPageLocalService {
 			summary, minorEdit, serviceContext);
 	}
 
+	public void addPageAttachment(long userId, long nodeId,
+		java.lang.String title, java.lang.String fileName, java.io.File file)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		_wikiPageLocalService.addPageAttachment(userId, nodeId, title,
+			fileName, file);
+	}
+
+	public void addPageAttachment(long userId, long nodeId,
+		java.lang.String title, java.lang.String fileName,
+		java.io.InputStream inputStream)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		_wikiPageLocalService.addPageAttachment(userId, nodeId, title,
+			fileName, inputStream);
+	}
+
 	public void addPageAttachment(long companyId, java.lang.String dirName,
 		java.util.Date modifiedDate, java.lang.String fileName,
 		java.io.InputStream inputStream)
@@ -292,10 +312,11 @@ public class WikiPageLocalServiceWrapper implements WikiPageLocalService {
 
 	public void addPageAttachments(long userId, long nodeId,
 		java.lang.String title,
-		java.util.List<com.liferay.portal.kernel.util.ObjectValuePair<java.lang.String, byte[]>> files)
+		java.util.List<com.liferay.portal.kernel.util.ObjectValuePair<java.lang.String, java.io.InputStream>> inputStreams)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
-		_wikiPageLocalService.addPageAttachments(userId, nodeId, title, files);
+		_wikiPageLocalService.addPageAttachments(userId, nodeId, title,
+			inputStreams);
 	}
 
 	public void addPageResources(long nodeId, java.lang.String title,
@@ -328,6 +349,16 @@ public class WikiPageLocalServiceWrapper implements WikiPageLocalService {
 			com.liferay.portal.kernel.exception.SystemException {
 		_wikiPageLocalService.addPageResources(page, groupPermissions,
 			guestPermissions);
+	}
+
+	public java.lang.String addTempPageAttachment(long userId,
+		java.lang.String fileName, java.lang.String tempFolderName,
+		java.io.InputStream inputStream)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException,
+			java.io.IOException {
+		return _wikiPageLocalService.addTempPageAttachment(userId, fileName,
+			tempFolderName, inputStream);
 	}
 
 	public void changeParent(long userId, long nodeId, java.lang.String title,
@@ -368,6 +399,12 @@ public class WikiPageLocalServiceWrapper implements WikiPageLocalService {
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		_wikiPageLocalService.deletePages(nodeId);
+	}
+
+	public void deleteTempPageAttachment(long userId,
+		java.lang.String fileName, java.lang.String tempFolderName) {
+		_wikiPageLocalService.deleteTempPageAttachment(userId, fileName,
+			tempFolderName);
 	}
 
 	public java.util.List<com.liferay.portlet.wiki.model.WikiPage> getChildren(
@@ -575,6 +612,12 @@ public class WikiPageLocalServiceWrapper implements WikiPageLocalService {
 		return _wikiPageLocalService.getRecentChangesCount(nodeId);
 	}
 
+	public java.lang.String[] getTempPageAttachmentNames(long userId,
+		java.lang.String tempFolderName) {
+		return _wikiPageLocalService.getTempPageAttachmentNames(userId,
+			tempFolderName);
+	}
+
 	public boolean hasDraftPage(long nodeId, java.lang.String title)
 		throws com.liferay.portal.kernel.exception.SystemException {
 		return _wikiPageLocalService.hasDraftPage(nodeId, title);
@@ -664,12 +707,26 @@ public class WikiPageLocalServiceWrapper implements WikiPageLocalService {
 		_wikiPageLocalService.validateTitle(title);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public WikiPageLocalService getWrappedWikiPageLocalService() {
 		return _wikiPageLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedWikiPageLocalService(
 		WikiPageLocalService wikiPageLocalService) {
+		_wikiPageLocalService = wikiPageLocalService;
+	}
+
+	public WikiPageLocalService getWrappedService() {
+		return _wikiPageLocalService;
+	}
+
+	public void setWrappedService(WikiPageLocalService wikiPageLocalService) {
 		_wikiPageLocalService = wikiPageLocalService;
 	}
 

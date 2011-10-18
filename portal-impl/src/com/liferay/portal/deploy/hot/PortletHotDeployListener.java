@@ -33,6 +33,7 @@ import com.liferay.portal.kernel.scheduler.StorageType;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.servlet.DirectServletRegistry;
+import com.liferay.portal.kernel.servlet.FileTimestampUtil;
 import com.liferay.portal.kernel.servlet.PortletServlet;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.servlet.ServletContextProvider;
@@ -106,23 +107,27 @@ import org.apache.portals.bridges.struts.StrutsPortlet;
  */
 public class PortletHotDeployListener extends BaseHotDeployListener {
 
-	public void invokeDeploy(HotDeployEvent event) throws HotDeployException {
+	public void invokeDeploy(HotDeployEvent hotDeployEvent)
+		throws HotDeployException {
+
 		try {
-			doInvokeDeploy(event);
+			doInvokeDeploy(hotDeployEvent);
 		}
 		catch (Throwable t) {
 			throwHotDeployException(
-				event, "Error registering portlets for ", t);
+				hotDeployEvent, "Error registering portlets for ", t);
 		}
 	}
 
-	public void invokeUndeploy(HotDeployEvent event) throws HotDeployException {
+	public void invokeUndeploy(HotDeployEvent hotDeployEvent)
+		throws HotDeployException {
+
 		try {
-			doInvokeUndeploy(event);
+			doInvokeUndeploy(hotDeployEvent);
 		}
 		catch (Throwable t) {
 			throwHotDeployException(
-				event, "Error unregistering portlets for ", t);
+				hotDeployEvent, "Error unregistering portlets for ", t);
 		}
 	}
 
@@ -203,11 +208,12 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 		portletIds.add(portlet.getPortletId());
 	}
 
-	protected void doInvokeDeploy(HotDeployEvent event) throws Exception {
+	protected void doInvokeDeploy(HotDeployEvent hotDeployEvent)
+		throws Exception {
 
 		// Servlet context
 
-		ServletContext servletContext = event.getServletContext();
+		ServletContext servletContext = hotDeployEvent.getServletContext();
 
 		String servletContextName = servletContext.getServletContextName();
 
@@ -257,16 +263,15 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 			return;
 		}
 
-		if (_log.isInfoEnabled()) {
-			_log.info("Registering portlets for " + servletContextName);
-		}
+		logRegistration(servletContextName);
 
 		List<Portlet> portlets = PortletLocalServiceUtil.initWAR(
-			servletContextName, servletContext, xmls, event.getPluginPackage());
+			servletContextName, servletContext, xmls,
+			hotDeployEvent.getPluginPackage());
 
 		// Class loader
 
-		ClassLoader portletClassLoader = event.getContextClassLoader();
+		ClassLoader portletClassLoader = hotDeployEvent.getContextClassLoader();
 
 		servletContext.setAttribute(
 			PortletServlet.PORTLET_CLASS_LOADER, portletClassLoader);
@@ -330,9 +335,8 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 			PortletLocalServiceUtil.getWARDisplay(servletContextName, xml);
 
 		for (long companyId : companyIds) {
-			PortletCategory portletCategory =
-				(PortletCategory)WebAppPool.get(
-					String.valueOf(companyId), WebKeys.PORTLET_CATEGORY);
+			PortletCategory portletCategory = (PortletCategory)WebAppPool.get(
+				companyId, WebKeys.PORTLET_CATEGORY);
 
 			if (portletCategory != null) {
 				portletCategory.merge(newPortletCategory);
@@ -406,7 +410,10 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 
 		registerClpMessageListeners(servletContext, portletClassLoader);
 
+		// Clear cache
+
 		DirectServletRegistry.clearServlets();
+		FileTimestampUtil.reset();
 
 		// Variables
 
@@ -429,8 +436,10 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 		}
 	}
 
-	protected void doInvokeUndeploy(HotDeployEvent event) throws Exception {
-		ServletContext servletContext = event.getServletContext();
+	protected void doInvokeUndeploy(HotDeployEvent hotDeployEvent)
+		throws Exception {
+
+		ServletContext servletContext = hotDeployEvent.getServletContext();
 
 		String servletContextName = servletContext.getServletContextName();
 
@@ -471,7 +480,7 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 			for (long companyId : companyIds) {
 				PortletCategory portletCategory =
 					(PortletCategory)WebAppPool.get(
-						String.valueOf(companyId), WebKeys.PORTLET_CATEGORY);
+						companyId, WebKeys.PORTLET_CATEGORY);
 
 				portletCategory.separate(portletIds);
 			}
@@ -590,6 +599,12 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 				portletURLListenerInstance);
 
 			PortletURLListenerFactory.create(portletURLListener);
+		}
+	}
+
+	protected void logRegistration(String servletContextName) {
+		if (_log.isInfoEnabled()) {
+			_log.info("Registering portlets for " + servletContextName);
 		}
 	}
 

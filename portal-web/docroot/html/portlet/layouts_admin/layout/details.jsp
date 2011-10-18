@@ -21,6 +21,8 @@ Group group = (Group)request.getAttribute("edit_pages.jsp-group");
 boolean privateLayout = ((Boolean)request.getAttribute("edit_pages.jsp-privateLayout")).booleanValue();
 Layout selLayout = (Layout)request.getAttribute("edit_pages.jsp-selLayout");
 
+boolean locked = GetterUtil.getBoolean(selLayout.getTypeSettingsProperty("locked"));
+
 Locale defaultLocale = LocaleUtil.getDefault();
 String defaultLanguageId = LocaleUtil.toLanguageId(defaultLocale);
 %>
@@ -92,6 +94,23 @@ StringBuilder friendlyURLBase = new StringBuilder();
 	</liferay-ui:error>
 </c:if>
 
+<liferay-ui:error exception="<%= LayoutTypeException.class %>">
+
+	<%
+	LayoutTypeException lte = (LayoutTypeException)errorException;
+
+	String type = BeanParamUtil.getString(selLayout, request, "type");
+	%>
+
+	<c:if test="<%= lte.getType() == LayoutTypeException.FIRST_LAYOUT %>">
+		<liferay-ui:message arguments="<%= type %>" key="the-first-page-cannot-be-of-type-x" />
+	</c:if>
+
+	<c:if test="<%= lte.getType() == LayoutTypeException.NOT_PARENTABLE %>">
+		<liferay-ui:message arguments="<%= type %>" key="pages-of-type-x-cannot-have-child-pages" />
+	</c:if>
+</liferay-ui:error>
+
 <aui:fieldset>
 	<c:choose>
 		<c:when test="<%= !group.isLayoutPrototype() %>">
@@ -104,11 +123,15 @@ StringBuilder friendlyURLBase = new StringBuilder();
 					<aui:input helpMessage='<%= LanguageUtil.format(pageContext, "for-example-x", "<em>/news</em>") %>' label="friendly-url" name="friendlyURL" prefix="<%= friendlyURLBase.toString() %>" />
 				</c:when>
 				<c:otherwise>
-					<aui:input name="friendlyURL" size="30" type="hidden" value="<%= HtmlUtil.escape(selLayout.getFriendlyURL()) %>" />
+					<aui:input name="friendlyURL" size="30" type="hidden" value="<%= HtmlUtil.escape((selLayout != null) ? selLayout.getFriendlyURL() : StringPool.BLANK) %>" />
 				</c:otherwise>
 			</c:choose>
 
 			<aui:input helpMessage="if-checked-this-page-wont-show-up-in-the-navigation-menu" name="hidden" />
+
+			<c:if test="<%= group.isLayoutSetPrototype() %>">
+				<aui:input helpMessage="if-checked-this-page-cannot-be-modified" name="locked" type="checkbox" value="<%= locked %>" />
+			</c:if>
 		</c:when>
 		<c:otherwise>
 			<aui:input name='<%= "name_" + defaultLanguageId %>' type="hidden" value="<%= HtmlUtil.escapeAttribute(selLayout.getName(defaultLocale)) %>" />
@@ -119,9 +142,12 @@ StringBuilder friendlyURLBase = new StringBuilder();
 
 		<%
 		for (int i = 0; i < PropsValues.LAYOUT_TYPES.length; i++) {
+			if (PropsValues.LAYOUT_TYPES[i].equals("article") && (group.isLayoutPrototype() || group.isLayoutSetPrototype())) {
+				continue;
+			}
 		%>
 
-			<aui:option label='<%= "layout.types." + PropsValues.LAYOUT_TYPES[i] %>' selected="<%= selLayout.getType().equals(PropsValues.LAYOUT_TYPES[i]) %>" value="<%= PropsValues.LAYOUT_TYPES[i] %>" />
+			<aui:option disabled="<%= selLayout.isFirstParent() && !PortalUtil.isLayoutFirstPageable(PropsValues.LAYOUT_TYPES[i]) %>" label='<%= "layout.types." + PropsValues.LAYOUT_TYPES[i] %>' selected="<%= selLayout.getType().equals(PropsValues.LAYOUT_TYPES[i]) %>" value="<%= PropsValues.LAYOUT_TYPES[i] %>" />
 
 		<%
 		}
@@ -132,6 +158,10 @@ StringBuilder friendlyURLBase = new StringBuilder();
 	<%
 	for (int i = 0; i < PropsValues.LAYOUT_TYPES.length; i++) {
 		String curLayoutType = PropsValues.LAYOUT_TYPES[i];
+
+		if (PropsValues.LAYOUT_TYPES[i].equals("article") && (group.isLayoutPrototype() || group.isLayoutSetPrototype())) {
+			continue;
+		}
 	%>
 
 		<div class="layout-type-form layout-type-form-<%= curLayoutType %> <%= selLayout.getType().equals(PropsValues.LAYOUT_TYPES[i]) ? "" : "aui-helper-hidden" %>">
@@ -151,12 +181,13 @@ StringBuilder friendlyURLBase = new StringBuilder();
 <aui:script use="aui-base">
 	var templateLink = A.one('#templateLink');
 
-	function toggleLayoutTypeFields (type) {
+	function toggleLayoutTypeFields(type) {
 		var currentType = 'layout-type-form-' + type;
 
 		A.all('.layout-type-form').each(
 			function(item, index, collection) {
 				var visible = item.hasClass(currentType);
+
 				var disabled = !visible;
 
 				item.toggle(visible);
@@ -166,13 +197,13 @@ StringBuilder friendlyURLBase = new StringBuilder();
 		);
 
 		if (templateLink) {
-			templateLink.toggle(type == 'portlet')
+			templateLink.toggle(type == 'portlet');
 		}
 	}
 
 	toggleLayoutTypeFields('<%= selLayout.getType() %>');
 
-	var typeSelector = A.one("#<portlet:namespace />type");
+	var typeSelector = A.one('#<portlet:namespace />type');
 
 	if (typeSelector) {
 		typeSelector.on(

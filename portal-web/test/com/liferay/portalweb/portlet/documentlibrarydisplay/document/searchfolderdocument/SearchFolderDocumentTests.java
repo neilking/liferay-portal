@@ -35,8 +35,8 @@ public class SearchFolderDocumentTests extends BaseTests {
 		testSuite.addTestSuite(AddFolderDocumentTest.class);
 		testSuite.addTestSuite(ConfigurePortletShowFolderSearchTest.class);
 		testSuite.addTestSuite(SearchFolderDocumentTest.class);
-		testSuite.addTestSuite(TearDownDLFolderTest.class);
-		testSuite.addTestSuite(TearDownDocumentTest.class);
+		testSuite.addTestSuite(SearchFolderDocumentQuotesTest.class);
+		testSuite.addTestSuite(TearDownDLDocumentTest.class);
 		testSuite.addTestSuite(TearDownPageTest.class);
 
 		return testSuite;

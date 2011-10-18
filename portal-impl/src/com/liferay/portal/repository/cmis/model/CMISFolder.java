@@ -66,17 +66,17 @@ public class CMISFolder extends CMISModel implements Folder {
 	public List<Folder> getAncestors()
 		throws PortalException, SystemException {
 
-		List<Folder> ancestors = new ArrayList<Folder>();
+		List<Folder> folders = new ArrayList<Folder>();
 
 		Folder folder = this;
 
 		while (!folder.isRoot()) {
 			folder = folder.getParentFolder();
 
-			ancestors.add(folder);
+			folders.add(folder);
 		}
 
-		return ancestors;
+		return folders;
 	}
 
 	public Map<String, Serializable> getAttributes() {
@@ -286,6 +286,10 @@ public class CMISFolder extends CMISModel implements Folder {
 	}
 
 	public boolean isSupportsMetadata() {
+		return false;
+	}
+
+	public boolean isSupportsMultipleUpload() {
 		return false;
 	}
 

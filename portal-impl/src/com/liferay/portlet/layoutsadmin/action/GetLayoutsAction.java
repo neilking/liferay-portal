@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.staging.StagingUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.model.Layout;
+import com.liferay.portal.model.LayoutBranch;
 import com.liferay.portal.model.LayoutRevision;
 import com.liferay.portal.model.LayoutSetBranch;
 import com.liferay.portal.model.User;
@@ -55,6 +56,16 @@ public class GetLayoutsAction extends JSONAction {
 
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
+		List<Layout> layoutAncestors = null;
+
+		long selPlid = ParamUtil.getLong(request, "selPlid");
+
+		if (selPlid != 0) {
+			Layout selLayout = LayoutLocalServiceUtil.getLayout(selPlid);
+
+			layoutAncestors = selLayout.getAncestors();
+		}
+
 		List<Layout> layouts = getLayouts(request);
 
 		for (Layout layout : layouts) {
@@ -68,7 +79,13 @@ public class GetLayoutsAction extends JSONAction {
 			jsonObject.put("plid", layout.getPlid());
 			jsonObject.put("priority", layout.getPriority());
 			jsonObject.put("privateLayout", layout.isPrivateLayout());
+
+			if ((layoutAncestors != null) && layoutAncestors.contains(layout)) {
+				jsonObject.put("selLayoutAncestor", true);
+			}
+
 			jsonObject.put("type", layout.getType());
+			jsonObject.put("uuid", layout.getUuid());
 
 			LayoutRevision layoutRevision = LayoutStagingUtil.getLayoutRevision(
 				layout);
@@ -77,7 +94,8 @@ public class GetLayoutsAction extends JSONAction {
 				User user = themeDisplay.getUser();
 
 				long recentLayoutSetBranchId =
-					StagingUtil.getRecentLayoutSetBranchId(user);
+					StagingUtil.getRecentLayoutSetBranchId(
+						user, layout.getLayoutSet().getLayoutSetId());
 
 				if (StagingUtil.isIncomplete(layout, recentLayoutSetBranchId)) {
 					jsonObject.put("incomplete", true);
@@ -89,11 +107,16 @@ public class GetLayoutsAction extends JSONAction {
 					LayoutSetBranchLocalServiceUtil.getLayoutSetBranch(
 						layoutSetBranchId);
 
+				LayoutBranch layoutBranch = layoutRevision.getLayoutBranch();
+
+				jsonObject.put(
+					"layoutBranchId", layoutBranch.getLayoutBranchId());
+				jsonObject.put("layoutBranchName", layoutBranch.getName());
+				jsonObject.put(
+					"layoutRevisionId", layoutRevision.getLayoutRevisionId());
 				jsonObject.put("layoutSetBranchId", layoutSetBranchId);
 				jsonObject.put(
 					"layoutSetBranchName", layoutSetBranch.getName());
-				jsonObject.put(
-					"layoutRevisionId", layoutRevision.getLayoutRevisionId());
 			}
 
 			jsonArray.put(jsonObject);

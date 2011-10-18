@@ -41,6 +41,7 @@ Liferay.Service.registerClass(
 	Liferay.Service.Portal, "Country",
 	{
 		addCountry: true,
+		fetchCountry: true,
 		getCountries: true,
 		getCountry: true,
 		getCountryByA2: true,
@@ -72,6 +73,7 @@ Liferay.Service.registerClass(
 		getUserGroup: true,
 		getUserGroupsGroups: true,
 		getUserOrganizationsGroups: true,
+		getUserSites: true,
 		getUserPlaces: true,
 		hasUserGroup: true,
 		search: true,
@@ -110,6 +112,15 @@ Liferay.Service.registerClass(
 );
 
 Liferay.Service.registerClass(
+	Liferay.Service.Portal, "LayoutBranch",
+	{
+		addLayoutBranch: true,
+		deleteLayoutBranch: true,
+		updateLayoutBranch: true
+	}
+);
+
+Liferay.Service.registerClass(
 	Liferay.Service.Portal, "LayoutPrototype",
 	{
 		addLayoutPrototype: true,
@@ -123,8 +134,7 @@ Liferay.Service.registerClass(
 Liferay.Service.registerClass(
 	Liferay.Service.Portal, "LayoutRevision",
 	{
-		addLayoutRevision: true,
-		deleteLayoutRevisions: true
+		addLayoutRevision: true
 	}
 );
 
@@ -227,6 +237,7 @@ Liferay.Service.registerClass(
 		hasUserPermission: true,
 		hasUserPermissions: true,
 		setGroupPermissions: true,
+		setIndividualPermissions: true,
 		setOrgGroupPermissions: true,
 		setRolePermission: true,
 		setRolePermissions: true,
@@ -299,6 +310,7 @@ Liferay.Service.registerClass(
 Liferay.Service.registerClass(
 	Liferay.Service.Portal, "Repository",
 	{
+		addRepository: true,
 		checkRepository: true,
 		getLocalRepositoryImpl: true,
 		getRepository: true,
@@ -306,7 +318,6 @@ Liferay.Service.registerClass(
 		getSupportedConfigurations: true,
 		getSupportedParameters: true,
 		getTypeSettingsProperties: true,
-		mountRepository: true,
 		unmountRepositories: true,
 		unmountRepository: true,
 		updateRepository: true
@@ -321,12 +332,28 @@ Liferay.Service.registerClass(
 );
 
 Liferay.Service.registerClass(
+	Liferay.Service.Portal, "ResourceBlock",
+	{
+		addCompanyScopePermission: true,
+		addGroupScopePermission: true,
+		addIndividualScopePermission: true,
+		removeAllGroupScopePermissions: true,
+		removeCompanyScopePermission: true,
+		removeGroupScopePermission: true,
+		removeIndividualScopePermission: true,
+		setCompanyScopePermissions: true,
+		setGroupScopePermissions: true,
+		setIndividualScopePermissions: true
+	}
+);
+
+Liferay.Service.registerClass(
 	Liferay.Service.Portal, "ResourcePermission",
 	{
 		addResourcePermission: true,
-		setIndividualResourcePermissions: true,
 		removeResourcePermission: true,
-		removeResourcePermissions: true
+		removeResourcePermissions: true,
+		setIndividualResourcePermissions: true
 	}
 );
 
@@ -492,14 +519,17 @@ Liferay.Service.registerClass(
 	Liferay.Service.Asset, "AssetCategory",
 	{
 		addCategory: true,
+		deleteCategories: true,
 		deleteCategory: true,
 		getCategories: true,
 		getCategory: true,
 		getChildCategories: true,
+		getJSONVocabularyCategories: true,
 		getVocabularyCategories: true,
+		getVocabularyCategoriesCount: true,
 		getVocabularyRootCategories: true,
-		search: true,
 		moveCategory: true,
+		search: true,
 		updateCategory: true
 	}
 );
@@ -565,10 +595,13 @@ Liferay.Service.registerClass(
 	Liferay.Service.Asset, "AssetVocabulary",
 	{
 		addVocabulary: true,
+		deleteVocabularies: true,
 		deleteVocabulary: true,
 		getCompanyVocabularies: true,
 		getGroupsVocabularies: true,
 		getGroupVocabularies: true,
+		getGroupVocabulariesCount: true,
+		getJSONGroupVocabularies: true,
 		getVocabularies: true,
 		getVocabulary: true,
 		updateVocabulary: true
@@ -653,6 +686,7 @@ Liferay.Service.registerClass(
 		deleteFileEntryByTitle: true,
 		deleteFileShortcut: true,
 		deleteFolder: true,
+		deleteTempFileEntry: true,
 		getFileEntries: true,
 		getFileEntriesAndFileShortcutsCount: true,
 		getFileEntriesCount: true,
@@ -668,12 +702,14 @@ Liferay.Service.registerClass(
 		getGroupFileEntriesCount: true,
 		getMountFolders: true,
 		getSubfolderIds: true,
+		getTempFileEntryNames: true,
 		lockFolder: true,
 		moveFileEntry: true,
 		moveFolder: true,
 		refreshFileEntryLock: true,
 		refreshFolderLock: true,
 		revertFileEntry: true,
+		search: true,
 		unlockFolder: true,
 		updateFileShortcut: true,
 		updateFolder: true,
@@ -690,6 +726,7 @@ Liferay.Service.registerClass(
 		checkOutFileEntry: true,
 		copyFileEntry: true,
 		deleteFileEntry: true,
+		fetchFileEntryByImageId: true,
 		getFileEntries: true,
 		getFileEntriesCount: true,
 		getFileEntry: true,
@@ -746,6 +783,7 @@ Liferay.Service.registerClass(
 		getFolder: true,
 		getFolderIds: true,
 		getFolders: true,
+		getFoldersAndFileEntriesAndFileShortcuts: true,
 		getFoldersAndFileEntriesAndFileShortcutsCount: true,
 		getFoldersCount: true,
 		getMountFolders: true,
@@ -798,6 +836,7 @@ Liferay.Service.registerClass(
 	{
 		addStructure: true,
 		deleteStructure: true,
+		fetchStructure: true,
 		getStructure: true,
 		updateStructure: true
 	}
@@ -818,6 +857,8 @@ Liferay.Service.registerClass(
 	{
 		addTemplate: true,
 		deleteTemplate: true,
+		getTemplate: true,
+		getTemplates: true,
 		updateTemplate: true
 	}
 );
@@ -838,6 +879,7 @@ Liferay.Service.registerClass(
 	Liferay.Service.Expando, "ExpandoValue",
 	{
 		addValue: true,
+		addValues: true,
 		getData: true,
 		getJSONData: true
 	}
@@ -854,37 +896,6 @@ Liferay.Service.registerClass(
 
 Liferay.Service.register("Liferay.Service.IG", "com.liferay.portlet.imagegallery.service");
 
-Liferay.Service.registerClass(
-	Liferay.Service.IG, "IGFolder",
-	{
-		addFolder: true,
-		copyFolder: true,
-		deleteFolder: true,
-		getFolder: true,
-		getFolders: true,
-		getFoldersCount: true,
-		getSubfolderIds: true,
-		updateFolder: true
-	}
-);
-
-Liferay.Service.registerClass(
-	Liferay.Service.IG, "IGImage",
-	{
-		deleteImage: true,
-		deleteImageByFolderIdAndNameWithExtension: true,
-		getFoldersImagesCount: true,
-		getGroupImages: true,
-		getGroupImagesCount: true,
-		getImage: true,
-		getImageByFolderIdAndNameWithExtension: true,
-		getImageByLargeImageId: true,
-		getImageBySmallImageId: true,
-		getImages: true,
-		getImagesCount: true
-	}
-);
-
 Liferay.Service.register("Liferay.Service.Journal", "com.liferay.portlet.journal.service");
 
 Liferay.Service.registerClass(
@@ -896,6 +907,7 @@ Liferay.Service.registerClass(
 		expireArticle: true,
 		getArticle: true,
 		getArticleByUrlTitle: true,
+		getArticlesByLayoutUuid: true,
 		getLatestArticle: true,
 		removeArticleLocale: true,
 		search: true,
@@ -940,6 +952,8 @@ Liferay.Service.registerClass(
 		deleteTemplate: true,
 		getStructureTemplates: true,
 		getTemplate: true,
+		search: true,
+		searchCount: true,
 		updateTemplate: true
 	}
 );
@@ -984,20 +998,14 @@ Liferay.Service.registerClass(
 		getGroupMessagesCount: true,
 		getMessage: true,
 		getMessageDisplay: true,
+		getThreadAnswersCount: true,
 		getThreadMessages: true,
 		getThreadMessagesCount: true,
 		subscribeMessage: true,
 		unsubscribeMessage: true,
+		updateAnswer: true,
 		updateDiscussionMessage: true,
 		updateMessage: true
-	}
-);
-
-Liferay.Service.registerClass(
-	Liferay.Service.MB, "MBMessageFlag",
-	{
-		addAnswerFlag: true,
-		deleteAnswerFlag: true
 	}
 );
 
@@ -1013,6 +1021,53 @@ Liferay.Service.registerClass(
 		moveThread: true,
 		splitThread: true,
 		unlockThread: true
+	}
+);
+
+Liferay.Service.register("Liferay.Service.MDR", "com.liferay.portlet.mobiledevicerules.service");
+
+Liferay.Service.registerClass(
+	Liferay.Service.MDR, "MDRAction",
+	{
+		addAction: true,
+		deleteAction: true,
+		fetchAction: true,
+		getAction: true,
+		updateAction: true
+	}
+);
+
+Liferay.Service.registerClass(
+	Liferay.Service.MDR, "MDRRule",
+	{
+		addRule: true,
+		deleteRule: true,
+		fetchRule: true,
+		getRule: true,
+		updateRule: true
+	}
+);
+
+Liferay.Service.registerClass(
+	Liferay.Service.MDR, "MDRRuleGroup",
+	{
+		addRuleGroup: true,
+		copyRuleGroup: true,
+		deleteRuleGroup: true,
+		fetchRuleGroup: true,
+		getRuleGroup: true,
+		updateRuleGroup: true
+	}
+);
+
+Liferay.Service.registerClass(
+	Liferay.Service.MDR, "MDRRuleGroupInstance",
+	{
+		addRuleGroupInstance: true,
+		deleteRuleGroupInstance: true,
+		getRuleGroupInstances: true,
+		getRuleGroupInstancesCount: true,
+		updateRuleGroupInstance: true
 	}
 );
 
@@ -1097,6 +1152,17 @@ Liferay.Service.registerClass(
 
 Liferay.Service.register("Liferay.Service.Social", "com.liferay.portlet.social.service");
 
+Liferay.Service.registerClass(
+	Liferay.Service.Social, "SocialActivitySetting",
+	{
+		getActivityDefinition: true,
+		getActivityDefinitions: true,
+		getJSONActivityDefinitions: true,
+		updateActivitySetting: true,
+		updateActivitySettings: true
+	}
+);
+
 Liferay.Service.register("Liferay.Service.SC", "com.liferay.portlet.softwarecatalog.service");
 
 Liferay.Service.registerClass(
@@ -1150,6 +1216,7 @@ Liferay.Service.registerClass(
 		addNode: true,
 		deleteNode: true,
 		getNode: true,
+		importPages: true,
 		subscribeNode: true,
 		unsubscribeNode: true,
 		updateNode: true
@@ -1164,11 +1231,13 @@ Liferay.Service.registerClass(
 		changeParent: true,
 		deletePage: true,
 		deletePageAttachment: true,
+		deleteTempPageAttachment: true,
 		getDraftPage: true,
 		getNodePages: true,
 		getNodePagesRSS: true,
 		getPage: true,
 		getPagesRSS: true,
+		getTempPageAttachmentNames: true,
 		movePage: true,
 		revertPage: true,
 		subscribePage: true,

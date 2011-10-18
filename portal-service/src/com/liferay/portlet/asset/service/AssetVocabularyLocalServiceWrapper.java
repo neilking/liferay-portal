@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.asset.service;
 
+import com.liferay.portal.service.ServiceWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link AssetVocabularyLocalService}.
@@ -24,7 +26,8 @@ package com.liferay.portlet.asset.service;
  * @generated
  */
 public class AssetVocabularyLocalServiceWrapper
-	implements AssetVocabularyLocalService {
+	implements AssetVocabularyLocalService,
+		ServiceWrapper<AssetVocabularyLocalService> {
 	public AssetVocabularyLocalServiceWrapper(
 		AssetVocabularyLocalService assetVocabularyLocalService) {
 		_assetVocabularyLocalService = assetVocabularyLocalService;
@@ -360,6 +363,14 @@ public class AssetVocabularyLocalServiceWrapper
 			createDefaultVocabulary);
 	}
 
+	public java.util.List<com.liferay.portlet.asset.model.AssetVocabulary> getGroupVocabularies(
+		long groupId, java.lang.String name, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator obc)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _assetVocabularyLocalService.getGroupVocabularies(groupId, name,
+			start, end, obc);
+	}
+
 	public com.liferay.portlet.asset.model.AssetVocabulary getGroupVocabulary(
 		long groupId, java.lang.String name)
 		throws com.liferay.portal.kernel.exception.PortalException,
@@ -408,11 +419,26 @@ public class AssetVocabularyLocalServiceWrapper
 			title, titleMap, descriptionMap, settings, serviceContext);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public AssetVocabularyLocalService getWrappedAssetVocabularyLocalService() {
 		return _assetVocabularyLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedAssetVocabularyLocalService(
+		AssetVocabularyLocalService assetVocabularyLocalService) {
+		_assetVocabularyLocalService = assetVocabularyLocalService;
+	}
+
+	public AssetVocabularyLocalService getWrappedService() {
+		return _assetVocabularyLocalService;
+	}
+
+	public void setWrappedService(
 		AssetVocabularyLocalService assetVocabularyLocalService) {
 		_assetVocabularyLocalService = assetVocabularyLocalService;
 	}

@@ -19,75 +19,107 @@
 <%
 List<LayoutSetBranch> layoutSetBranches = LayoutSetBranchLocalServiceUtil.getLayoutSetBranches(stagingGroup.getGroupId(), privateLayout);
 
-LayoutSetBranch layoutSetBranch = LayoutSetBranchLocalServiceUtil.getUserLayoutSetBranch(themeDisplay.getUserId(), stagingGroup.getGroupId(), privateLayout, 0);
+LayoutSetBranch currentLayoutSetBranch = LayoutSetBranchLocalServiceUtil.getUserLayoutSetBranch(themeDisplay.getUserId(), stagingGroup.getGroupId(), privateLayout, 0);
+
+request.setAttribute("view_layout_set_branches.jsp-currentLayoutSetBranchId", String.valueOf(currentLayoutSetBranch.getLayoutSetBranchId()));
 %>
 
-<liferay-ui:error key="<%= LayoutSetBranchNameException.class.getName() + LayoutSetBranchNameException.DUPLICATE %>" message="a-branch-with-that-name-already-exists" />
-<liferay-ui:error key="<%= LayoutSetBranchNameException.class.getName() + LayoutSetBranchNameException.TOO_LONG %>" message='<%= LanguageUtil.format(pageContext, "please-enter-a-value-between-x-and-x-characters-long", new Object[] {4, 100}) %>' />
-<liferay-ui:error key="<%= LayoutSetBranchNameException.class.getName() + LayoutSetBranchNameException.TOO_SHORT %>" message='<%= LanguageUtil.format(pageContext, "please-enter-a-value-between-x-and-x-characters-long", new Object[] {4, 100}) %>' />
+<liferay-ui:success key="sitePageVariationAdded" message="site-page-variation-was-added" />
+<liferay-ui:success key="sitePageVariationDeleted" message="site-page-variation-was-deleted" />
+<liferay-ui:success key="sitePageVariationMerged" message="site-page-variation-was-merged" />
+<liferay-ui:success key="sitePageVariationUpdated" message="site-page-variation-was-updated" />
+
+<liferay-ui:error exception="<%= LayoutSetBranchNameException.class %>">
+
+	<%
+	LayoutSetBranchNameException lsbne = (LayoutSetBranchNameException)errorException;
+	%>
+
+	<c:if test="<%= lsbne.getType() == LayoutSetBranchNameException.DUPLICATE %>">
+		<liferay-ui:message key="a-site-pages-variation-with-that-name-already-exists" />
+	</c:if>
+
+	<c:if test="<%= lsbne.getType() == LayoutSetBranchNameException.TOO_LONG %>">
+		<liferay-ui:message arguments="<%= new Object[] {4, 100} %>" key="please-enter-a-value-between-x-and-x-characters-long" />
+	</c:if>
+
+	<c:if test="<%= lsbne.getType() == LayoutSetBranchNameException.TOO_SHORT %>">
+		<liferay-ui:message arguments="<%= new Object[] {4, 100} %>" key="please-enter-a-value-between-x-and-x-characters-long" />
+	</c:if>
+</liferay-ui:error>
+
+<div class="portlet-msg-info">
+	<liferay-ui:message key="pages-variations-help" />
+</div>
 
 <c:if test="<%= GroupPermissionUtil.contains(permissionChecker, stagingGroup.getGroupId(), ActionKeys.ADD_LAYOUT_SET_BRANCH) %>">
 	<liferay-util:html-top>
-		<liferay-util:include page="/html/portlet/staging_bar/add_layout_set_branch.jsp">
+		<liferay-util:include page="/html/portlet/staging_bar/edit_layout_set_branch.jsp">
 			<liferay-util:param name="redirect" value="<%= currentURL %>" />
 		</liferay-util:include>
 	</liferay-util:html-top>
 
 	<%
-	String taglibOnClick = "javascript:Liferay.Staging.Branching.addBranch('" + LanguageUtil.get(pageContext, (privateLayout ? "add-private-pages-variation" : "add-public-pages-variation")) + "');";
+	String taglibOnClick = "javascript:Liferay.StagingBar.addBranch('" + LanguageUtil.get(pageContext, "add-site-pages-variation") + "');";
 	%>
 
 	<aui:button-row>
-		<aui:button name="addBranchButton" onClick="<%= taglibOnClick %>" value='<%= privateLayout ? "add-private-pages-variation" : "add-public-pages-variation" %>' />
+		<aui:button name="addBranchButton" onClick="<%= taglibOnClick %>" value="add-site-pages-variation" />
 	</aui:button-row>
 </c:if>
 
-<liferay-ui:search-container>
-	<liferay-ui:search-container-results
-		results="<%= layoutSetBranches %>"
-		total="<%= layoutSetBranches.size() %>"
-	/>
+<div class="branch-results">
+	<liferay-ui:search-container>
+		<liferay-ui:search-container-results
+			results="<%= layoutSetBranches %>"
+			total="<%= layoutSetBranches.size() %>"
+		/>
 
-	<liferay-ui:search-container-row
-		className="com.liferay.portal.model.LayoutSetBranch"
-		escapedModel="<%= true %>"
-		keyProperty="layoutSetBranchId"
-		modelVar="curLayoutSetBranch"
-	>
-
-		<liferay-ui:search-container-column-text
-			buffer="buffer"
-			name="name"
+		<liferay-ui:search-container-row
+			className="com.liferay.portal.model.LayoutSetBranch"
+			escapedModel="<%= true %>"
+			keyProperty="layoutSetBranchId"
+			modelVar="curLayoutSetBranch"
 		>
 
-			<%
-			if (layoutSetBranch.equals(curLayoutSetBranch)) {
-				buffer.append("<strong>");
-			}
+			<liferay-ui:search-container-column-text
+				buffer="buffer"
+				name="name"
+			>
 
-			buffer.append(curLayoutSetBranch.getName());
+				<%
+				if (currentLayoutSetBranch.equals(curLayoutSetBranch)) {
+					buffer.append("<strong>");
+				}
 
-			if (layoutSetBranch.equals(curLayoutSetBranch)) {
-				buffer.append(" (*)</strong>");
-			}
-			%>
+				buffer.append(LanguageUtil.get(pageContext, curLayoutSetBranch.getName()));
 
-		</liferay-ui:search-container-column-text>
+				if (curLayoutSetBranch.isMaster()) {
+					buffer.append(" (*)");
+				}
 
-		<liferay-ui:search-container-column-text
-			property="description"
-		/>
+				if (currentLayoutSetBranch.equals(curLayoutSetBranch)) {
+					buffer.append("</strong>");
+				}
+				%>
 
-		<liferay-ui:search-container-column-jsp
-			path="/html/portlet/staging_bar/layout_set_branch_action.jsp"
-		/>
-	</liferay-ui:search-container-row>
+			</liferay-ui:search-container-column-text>
 
-	<liferay-ui:search-iterator searchContainer="<%= searchContainer %>" paginate="<%= false %>" />
-</liferay-ui:search-container>
+			<liferay-ui:search-container-column-text
+				property="description"
+			/>
 
-<aui:script position="inline" use="liferay-staging">
-	Liferay.Staging.Branching.init(
+			<liferay-ui:search-container-column-jsp
+				path="/html/portlet/staging_bar/layout_set_branch_action.jsp"
+			/>
+		</liferay-ui:search-container-row>
+
+		<liferay-ui:search-iterator searchContainer="<%= searchContainer %>" paginate="<%= false %>" />
+	</liferay-ui:search-container>
+</div>
+
+<aui:script position="inline" use="liferay-staging-branch">
+	Liferay.StagingBar.init(
 		{
 			namespace: '<portlet:namespace />'
 		}

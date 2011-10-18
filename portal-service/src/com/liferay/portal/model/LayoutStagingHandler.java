@@ -14,6 +14,7 @@
 
 package com.liferay.portal.model;
 
+import com.liferay.portal.NoSuchLayoutBranchException;
 import com.liferay.portal.NoSuchLayoutRevisionException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -22,6 +23,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.staging.StagingUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.ReflectionUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.service.LayoutBranchLocalServiceUtil;
@@ -35,7 +37,6 @@ import com.liferay.portal.util.LayoutTypePortletFactoryUtil;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 
 import java.util.HashSet;
 import java.util.List;
@@ -127,7 +128,7 @@ public class LayoutStagingHandler implements InvocationHandler {
 	}
 
 	private Object _clone() {
-		return Proxy.newProxyInstance(
+		return ProxyUtil.newProxyInstance(
 			PortalClassLoaderUtil.getClassLoader(), new Class[] {Layout.class},
 			new LayoutStagingHandler(_layout, _layoutRevision));
 	}
@@ -160,34 +161,54 @@ public class LayoutStagingHandler implements InvocationHandler {
 		long layoutRevisionId = ParamUtil.getLong(
 			serviceContext, "layoutRevisionId");
 
-		if (layoutRevisionId <= 0) {
-			User user = UserLocalServiceUtil.getUser(
-				serviceContext.getUserId());
+		if (layoutSetBranchId > 0) {
+			if (layoutRevisionId <= 0) {
+				User user = UserLocalServiceUtil.getUser(
+					serviceContext.getUserId());
 
-			layoutRevisionId = StagingUtil.getRecentLayoutRevisionId(
-				user, layoutSetBranchId, layout.getPlid());
+				layoutRevisionId = StagingUtil.getRecentLayoutRevisionId(
+					user, layoutSetBranchId, layout.getPlid());
 
-			if (layoutRevisionId > 0) {
-				try {
-					layoutRevision =
-						LayoutRevisionLocalServiceUtil.getLayoutRevision(
-							layoutRevisionId);
+				if (layoutRevisionId > 0) {
+					try {
+						layoutRevision =
+							LayoutRevisionLocalServiceUtil.getLayoutRevision(
+								layoutRevisionId);
 
-					if (layoutRevision.getStatus() !=
-							WorkflowConstants.STATUS_INACTIVE) {
+						if (layoutRevision.getStatus() !=
+								WorkflowConstants.STATUS_INACTIVE) {
 
-						return layoutRevision;
+							return layoutRevision;
+						}
+
+						StagingUtil.setRecentLayoutRevisionId(
+							user, layoutSetBranchId, layout.getPlid(),
+							LayoutRevisionConstants.
+								DEFAULT_PARENT_LAYOUT_REVISION_ID);
+
+						layoutRevisionId =
+							StagingUtil.getRecentLayoutRevisionId(
+								user, layoutSetBranchId, layout.getPlid());
 					}
-
-					StagingUtil.setRecentLayoutRevisionId(
-						user, layoutSetBranchId, layout.getPlid(),
-						LayoutRevisionConstants.
-							DEFAULT_PARENT_LAYOUT_REVISION_ID);
-
-					layoutRevisionId = StagingUtil.getRecentLayoutRevisionId(
-						user, layoutSetBranchId, layout.getPlid());
+					catch (NoSuchLayoutRevisionException nslre) {
+					}
 				}
-				catch (NoSuchLayoutRevisionException nslre) {
+			}
+
+			try {
+				return LayoutRevisionLocalServiceUtil.getLayoutRevision(
+					layoutSetBranchId, layout.getPlid(), true);
+			}
+			catch (NoSuchLayoutRevisionException nslre) {
+				List<LayoutRevision> layoutRevisions =
+					LayoutRevisionLocalServiceUtil.getChildLayoutRevisions(
+						layoutSetBranchId,
+						LayoutRevisionConstants.
+							DEFAULT_PARENT_LAYOUT_REVISION_ID,
+						layout.getPlid());
+
+				if (!layoutRevisions.isEmpty()) {
+					return layoutRevisions.get(0);
 				}
 			}
 		}
@@ -201,28 +222,19 @@ public class LayoutStagingHandler implements InvocationHandler {
 			}
 		}
 
+		LayoutBranch layoutBranch = null;
+
 		try {
-			return LayoutRevisionLocalServiceUtil.getLayoutRevision(
-				layoutSetBranchId, layout.getPlid(), true);
+			layoutBranch = LayoutBranchLocalServiceUtil.getMasterLayoutBranch(
+				layoutSetBranchId, layout.getPlid());
 		}
-		catch (NoSuchLayoutRevisionException nslre) {
-			List<LayoutRevision> layoutRevisions =
-				LayoutRevisionLocalServiceUtil.getChildLayoutRevisions(
-					layoutSetBranchId,
-					LayoutRevisionConstants.DEFAULT_PARENT_LAYOUT_REVISION_ID,
-					layout.getPlid());
-
-			if (!layoutRevisions.isEmpty()) {
-				return layoutRevisions.get(0);
-			}
-		}
-
-		LayoutBranch layoutBranch =
-			LayoutBranchLocalServiceUtil.addLayoutBranch(
+		catch (NoSuchLayoutBranchException nslbe) {
+			layoutBranch = LayoutBranchLocalServiceUtil.addLayoutBranch(
 				layoutSetBranchId, layout.getPlid(),
 				LayoutBranchConstants.MASTER_BRANCH_NAME,
 				LayoutBranchConstants.MASTER_BRANCH_DESCRIPTION, true,
 				serviceContext);
+		}
 
 		layoutRevision = LayoutRevisionLocalServiceUtil.addLayoutRevision(
 			serviceContext.getUserId(), layoutSetBranchId,
@@ -250,14 +262,14 @@ public class LayoutStagingHandler implements InvocationHandler {
 
 	private LayoutType _getLayoutType() {
 		return LayoutTypePortletFactoryUtil.create(
-			(Layout)Proxy.newProxyInstance(
+			(Layout)ProxyUtil.newProxyInstance(
 				PortalClassLoaderUtil.getClassLoader(),
 				new Class[] {Layout.class},
 				new LayoutStagingHandler(_layout, _layoutRevision)));
 	}
 
 	private Object _toEscapedModel() {
-		return Proxy.newProxyInstance(
+		return ProxyUtil.newProxyInstance(
 			PortalClassLoaderUtil.getClassLoader(),
 			new Class[] {Layout.class},
 			new LayoutStagingHandler(
@@ -273,22 +285,30 @@ public class LayoutStagingHandler implements InvocationHandler {
 	private LayoutRevision _layoutRevision;
 
 	static {
+		_layoutRevisionMethodNames.add("getColorScheme");
 		_layoutRevisionMethodNames.add("getColorSchemeId");
 		_layoutRevisionMethodNames.add("getCss");
+		_layoutRevisionMethodNames.add("getCssText");
 		_layoutRevisionMethodNames.add("getDescription");
+		_layoutRevisionMethodNames.add("getHTMLTitle");
 		_layoutRevisionMethodNames.add("getIconImage");
 		_layoutRevisionMethodNames.add("getIconImageId");
 		_layoutRevisionMethodNames.add("getKeywords");
 		_layoutRevisionMethodNames.add("getName");
 		_layoutRevisionMethodNames.add("getRobots");
+		_layoutRevisionMethodNames.add("getTheme");
 		_layoutRevisionMethodNames.add("getThemeId");
 		_layoutRevisionMethodNames.add("getTitle");
 		_layoutRevisionMethodNames.add("getTypeSettings");
 		_layoutRevisionMethodNames.add("getTypeSettingsProperties");
+		_layoutRevisionMethodNames.add("getWapColorScheme");
 		_layoutRevisionMethodNames.add("getWapColorSchemeId");
+		_layoutRevisionMethodNames.add("getWapTheme");
 		_layoutRevisionMethodNames.add("getWapThemeId");
 		_layoutRevisionMethodNames.add("isEscapedModel");
 		_layoutRevisionMethodNames.add("isIconImage");
+		_layoutRevisionMethodNames.add("isInheritLookAndFeel");
+		_layoutRevisionMethodNames.add("isInheritWapLookAndFeel");
 		_layoutRevisionMethodNames.add("setColorSchemeId");
 		_layoutRevisionMethodNames.add("setCss");
 		_layoutRevisionMethodNames.add("setDescription");

@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.ResourceConstants;
 import com.liferay.portal.model.User;
@@ -29,6 +30,7 @@ import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.util.PrefsPropsUtil;
 import com.liferay.portlet.amazonrankings.model.AmazonRankings;
 import com.liferay.portlet.amazonrankings.util.AmazonRankingsUtil;
+import com.liferay.portlet.shopping.AmazonException;
 import com.liferay.portlet.shopping.DuplicateItemSKUException;
 import com.liferay.portlet.shopping.ItemLargeImageNameException;
 import com.liferay.portlet.shopping.ItemLargeImageSizeException;
@@ -46,7 +48,6 @@ import com.liferay.portlet.shopping.model.ShoppingItemPrice;
 import com.liferay.portlet.shopping.model.ShoppingItemPriceConstants;
 import com.liferay.portlet.shopping.service.base.ShoppingItemLocalServiceBaseImpl;
 import com.liferay.util.PwdGenerator;
-import com.liferay.util.SystemProperties;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -80,9 +81,9 @@ public class ShoppingItemLocalServiceImpl
 			String description, String properties, String fieldsQuantities,
 			boolean requiresShipping, int stockQuantity, boolean featured,
 			Boolean sale, boolean smallImage, String smallImageURL,
-			File smallFile, boolean mediumImage, String mediumImageURL,
-			File mediumFile, boolean largeImage, String largeImageURL,
-			File largeFile, List<ShoppingItemField> itemFields,
+			File smallImageFile, boolean mediumImage, String mediumImageURL,
+			File mediumImageFile, boolean largeImage, String largeImageURL,
+			File largeImageFile, List<ShoppingItemField> itemFields,
 			List<ShoppingItemPrice> itemPrices, ServiceContext serviceContext)
 		throws PortalException, SystemException {
 
@@ -91,14 +92,14 @@ public class ShoppingItemLocalServiceImpl
 		User user = userPersistence.findByPrimaryKey(userId);
 		sku = sku.trim().toUpperCase();
 
-		byte[] smallBytes = null;
-		byte[] mediumBytes = null;
-		byte[] largeBytes = null;
+		byte[] smallImageBytes = null;
+		byte[] mediumImageBytes = null;
+		byte[] largeImageBytes = null;
 
 		try {
-			smallBytes = FileUtil.getBytes(smallFile);
-			mediumBytes = FileUtil.getBytes(mediumFile);
-			largeBytes = FileUtil.getBytes(largeFile);
+			smallImageBytes = FileUtil.getBytes(smallImageFile);
+			mediumImageBytes = FileUtil.getBytes(mediumImageFile);
+			largeImageBytes = FileUtil.getBytes(largeImageFile);
 		}
 		catch (IOException ioe) {
 		}
@@ -107,8 +108,9 @@ public class ShoppingItemLocalServiceImpl
 
 		validate(
 			user.getCompanyId(), 0, sku, name, smallImage, smallImageURL,
-			smallFile, smallBytes, mediumImage, mediumImageURL, mediumFile,
-			mediumBytes, largeImage, largeImageURL, largeFile, largeBytes);
+			smallImageFile, smallImageBytes, mediumImage, mediumImageURL,
+			mediumImageFile, mediumImageBytes, largeImage, largeImageURL,
+			largeImageFile, largeImageBytes);
 
 		long itemId = counterLocalService.increment();
 
@@ -186,9 +188,10 @@ public class ShoppingItemLocalServiceImpl
 		// Images
 
 		saveImages(
-			smallImage, item.getSmallImageId(), smallFile, smallBytes,
-			mediumImage, item.getMediumImageId(), mediumFile, mediumBytes,
-			largeImage, item.getLargeImageId(), largeFile, largeBytes);
+			smallImage, item.getSmallImageId(), smallImageFile, smallImageBytes,
+			mediumImage, item.getMediumImageId(), mediumImageFile,
+			mediumImageBytes, largeImage, item.getLargeImageId(),
+			largeImageFile, largeImageBytes);
 
 		// Item fields
 
@@ -452,9 +455,9 @@ public class ShoppingItemLocalServiceImpl
 			String name, String description, String properties,
 			String fieldsQuantities, boolean requiresShipping,
 			int stockQuantity, boolean featured, Boolean sale,
-			boolean smallImage, String smallImageURL, File smallFile,
-			boolean mediumImage, String mediumImageURL, File mediumFile,
-			boolean largeImage, String largeImageURL, File largeFile,
+			boolean smallImage, String smallImageURL, File smallImageFile,
+			boolean mediumImage, String mediumImageURL, File mediumImageFile,
+			boolean largeImage, String largeImageURL, File largeImageFile,
 			List<ShoppingItemField> itemFields,
 			List<ShoppingItemPrice> itemPrices, ServiceContext serviceContext)
 		throws PortalException, SystemException {
@@ -467,22 +470,23 @@ public class ShoppingItemLocalServiceImpl
 		categoryId = getCategory(item, categoryId);
 		sku = sku.trim().toUpperCase();
 
-		byte[] smallBytes = null;
-		byte[] mediumBytes = null;
-		byte[] largeBytes = null;
+		byte[] smallImageBytes = null;
+		byte[] mediumImageBytes = null;
+		byte[] largeImageBytes = null;
 
 		try {
-			smallBytes = FileUtil.getBytes(smallFile);
-			mediumBytes = FileUtil.getBytes(mediumFile);
-			largeBytes = FileUtil.getBytes(largeFile);
+			smallImageBytes = FileUtil.getBytes(smallImageFile);
+			mediumImageBytes = FileUtil.getBytes(mediumImageFile);
+			largeImageBytes = FileUtil.getBytes(largeImageFile);
 		}
 		catch (IOException ioe) {
 		}
 
 		validate(
 			user.getCompanyId(), itemId, sku, name, smallImage, smallImageURL,
-			smallFile, smallBytes, mediumImage, mediumImageURL, mediumFile,
-			mediumBytes, largeImage, largeImageURL, largeFile, largeBytes);
+			smallImageFile, smallImageBytes, mediumImage, mediumImageURL,
+			mediumImageFile, mediumImageBytes, largeImage, largeImageURL,
+			largeImageFile, largeImageBytes);
 
 		item.setModifiedDate(new Date());
 		item.setCategoryId(categoryId);
@@ -533,9 +537,10 @@ public class ShoppingItemLocalServiceImpl
 		// Images
 
 		saveImages(
-			smallImage, item.getSmallImageId(), smallFile, smallBytes,
-			mediumImage, item.getMediumImageId(), mediumFile, mediumBytes,
-			largeImage, item.getLargeImageId(), largeFile, largeBytes);
+			smallImage, item.getSmallImageId(), smallImageFile, smallImageBytes,
+			mediumImage, item.getMediumImageId(), mediumImageFile,
+			mediumImageBytes, largeImage, item.getLargeImageId(),
+			largeImageFile, largeImageBytes);
 
 		// Item fields
 
@@ -591,6 +596,10 @@ public class ShoppingItemLocalServiceImpl
 			long userId, long groupId, long categoryId, String[] isbns)
 		throws IOException, PortalException, SystemException {
 
+		if (!AmazonRankingsUtil.isEnabled()) {
+			throw new AmazonException("Amazon integration is not enabled");
+		}
+
 		String tmpDir = SystemProperties.get(SystemProperties.TMP_DIR);
 
 		for (int i = 0; (i < isbns.length) && (i < 50); i++) {
@@ -637,21 +646,21 @@ public class ShoppingItemLocalServiceImpl
 
 			boolean smallImage = true;
 			String smallImageURL = StringPool.BLANK;
-			File smallFile = new File(
+			File smallImageFile = new File(
 				tmpDir + File.separatorChar +
 				PwdGenerator.getPassword(
 					PwdGenerator.KEY1 + PwdGenerator.KEY2, 12) + ".jpg");
 
-			byte[] smallBytes = HttpUtil.URLtoByteArray(
+			byte[] smallImageBytes = HttpUtil.URLtoByteArray(
 				amazonRankings.getSmallImageURL());
 
-			if (smallBytes.length < 1024) {
+			if (smallImageBytes.length < 1024) {
 				smallImage = false;
 			}
 			else {
-				OutputStream os = new FileOutputStream(smallFile);
+				OutputStream os = new FileOutputStream(smallImageFile);
 
-				os.write(smallBytes);
+				os.write(smallImageBytes);
 
 				os.close();
 			}
@@ -660,21 +669,21 @@ public class ShoppingItemLocalServiceImpl
 
 			boolean mediumImage = true;
 			String mediumImageURL = StringPool.BLANK;
-			File mediumFile = new File(
+			File mediumImageFile = new File(
 				tmpDir + File.separatorChar +
 				PwdGenerator.getPassword(
 					PwdGenerator.KEY1 + PwdGenerator.KEY2, 12) + ".jpg");
 
-			byte[] mediumBytes = HttpUtil.URLtoByteArray(
+			byte[] mediumImageBytes = HttpUtil.URLtoByteArray(
 				amazonRankings.getMediumImageURL());
 
-			if (mediumBytes.length < 1024) {
+			if (mediumImageBytes.length < 1024) {
 				mediumImage = false;
 			}
 			else {
-				OutputStream os = new FileOutputStream(mediumFile);
+				OutputStream os = new FileOutputStream(mediumImageFile);
 
-				os.write(mediumBytes);
+				os.write(mediumImageBytes);
 
 				os.close();
 			}
@@ -683,21 +692,21 @@ public class ShoppingItemLocalServiceImpl
 
 			boolean largeImage = true;
 			String largeImageURL = StringPool.BLANK;
-			File largeFile = new File(
+			File largeImageFile = new File(
 				tmpDir + File.separatorChar +
 				PwdGenerator.getPassword(
 					PwdGenerator.KEY1 + PwdGenerator.KEY2, 12) + ".jpg");
 
-			byte[] largeBytes = HttpUtil.URLtoByteArray(
+			byte[] largeImageBytes = HttpUtil.URLtoByteArray(
 				amazonRankings.getLargeImageURL());
 
-			if (largeBytes.length < 1024) {
+			if (largeImageBytes.length < 1024) {
 				largeImage = false;
 			}
 			else {
-				OutputStream os = new FileOutputStream(largeFile);
+				OutputStream os = new FileOutputStream(largeImageFile);
 
-				os.write(largeBytes);
+				os.write(largeImageBytes);
 
 				os.close();
 			}
@@ -718,14 +727,14 @@ public class ShoppingItemLocalServiceImpl
 			addItem(
 				userId, groupId, categoryId, isbn, name, description,
 				properties, StringPool.BLANK, requiresShipping, stockQuantity,
-				featured, sale, smallImage, smallImageURL, smallFile,
-				mediumImage, mediumImageURL, mediumFile, largeImage,
-				largeImageURL, largeFile, itemFields, itemPrices,
+				featured, sale, smallImage, smallImageURL, smallImageFile,
+				mediumImage, mediumImageURL, mediumImageFile, largeImage,
+				largeImageURL, largeImageFile, itemFields, itemPrices,
 				serviceContext);
 
-			smallFile.delete();
-			mediumFile.delete();
-			largeFile.delete();
+			smallImageFile.delete();
+			mediumImageFile.delete();
+			largeImageFile.delete();
 		}
 	}
 
@@ -765,17 +774,17 @@ public class ShoppingItemLocalServiceImpl
 	}
 
 	protected void saveImages(
-			boolean smallImage, long smallImageId, File smallFile,
-			byte[] smallBytes, boolean mediumImage, long mediumImageId,
-			File mediumFile, byte[] mediumBytes, boolean largeImage,
-			long largeImageId, File largeFile, byte[] largeBytes)
+			boolean smallImage, long smallImageId, File smallImageFile,
+			byte[] smallImageBytes, boolean mediumImage, long mediumImageId,
+			File mediumImageFile, byte[] mediumImageBytes, boolean largeImage,
+			long largeImageId, File largeImageFile, byte[] largeImageBytes)
 		throws PortalException, SystemException {
 
 		// Small image
 
 		if (smallImage) {
-			if ((smallFile != null) && (smallBytes != null)) {
-				imageLocalService.updateImage(smallImageId, smallBytes);
+			if ((smallImageFile != null) && (smallImageBytes != null)) {
+				imageLocalService.updateImage(smallImageId, smallImageBytes);
 			}
 		}
 		else {
@@ -785,8 +794,8 @@ public class ShoppingItemLocalServiceImpl
 		// Medium image
 
 		if (mediumImage) {
-			if ((mediumFile != null) && (mediumBytes != null)) {
-				imageLocalService.updateImage(mediumImageId, mediumBytes);
+			if ((mediumImageFile != null) && (mediumImageBytes != null)) {
+				imageLocalService.updateImage(mediumImageId, mediumImageBytes);
 			}
 		}
 		else {
@@ -796,8 +805,8 @@ public class ShoppingItemLocalServiceImpl
 		// Large image
 
 		if (largeImage) {
-			if ((largeFile != null) && (largeBytes != null)) {
-				imageLocalService.updateImage(largeImageId, largeBytes);
+			if ((largeImageFile != null) && (largeImageBytes != null)) {
+				imageLocalService.updateImage(largeImageId, largeImageBytes);
 			}
 		}
 		else {
@@ -807,10 +816,10 @@ public class ShoppingItemLocalServiceImpl
 
 	protected void validate(
 			long companyId, long itemId, String sku, String name,
-			boolean smallImage, String smallImageURL, File smallFile,
-			byte[] smallBytes, boolean mediumImage, String mediumImageURL,
-			File mediumFile, byte[] mediumBytes, boolean largeImage,
-			String largeImageURL, File largeFile, byte[] largeBytes)
+			boolean smallImage, String smallImageURL, File smallImageFile,
+			byte[] smallImageBytes, boolean mediumImage, String mediumImageURL,
+			File mediumImageFile, byte[] mediumImageBytes, boolean largeImage,
+			String largeImageURL, File largeImageFile, byte[] largeImageBytes)
 		throws PortalException, SystemException {
 
 		if (Validator.isNull(sku)) {
@@ -841,9 +850,9 @@ public class ShoppingItemLocalServiceImpl
 		// Small image
 
 		if (smallImage && Validator.isNull(smallImageURL) &&
-			smallFile != null && smallBytes != null) {
+			smallImageFile != null && smallImageBytes != null) {
 
-			String smallImageName = smallFile.getName();
+			String smallImageName = smallImageFile.getName();
 
 			if (smallImageName != null) {
 				boolean validSmallImageExtension = false;
@@ -868,8 +877,8 @@ public class ShoppingItemLocalServiceImpl
 				PropsKeys.SHOPPING_IMAGE_MEDIUM_MAX_SIZE);
 
 			if ((smallImageMaxSize > 0) &&
-				((smallBytes == null) ||
-					(smallBytes.length > smallImageMaxSize))) {
+				((smallImageBytes == null) ||
+				 (smallImageBytes.length > smallImageMaxSize))) {
 
 				throw new ItemSmallImageSizeException();
 			}
@@ -878,9 +887,9 @@ public class ShoppingItemLocalServiceImpl
 		// Medium image
 
 		if (mediumImage && Validator.isNull(mediumImageURL) &&
-			mediumFile != null && mediumBytes != null) {
+			mediumImageFile != null && mediumImageBytes != null) {
 
-			String mediumImageName = mediumFile.getName();
+			String mediumImageName = mediumImageFile.getName();
 
 			if (mediumImageName != null) {
 				boolean validMediumImageExtension = false;
@@ -905,8 +914,8 @@ public class ShoppingItemLocalServiceImpl
 				PropsKeys.SHOPPING_IMAGE_MEDIUM_MAX_SIZE);
 
 			if ((mediumImageMaxSize > 0) &&
-				((mediumBytes == null) ||
-					(mediumBytes.length > mediumImageMaxSize))) {
+				((mediumImageBytes == null) ||
+					(mediumImageBytes.length > mediumImageMaxSize))) {
 
 				throw new ItemMediumImageSizeException();
 			}
@@ -915,9 +924,9 @@ public class ShoppingItemLocalServiceImpl
 		// Large image
 
 		if (largeImage && Validator.isNull(largeImageURL) &&
-			largeFile != null && largeBytes != null) {
+			largeImageFile != null && largeImageBytes != null) {
 
-			String largeImageName = largeFile.getName();
+			String largeImageName = largeImageFile.getName();
 
 			if (largeImageName != null) {
 				boolean validLargeImageExtension = false;
@@ -942,8 +951,8 @@ public class ShoppingItemLocalServiceImpl
 				PropsKeys.SHOPPING_IMAGE_LARGE_MAX_SIZE);
 
 			if ((largeImageMaxSize > 0) &&
-				((largeBytes == null) ||
-					(largeBytes.length > largeImageMaxSize))) {
+				((largeImageBytes == null) ||
+					(largeImageBytes.length > largeImageMaxSize))) {
 
 				throw new ItemLargeImageSizeException();
 			}

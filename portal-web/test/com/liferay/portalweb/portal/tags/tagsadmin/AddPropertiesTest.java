@@ -25,7 +25,7 @@ public class AddPropertiesTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
@@ -40,21 +40,19 @@ public class AddPropertiesTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Control Panel", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Control Panel",
+			RuntimeVariables.replace("Control Panel"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Tags", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Tags", RuntimeVariables.replace("Tags"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isVisible("//div[4]/ul/li/span/a")) {
+				if (selenium.isVisible("//h1[@class='header-title']/span")) {
 					break;
 				}
 			}
@@ -64,16 +62,18 @@ public class AddPropertiesTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("//div[4]/ul/li/span/a", RuntimeVariables.replace(""));
+		assertEquals(RuntimeVariables.replace("selenium ide"),
+			selenium.getText("//h1[@class='header-title']/span"));
+		selenium.clickAt("//input[@id='editTagButton']",
+			RuntimeVariables.replace("Edit"));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isVisible("//div[3]/div[2]/input[1]")) {
+				if (selenium.isVisible("//input[@id='_99_name']")) {
 					break;
 				}
 			}
@@ -83,25 +83,20 @@ public class AddPropertiesTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.type("//div[3]/div[2]/input[1]",
+		selenium.type("//input[@id='_99_key0']",
 			RuntimeVariables.replace("This is a tag for anything"));
-		selenium.saveScreenShotAndSource();
-		selenium.type("//div[3]/div[2]/input[2]",
+		selenium.type("//input[@id='_99_value0']",
 			RuntimeVariables.replace("related to selenium."));
-		selenium.saveScreenShotAndSource();
-		Thread.sleep(500);
-		selenium.clickAt("//td[2]/div[2]/div[3]/input[1]",
-			RuntimeVariables.replace(""));
-		selenium.open("/web/guest/home/");
+		selenium.clickAt("//input[@value='Save']",
+			RuntimeVariables.replace("Save"));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent("link=Control Panel")) {
+				if (selenium.isVisible("//div[@id='portletMessages']")) {
 					break;
 				}
 			}
@@ -111,21 +106,18 @@ public class AddPropertiesTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Control Panel", RuntimeVariables.replace(""));
-		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Tags", RuntimeVariables.replace(""));
-		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
+		assertEquals(RuntimeVariables.replace(
+				"Your request processed successfully."),
+			selenium.getText("//div[@id='portletMessages']"));
+		selenium.clickAt("link=Tags", RuntimeVariables.replace("Tags"));
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isVisible("//div[4]/ul/li/span/a")) {
+				if (selenium.isVisible("//div[@class='view-tag']/div/span[1]")) {
 					break;
 				}
 			}
@@ -135,29 +127,9 @@ public class AddPropertiesTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("//div[4]/ul/li/span/a", RuntimeVariables.replace(""));
-
-		for (int second = 0;; second++) {
-			if (second >= 60) {
-				fail("timeout");
-			}
-
-			try {
-				if (selenium.isVisible("//div[3]/div[2]/input[1]")) {
-					break;
-				}
-			}
-			catch (Exception e) {
-			}
-
-			Thread.sleep(1000);
-		}
-
-		selenium.saveScreenShotAndSource();
-		assertEquals("This is a tag for anything",
-			selenium.getValue("//div[3]/div[2]/input[1]"));
-		assertEquals("related to selenium.",
-			selenium.getValue("//div[3]/div[2]/input[2]"));
+		assertEquals(RuntimeVariables.replace("This is a tag for anything"),
+			selenium.getText("//div[@class='view-tag']/div/span[1]"));
+		assertEquals(RuntimeVariables.replace("related to selenium."),
+			selenium.getText("//div[@class='view-tag']/div/span[2]"));
 	}
 }

@@ -94,6 +94,7 @@ import com.liferay.portlet.PortletFilterFactory;
 import com.liferay.portlet.PortletInstanceFactoryUtil;
 import com.liferay.portlet.PortletURLListenerFactory;
 import com.liferay.portlet.social.messaging.CheckEquityLogMessageListener;
+import com.liferay.portlet.social.util.SocialConfigurationUtil;
 import com.liferay.util.ContentUtil;
 import com.liferay.util.servlet.DynamicServletRequest;
 import com.liferay.util.servlet.EncryptedServletRequest;
@@ -188,6 +189,8 @@ public class MainServlet extends ActionServlet {
 			_log.debug("Initialize");
 		}
 
+		ServletContext servletContext = getServletContext();
+
 		callParentInit();
 
 		if (_log.isDebugEnabled()) {
@@ -249,6 +252,17 @@ public class MainServlet extends ActionServlet {
 
 		try {
 			initLayoutTemplates(pluginPackage, portlets);
+		}
+		catch (Exception e) {
+			_log.error(e, e);
+		}
+
+		if (_log.isDebugEnabled()) {
+			_log.debug("Initialize social");
+		}
+
+		try {
+			initSocial(pluginPackage);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -345,10 +359,6 @@ public class MainServlet extends ActionServlet {
 		}
 
 		if (_log.isDebugEnabled()) {
-			_log.debug("Initialize message resources");
-		}
-
-		if (_log.isDebugEnabled()) {
 			_log.debug("Initialize plugins");
 		}
 
@@ -358,6 +368,12 @@ public class MainServlet extends ActionServlet {
 		catch (Exception e) {
 			_log.error(e, e);
 		}
+
+		if (PropsValues.SETUP_WIZARD_ENABLED) {
+			servletContext.setAttribute(WebKeys.SETUP_WIZARD_FINISHED, false);
+		}
+
+		servletContext.setAttribute(WebKeys.STARTUP_FINISHED, true);
 	}
 
 	@Override
@@ -397,6 +413,19 @@ public class MainServlet extends ActionServlet {
 			}
 
 			return;
+		}
+
+		try {
+			if (processGroupInactiveRequest(request, response)) {
+				if (_log.isDebugEnabled()) {
+					_log.debug("Processed site inactive request");
+				}
+
+				return;
+			}
+		}
+		catch (Exception e) {
+			_log.error(e, e);
 		}
 
 		if (_log.isDebugEnabled()) {
@@ -704,10 +733,10 @@ public class MainServlet extends ActionServlet {
 
 		String key = Globals.REQUEST_PROCESSOR_KEY + moduleConfig.getPrefix();
 
-		RequestProcessor processor =
+		RequestProcessor requestProcessor =
 			(RequestProcessor)servletContext.getAttribute(key);
 
-		if (processor == null) {
+		if (requestProcessor == null) {
 			ControllerConfig controllerConfig =
 				moduleConfig.getControllerConfig();
 
@@ -716,19 +745,19 @@ public class MainServlet extends ActionServlet {
 			ClassLoader classLoader = PortalClassLoaderUtil.getClassLoader();
 
 			try {
-				processor = (RequestProcessor)classLoader.loadClass(
+				requestProcessor = (RequestProcessor)classLoader.loadClass(
 					processorClass).newInstance();
 			}
 			catch (Exception e) {
 				throw new ServletException(e);
 			}
 
-			processor.init(this, moduleConfig);
+			requestProcessor.init(this, moduleConfig);
 
-			servletContext.setAttribute(key, processor);
+			servletContext.setAttribute(key, requestProcessor);
 		}
 
-		return processor;
+		return requestProcessor;
 	}
 
 	protected long getUserId(HttpServletRequest request) {
@@ -954,6 +983,21 @@ public class MainServlet extends ActionServlet {
 		ServletContextPool.put(contextPath, servletContext);
 	}
 
+	protected void initSocial(PluginPackage pluginPackage) throws Exception {
+		ClassLoader classLoader = PortalClassLoaderUtil.getClassLoader();
+
+		ServletContext servletContext = getServletContext();
+
+		String[] xmls = new String[] {
+			HttpUtil.URLtoString(
+				servletContext.getResource("/WEB-INF/liferay-social.xml")),
+			HttpUtil.URLtoString(
+				servletContext.getResource("/WEB-INF/liferay-social-ext.xml"))
+		};
+
+		SocialConfigurationUtil.read(classLoader, xmls);
+	}
+
 	protected void initSocialEquityLogScheduler() throws Exception {
 		SchedulerEntry socialEquityLogSchedulerEntry = new SchedulerEntryImpl();
 
@@ -1040,23 +1084,34 @@ public class MainServlet extends ActionServlet {
 			return false;
 		}
 
-		response.setContentType(ContentTypes.TEXT_HTML_UTF8);
-
-		Locale locale = LocaleUtil.getDefault();
-
-		String companyInactiveMessage = LanguageUtil.get(
-			locale,
+		processInactiveRequest(
+			request, response,
 			"this-instance-is-inactive-please-contact-the-administrator");
 
-		String html = ContentUtil.get(
-			"com/liferay/portal/dependencies/company_inactive.html");
+		return true;
+	}
 
-		html = StringUtil.replace(
-			html, "[$COMPANY_INACTIVE_MESSAGE$]", companyInactiveMessage);
+	protected boolean processGroupInactiveRequest(
+			HttpServletRequest request, HttpServletResponse response)
+		throws IOException, PortalException, SystemException {
 
-		ServletOutputStream servletOutputStream = response.getOutputStream();
+		long plid = ParamUtil.getLong(request, "p_l_id");
 
-		servletOutputStream.print(html);
+		if (plid <= 0) {
+			return false;
+		}
+
+		Layout layout = LayoutLocalServiceUtil.getLayout(plid);
+
+		Group group = layout.getGroup();
+
+		if (group.isActive()) {
+			return false;
+		}
+
+		processInactiveRequest(
+			request, response,
+			"this-site-is-inactive-please-contact-the-administrator");
 
 		return true;
 	}
@@ -1072,6 +1127,28 @@ public class MainServlet extends ActionServlet {
 	protected void processGlobalStartupEvents() throws Exception {
 		EventsProcessorUtil.process(
 			PropsKeys.GLOBAL_STARTUP_EVENTS, PropsValues.GLOBAL_STARTUP_EVENTS);
+	}
+
+	protected void processInactiveRequest(
+			HttpServletRequest request, HttpServletResponse response,
+			String messageKey)
+		throws IOException {
+
+		response.setContentType(ContentTypes.TEXT_HTML_UTF8);
+
+		Locale locale = LocaleUtil.getDefault();
+
+		String message = LanguageUtil.get(locale, messageKey);
+
+		String html = ContentUtil.get(
+			"com/liferay/portal/dependencies/inactive.html");
+
+		html = StringUtil.replace(
+			html, "[$MESSAGE$]", message);
+
+		ServletOutputStream servletOutputStream = response.getOutputStream();
+
+		servletOutputStream.print(html);
 	}
 
 	protected boolean processMaintenanceRequest(
@@ -1208,26 +1285,13 @@ public class MainServlet extends ActionServlet {
 			return false;
 		}
 
-		response.setContentType(ContentTypes.TEXT_HTML_UTF8);
+		String messageKey = ShutdownUtil.getMessage();
 
-		String shutdownMessage = ShutdownUtil.getMessage();
-
-		if (Validator.isNull(shutdownMessage)) {
-			Locale locale = LocaleUtil.getDefault();
-
-			shutdownMessage = LanguageUtil.get(
-				locale, "the-system-is-shutdown-please-try-again-later");
+		if (Validator.isNull(messageKey)) {
+			messageKey = "the-system-is-shutdown-please-try-again-later";
 		}
 
-		String html = ContentUtil.get(
-			"com/liferay/portal/dependencies/shutdown.html");
-
-		html = StringUtil.replace(
-			html, "[$SHUTDOWN_MESSAGE$]", shutdownMessage);
-
-		ServletOutputStream servletOutputStream = response.getOutputStream();
-
-		servletOutputStream.print(html);
+		processInactiveRequest(request, response, messageKey);
 
 		return true;
 	}

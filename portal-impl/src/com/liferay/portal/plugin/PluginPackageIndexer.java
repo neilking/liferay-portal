@@ -63,16 +63,15 @@ public class PluginPackageIndexer extends BaseIndexer {
 		return CLASS_NAMES;
 	}
 
+	public String getPortletId() {
+		return PORTLET_ID;
+	}
+
 	@Override
 	protected void doDelete(Object obj) throws Exception {
 		PluginPackage pluginPackage = (PluginPackage)obj;
 
-		Document document = new DocumentImpl();
-
-		document.addUID(PORTLET_ID, pluginPackage.getModuleId());
-
-		SearchEngineUtil.deleteDocument(
-			CompanyConstants.SYSTEM, document.get(Field.UID));
+		deleteDocument(CompanyConstants.SYSTEM, pluginPackage.getModuleId());
 	}
 
 	@Override
@@ -106,7 +105,8 @@ public class PluginPackageIndexer extends BaseIndexer {
 
 		document.addText(Field.CONTENT, sb.toString());
 
-		document.addKeyword(Field.PORTLET_ID, PORTLET_ID);
+		document.addKeyword(
+			Field.ENTRY_CLASS_NAME, PluginPackage.class.getName());
 
 		ModuleId moduleIdObj = ModuleId.getInstance(
 			pluginPackage.getModuleId());
@@ -114,6 +114,7 @@ public class PluginPackageIndexer extends BaseIndexer {
 		document.addKeyword(Field.GROUP_ID, moduleIdObj.getGroupId());
 
 		document.addDate(Field.MODIFIED_DATE, pluginPackage.getModifiedDate());
+		document.addKeyword(Field.PORTLET_ID, PORTLET_ID);
 
 		String[] statusAndInstalledVersion =
 			PluginPackageUtil.getStatusAndInstalledVersion(pluginPackage);
@@ -130,7 +131,9 @@ public class PluginPackageIndexer extends BaseIndexer {
 		List<License> licenses = pluginPackage.getLicenses();
 
 		document.addKeyword(
-			"license", StringUtil.split(ListUtil.toString(licenses, "name")));
+			"license",
+			StringUtil.split(
+				ListUtil.toString(licenses, License.NAME_ACCESSOR)));
 
 		document.addText("longDescription", longDescription);
 		document.addKeyword("moduleId", pluginPackage.getModuleId());

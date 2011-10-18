@@ -15,10 +15,19 @@
 package com.liferay.portal.jsonwebservice;
 
 import com.liferay.portal.kernel.jsonwebservice.JSONWebServiceAction;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.service.ServiceContext;
 
 import java.lang.reflect.Method;
 
+import java.util.List;
+import java.util.Locale;
+
+import jodd.bean.BeanUtil;
+
+import jodd.util.KeyValue;
 import jodd.util.ReflectUtil;
 
 /**
@@ -50,32 +59,24 @@ public class JSONWebServiceActionImpl implements JSONWebServiceAction {
 		}
 		catch (Exception e) {
 			exception = e;
+
+			_log.error(e, e);
 		}
 
 		return new JSONRPCResponse(jsonRpcRequest, result, exception);
 	}
 
-	private void _injectServiceContext(Object[] parameters) {
-		String[] parameterNames =
-			_jsonWebServiceActionConfig.getParameterNames();
+	private Object _createDefaultParameterValue(
+			String parameterName, Class<?> parameterType)
+		throws Exception {
 
-		Class<?>[] parameterTypes =
-			_jsonWebServiceActionConfig.getParameterTypes();
-
-		for (int i = 0; i < parameterNames.length; i++) {
-			if (parameters[i] != null) {
-				continue;
-			}
-
-			String parameterName = parameterNames[i];
-			Class<?> parameterType = parameterTypes[i];
-
-			if (parameterName.equals("serviceContext") &&
+		if (parameterName.equals("serviceContext") &&
 				parameterType.equals(ServiceContext.class)) {
 
-				parameters[i] = new ServiceContext();
-			}
+			return new ServiceContext();
 		}
+
+		return parameterType.newInstance();
 	}
 
 	private Object _invokeActionMethod() throws Exception {
@@ -83,14 +84,12 @@ public class JSONWebServiceActionImpl implements JSONWebServiceAction {
 
 		Class<?> actionClass = _jsonWebServiceActionConfig.getActionClass();
 
-		Object[] parameters = _prepareParameters();
-
-		_injectServiceContext(parameters);
+		Object[] parameters = _prepareParameters(actionClass);
 
 		return actionMethod.invoke(actionClass, parameters);
 	}
 
-	private Object[] _prepareParameters() {
+	private Object[] _prepareParameters(Class<?> actionClass) throws Exception {
 		String[] parameterNames =
 			_jsonWebServiceActionConfig.getParameterNames();
 
@@ -110,7 +109,44 @@ public class JSONWebServiceActionImpl implements JSONWebServiceAction {
 			if (value != null) {
 				Class<?> parameterType = parameterTypes[i];
 
-				parameterValue = ReflectUtil.castType(value, parameterType);
+				if (value.equals(Void.TYPE)) {
+					String parameterTypeName =
+						_jsonWebServiceActionParameters.getParameterTypeName(
+							parameterName);
+
+					if (parameterTypeName != null) {
+						ClassLoader classLoader = actionClass.getClassLoader();
+
+						parameterType = classLoader.loadClass(
+							parameterTypeName);
+					}
+
+					parameterValue = _createDefaultParameterValue(
+						parameterName, parameterType);
+				}
+				else if (parameterType.equals(Locale.class)) {
+					parameterValue = LocaleUtil.fromLanguageId(
+						value.toString());
+				}
+				else {
+					parameterValue = ReflectUtil.castType(value, parameterType);
+				}
+			}
+
+			if (parameterValue != null) {
+				List<KeyValue<String, Object>> innerParameters =
+					_jsonWebServiceActionParameters.getInnerParameters(
+						parameterName);
+
+				if (innerParameters != null) {
+					for (KeyValue<String, Object> innerParameter :
+							innerParameters) {
+
+						BeanUtil.setPropertySilent(
+							parameterValue, innerParameter.getKey(),
+							innerParameter.getValue());
+					}
+				}
 			}
 
 			parameters[i] = parameterValue;
@@ -118,6 +154,9 @@ public class JSONWebServiceActionImpl implements JSONWebServiceAction {
 
 		return parameters;
 	}
+
+	private static Log _log = LogFactoryUtil.getLog(
+		JSONWebServiceActionImpl.class);
 
 	private JSONWebServiceActionConfig _jsonWebServiceActionConfig;
 	private JSONWebServiceActionParameters _jsonWebServiceActionParameters;

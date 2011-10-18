@@ -23,7 +23,8 @@ package com.liferay.portal.service;
  * @see       LayoutRevisionService
  * @generated
  */
-public class LayoutRevisionServiceWrapper implements LayoutRevisionService {
+public class LayoutRevisionServiceWrapper implements LayoutRevisionService,
+	ServiceWrapper<LayoutRevisionService> {
 	public LayoutRevisionServiceWrapper(
 		LayoutRevisionService layoutRevisionService) {
 		_layoutRevisionService = layoutRevisionService;
@@ -48,20 +49,26 @@ public class LayoutRevisionServiceWrapper implements LayoutRevisionService {
 			wapThemeId, wapColorSchemeId, css, serviceContext);
 	}
 
-	public void deleteLayoutRevisions(long layoutSetBranchId,
-		long layoutBranchId, long plid)
-		throws com.liferay.portal.kernel.exception.PortalException,
-			com.liferay.portal.kernel.exception.SystemException {
-		_layoutRevisionService.deleteLayoutRevisions(layoutSetBranchId,
-			layoutBranchId, plid);
-	}
-
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public LayoutRevisionService getWrappedLayoutRevisionService() {
 		return _layoutRevisionService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedLayoutRevisionService(
 		LayoutRevisionService layoutRevisionService) {
+		_layoutRevisionService = layoutRevisionService;
+	}
+
+	public LayoutRevisionService getWrappedService() {
+		return _layoutRevisionService;
+	}
+
+	public void setWrappedService(LayoutRevisionService layoutRevisionService) {
 		_layoutRevisionService = layoutRevisionService;
 	}
 

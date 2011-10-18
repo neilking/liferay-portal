@@ -63,8 +63,33 @@ import javax.servlet.ServletContext;
 /**
  * @author Brian Wing Shun Chan
  * @author Jorge Ferrer
+ * @author Raymond Augé
  */
 public class ThemeLocalServiceImpl extends ThemeLocalServiceBaseImpl {
+
+	public ColorScheme fetchColorScheme(
+		long companyId, String themeId, String colorSchemeId) {
+
+		colorSchemeId = GetterUtil.getString(colorSchemeId);
+
+		Theme theme = fetchTheme(companyId, themeId);
+
+		if (theme == null) {
+			return null;
+		}
+
+		Map<String, ColorScheme> colorSchemesMap = theme.getColorSchemesMap();
+
+		return colorSchemesMap.get(colorSchemeId);
+	}
+
+	public Theme fetchTheme(long companyId, String themeId) {
+		themeId = GetterUtil.getString(themeId);
+
+		Map<String, Theme> themes = _getThemes(companyId);
+
+		return themes.get(themeId);
+	}
 
 	public ColorScheme getColorScheme(
 			long companyId, String themeId, String colorSchemeId,
@@ -115,7 +140,9 @@ public class ThemeLocalServiceImpl extends ThemeLocalServiceBaseImpl {
 
 		themeId = GetterUtil.getString(themeId);
 
-		Theme theme = _getThemes(companyId).get(themeId);
+		Map<String, Theme> themes = _getThemes(companyId);
+
+		Theme theme = themes.get(themeId);
 
 		if (theme == null) {
 			if (_log.isWarnEnabled()) {
@@ -161,9 +188,11 @@ public class ThemeLocalServiceImpl extends ThemeLocalServiceBaseImpl {
 	}
 
 	public List<Theme> getThemes(long companyId) {
-		List<Theme> themes = ListUtil.fromMapValues(_getThemes(companyId));
+		Map<String, Theme> themes = _getThemes(companyId);
 
-		return ListUtil.sort(themes);
+		List<Theme> themesList = ListUtil.fromMapValues(themes);
+
+		return ListUtil.sort(themesList);
 	}
 
 	public List<Theme> getThemes(
@@ -225,10 +254,10 @@ public class ThemeLocalServiceImpl extends ThemeLocalServiceBaseImpl {
 		List<String> themeIdsList = new ArrayList<String>();
 
 		try {
-			for (int i = 0; i < xmls.length; i++) {
+			for (String xml : xmls) {
 				Set<String> themeIds = _readThemes(
 					servletContextName, servletContext, themesPath,
-					loadFromServletContext, xmls[i], pluginPackage);
+					loadFromServletContext, xml, pluginPackage);
 
 				for (String themeId : themeIds) {
 					if (!themeIdsList.contains(themeId)) {
@@ -539,8 +568,6 @@ public class ThemeLocalServiceImpl extends ThemeLocalServiceBaseImpl {
 
 			if (theme == null) {
 				theme = new ThemeImpl(themeId);
-
-				_themes.put(themeId, theme);
 			}
 
 			theme.setTimestamp(timestamp);
@@ -635,8 +662,10 @@ public class ThemeLocalServiceImpl extends ThemeLocalServiceBaseImpl {
 						settingElement.attributeValue("options"));
 					String type = settingElement.attributeValue("type");
 					String value = settingElement.attributeValue("value");
+					String script = settingElement.getTextTrim();
 
-					theme.addSetting(key, value, configurable, type, options);
+					theme.addSetting(
+						key, value, configurable, type, options, script);
 				}
 			}
 
@@ -686,6 +715,10 @@ public class ThemeLocalServiceImpl extends ThemeLocalServiceBaseImpl {
 			if (!theme.isWapTheme()) {
 				_setSpriteImages(servletContext, theme, imagesPath);
 			}
+
+			if (!_themes.containsKey(themeId)) {
+				_themes.put(themeId, theme);
+			}
 		}
 
 		return themeIds;
@@ -702,7 +735,7 @@ public class ThemeLocalServiceImpl extends ThemeLocalServiceBaseImpl {
 			return;
 		}
 
-		List<File> images = new ArrayList<File>(resourcePaths.size());
+		List<File> imageFiles = new ArrayList<File>(resourcePaths.size());
 
 		for (String curResourcePath : resourcePaths) {
 			if (curResourcePath.endsWith(StringPool.SLASH)) {
@@ -713,7 +746,9 @@ public class ThemeLocalServiceImpl extends ThemeLocalServiceBaseImpl {
 					servletContext, curResourcePath);
 
 				if (realPath != null) {
-					images.add(new File(realPath));
+					File imageFile = new File(realPath);
+
+					imageFiles.add(imageFile);
 				}
 				else {
 					if (ServerDetector.isTomcat()) {
@@ -736,8 +771,8 @@ public class ThemeLocalServiceImpl extends ThemeLocalServiceBaseImpl {
 			servletContext, theme.getImagesPath());
 
 		Properties spriteProperties = SpriteProcessorUtil.generate(
-			images, spriteFileName, spritePropertiesFileName,
-			spritePropertiesRootPath, 16, 16, 10240);
+			servletContext, imageFiles, spriteFileName,
+			spritePropertiesFileName, spritePropertiesRootPath, 16, 16, 10240);
 
 		if (spriteProperties == null) {
 			return;

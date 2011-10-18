@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.journal.service;
 
+import com.liferay.portal.service.ServiceWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link JournalArticleService}.
@@ -23,7 +25,8 @@ package com.liferay.portlet.journal.service;
  * @see       JournalArticleService
  * @generated
  */
-public class JournalArticleServiceWrapper implements JournalArticleService {
+public class JournalArticleServiceWrapper implements JournalArticleService,
+	ServiceWrapper<JournalArticleService> {
 	public JournalArticleServiceWrapper(
 		JournalArticleService journalArticleService) {
 		_journalArticleService = journalArticleService;
@@ -187,6 +190,13 @@ public class JournalArticleServiceWrapper implements JournalArticleService {
 			languageId, themeDisplay);
 	}
 
+	public java.util.List<com.liferay.portlet.journal.model.JournalArticle> getArticlesByLayoutUuid(
+		long groupId, java.lang.String layoutUuid)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _journalArticleService.getArticlesByLayoutUuid(groupId,
+			layoutUuid);
+	}
+
 	public com.liferay.portlet.journal.model.JournalArticle getLatestArticle(
 		long resourcePrimKey)
 		throws com.liferay.portal.kernel.exception.PortalException,
@@ -200,6 +210,14 @@ public class JournalArticleServiceWrapper implements JournalArticleService {
 			com.liferay.portal.kernel.exception.SystemException {
 		return _journalArticleService.getLatestArticle(groupId, articleId,
 			status);
+	}
+
+	public com.liferay.portlet.journal.model.JournalArticle getLatestArticle(
+		long groupId, java.lang.String className, long classPK)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return _journalArticleService.getLatestArticle(groupId, className,
+			classPK);
 	}
 
 	public void removeArticleLocale(long companyId, java.lang.String languageId)
@@ -384,12 +402,26 @@ public class JournalArticleServiceWrapper implements JournalArticleService {
 			version, content);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public JournalArticleService getWrappedJournalArticleService() {
 		return _journalArticleService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedJournalArticleService(
 		JournalArticleService journalArticleService) {
+		_journalArticleService = journalArticleService;
+	}
+
+	public JournalArticleService getWrappedService() {
+		return _journalArticleService;
+	}
+
+	public void setWrappedService(JournalArticleService journalArticleService) {
 		_journalArticleService = journalArticleService;
 	}
 

@@ -14,11 +14,15 @@
 
 package com.liferay.portlet.login.util;
 
+import com.liferay.portal.NoSuchLayoutException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.servlet.PortalSessionContext;
+import com.liferay.portal.kernel.messaging.DestinationNames;
+import com.liferay.portal.kernel.messaging.MessageBusUtil;
 import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MapUtil;
@@ -28,10 +32,13 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.liveusers.LiveUsers;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.CompanyConstants;
+import com.liferay.portal.model.Layout;
 import com.liferay.portal.model.User;
 import com.liferay.portal.model.UserTracker;
 import com.liferay.portal.security.auth.AuthException;
 import com.liferay.portal.security.auth.Authenticator;
+import com.liferay.portal.service.CompanyLocalServiceUtil;
+import com.liferay.portal.service.LayoutLocalServiceUtil;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.service.ServiceContextFactory;
 import com.liferay.portal.service.UserLocalServiceUtil;
@@ -170,14 +177,52 @@ public class LoginUtil {
 		return userId;
 	}
 
-	public static String getEmailFromAddress(PortletPreferences preferences) {
-		return preferences.getValue(
-			"emailFromAddress", PropsValues.LOGIN_EMAIL_FROM_ADDRESS);
+	public static String getCreateAccountHREF(
+		HttpServletRequest request, ThemeDisplay themeDisplay)
+			throws Exception {
+
+		if (Validator.isNull(PropsValues.COMPANY_SECURITY_STRANGERS_URL)) {
+			PortletURL createAccountURL = new PortletURLImpl(
+				request, PortletKeys.LOGIN, themeDisplay.getPlid(),
+				PortletRequest.RENDER_PHASE);
+
+			createAccountURL.setWindowState(WindowState.MAXIMIZED);
+			createAccountURL.setPortletMode(PortletMode.VIEW);
+
+			createAccountURL.setParameter("saveLastPath", "0");
+			createAccountURL.setParameter(
+				"struts_action", "/login/create_account");
+
+			return createAccountURL.toString();
+		}
+
+		try {
+			Layout layout = LayoutLocalServiceUtil.getFriendlyURLLayout(
+				themeDisplay.getScopeGroupId(), false,
+				PropsValues.COMPANY_SECURITY_STRANGERS_URL);
+
+			return PortalUtil.getLayoutURL(layout, themeDisplay);
+		}
+		catch (NoSuchLayoutException nsle) {
+		}
+
+		return StringPool.BLANK;
 	}
 
-	public static String getEmailFromName(PortletPreferences preferences) {
-		return preferences.getValue(
-			"emailFromName", PropsValues.LOGIN_EMAIL_FROM_NAME);
+	public static String getEmailFromAddress(
+			PortletPreferences preferences, long companyId)
+		throws SystemException {
+
+		return PortalUtil.getEmailFromAddress(
+			preferences, companyId, PropsValues.LOGIN_EMAIL_FROM_ADDRESS);
+	}
+
+	public static String getEmailFromName(
+			PortletPreferences preferences, long companyId)
+		throws SystemException {
+
+		return PortalUtil.getEmailFromName(
+			preferences, companyId, PropsValues.LOGIN_EMAIL_FROM_NAME);
 	}
 
 	public static String getLogin(
@@ -239,14 +284,24 @@ public class LoginUtil {
 				sessionUsers.values());
 
 			for (UserTracker userTracker : userTrackers) {
-				if (userId == userTracker.getUserId()) {
-					HttpSession userTrackerSession =  PortalSessionContext.get(
-						userTracker.getSessionId());
-
-					if (userTrackerSession != null) {
-						userTrackerSession.invalidate();
-					}
+				if (userId != userTracker.getUserId()) {
+					continue;
 				}
+
+				JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
+
+				jsonObject.put("command", "signOut");
+
+				long companyId = CompanyLocalServiceUtil.getCompanyIdByUserId(
+					userId);
+
+				jsonObject.put("companyId", companyId);
+
+				jsonObject.put("userId", userId);
+				jsonObject.put("sessionId", userTracker.getSessionId());
+
+				MessageBusUtil.sendMessage(
+					DestinationNames.LIVE_USERS, jsonObject.toString());
 			}
 		}
 
@@ -325,7 +380,8 @@ public class LoginUtil {
 		companyIdCookie.setPath(StringPool.SLASH);
 
 		Cookie idCookie = new Cookie(
-			CookieKeys.ID, UserLocalServiceUtil.encryptUserId(userIdString));
+			CookieKeys.ID,
+			Encryptor.encrypt(company.getKeyObj(), userIdString));
 
 		if (Validator.isNotNull(domain)) {
 			idCookie.setDomain(domain);

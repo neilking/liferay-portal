@@ -18,6 +18,7 @@ import com.liferay.portal.LayoutSetBranchNameException;
 import com.liferay.portal.NoSuchGroupException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.model.LayoutSetBranchConstants;
@@ -25,6 +26,7 @@ import com.liferay.portal.security.auth.PrincipalException;
 import com.liferay.portal.service.LayoutSetBranchServiceUtil;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.service.ServiceContextFactory;
+import com.liferay.portal.util.PortletKeys;
 import com.liferay.portlet.layoutsadmin.action.EditLayoutsAction;
 
 import javax.portlet.ActionRequest;
@@ -63,21 +65,26 @@ public class EditLayoutSetBranchAction extends EditLayoutsAction {
 				updateLayoutSetBranch(actionRequest);
 			}
 			else if (cmd.equals(Constants.DELETE)) {
-				deleteLayoutSetBranch(actionRequest);
+				deleteLayoutSetBranch(actionRequest, portletConfig);
 			}
 			else if (cmd.equals("merge_layout_set_branch")) {
 				mergeLayoutSetBranch(actionRequest);
+			}
+
+			if (SessionErrors.isEmpty(actionRequest)) {
+				SessionMessages.add(
+					actionRequest,
+					portletConfig.getPortletName() + ".doRefresh",
+					PortletKeys.STAGING_BAR);
 			}
 
 			sendRedirect(actionRequest, actionResponse);
 		}
 		catch (Exception e) {
 			if (e instanceof LayoutSetBranchNameException) {
-				LayoutSetBranchNameException lsbne =
-					(LayoutSetBranchNameException)e;
+				SessionErrors.add(actionRequest, e.getClass().getName(), e);
 
-				SessionErrors.add(
-					actionRequest, e.getClass().getName() + lsbne.getType());
+				sendRedirect(actionRequest, actionResponse);
 			}
 			else if (e instanceof PrincipalException ||
 					 e instanceof SystemException) {
@@ -129,13 +136,25 @@ public class EditLayoutSetBranchAction extends EditLayoutsAction {
 				renderRequest, "portlet.staging_bar.edit_layout_set_branch"));
 	}
 
-	protected void deleteLayoutSetBranch(ActionRequest actionRequest)
+	protected void deleteLayoutSetBranch(
+			ActionRequest actionRequest, PortletConfig portletConfig)
 		throws Exception {
 
 		long layoutSetBranchId = ParamUtil.getLong(
 			actionRequest, "layoutSetBranchId");
 
+		long currentLayoutBranchId = ParamUtil.getLong(
+			actionRequest, "currentLayoutBranchId");
+
+		if (layoutSetBranchId == currentLayoutBranchId) {
+			SessionMessages.add(
+				actionRequest,
+				portletConfig.getPortletName() + ".notAjaxable");
+		}
+
 		LayoutSetBranchServiceUtil.deleteLayoutSetBranch(layoutSetBranchId);
+
+		SessionMessages.add(actionRequest, "sitePageVariationDeleted");
 	}
 
 	protected void mergeLayoutSetBranch(ActionRequest actionRequest)
@@ -152,6 +171,8 @@ public class EditLayoutSetBranchAction extends EditLayoutsAction {
 
 		LayoutSetBranchServiceUtil.mergeLayoutSetBranch(
 			layoutSetBranchId, mergeLayoutSetBranchId, serviceContext);
+
+		SessionMessages.add(actionRequest, "sitePageVariationMerged");
 	}
 
 	protected void updateLayoutSetBranch(ActionRequest actionRequest)
@@ -176,10 +197,14 @@ public class EditLayoutSetBranchAction extends EditLayoutsAction {
 			LayoutSetBranchServiceUtil.addLayoutSetBranch(
 				groupId, privateLayout, name, description, false,
 				copyLayoutSetBranchId, serviceContext);
+
+			SessionMessages.add(actionRequest, "sitePageVariationAdded");
 		}
 		else {
 			LayoutSetBranchServiceUtil.updateLayoutSetBranch(
 				groupId, layoutSetBranchId, name, description, serviceContext);
+
+			SessionMessages.add(actionRequest, "sitePageVariationUpdated");
 		}
 	}
 

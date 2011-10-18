@@ -22,11 +22,13 @@ import com.liferay.portal.PortletIdException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.staging.StagingUtil;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ContentTypes;
+import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringPool;
@@ -40,7 +42,6 @@ import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.WebKeys;
 import com.liferay.portlet.PortletPreferencesFactoryUtil;
-import com.liferay.util.servlet.ServletResponseUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -246,6 +247,8 @@ public class ExportImportAction extends EditConfigurationAction {
 				request, response, fileName, new FileInputStream(file),
 				ContentTypes.APPLICATION_ZIP);
 
+			FileUtil.delete(file);
+
 			setForward(actionRequest, ActionConstants.COMMON_NULL);
 		}
 		catch (Exception e) {
@@ -259,12 +262,12 @@ public class ExportImportAction extends EditConfigurationAction {
 		throws Exception {
 
 		try {
-			UploadPortletRequest uploadRequest =
+			UploadPortletRequest uploadPortletRequest =
 				PortalUtil.getUploadPortletRequest(actionRequest);
 
-			long plid = ParamUtil.getLong(uploadRequest, "plid");
-			long groupId = ParamUtil.getLong(uploadRequest, "groupId");
-			File file = uploadRequest.getFile("importFileName");
+			long plid = ParamUtil.getLong(uploadPortletRequest, "plid");
+			long groupId = ParamUtil.getLong(uploadPortletRequest, "groupId");
+			File file = uploadPortletRequest.getFile("importFileName");
 
 			if (!file.exists()) {
 				throw new LARFileException("Import file does not exist");

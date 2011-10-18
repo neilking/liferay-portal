@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.social.service;
 
+import com.liferay.portal.service.ServiceWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link SocialEquitySettingLocalService}.
@@ -24,7 +26,8 @@ package com.liferay.portlet.social.service;
  * @generated
  */
 public class SocialEquitySettingLocalServiceWrapper
-	implements SocialEquitySettingLocalService {
+	implements SocialEquitySettingLocalService,
+		ServiceWrapper<SocialEquitySettingLocalService> {
 	public SocialEquitySettingLocalServiceWrapper(
 		SocialEquitySettingLocalService socialEquitySettingLocalService) {
 		_socialEquitySettingLocalService = socialEquitySettingLocalService;
@@ -250,6 +253,15 @@ public class SocialEquitySettingLocalServiceWrapper
 		_socialEquitySettingLocalService.setBeanIdentifier(beanIdentifier);
 	}
 
+	/**
+	* Returns all the settings for the social equity action.
+	*
+	* @param groupId the primary key of the group
+	* @param className the class name for the target asset
+	* @param actionId the ID of the action
+	* @return the settings for the social equity action
+	* @throws SystemException if a system exception occurred
+	*/
 	public java.util.List<com.liferay.portlet.social.model.SocialEquitySetting> getEquitySettings(
 		long groupId, java.lang.String className, java.lang.String actionId)
 		throws com.liferay.portal.kernel.exception.SystemException {
@@ -257,6 +269,15 @@ public class SocialEquitySettingLocalServiceWrapper
 			className, actionId);
 	}
 
+	/**
+	* Returns all the settings for the social equity action.
+	*
+	* @param groupId the primary key of the group
+	* @param classNameId the ID of the target asset's class
+	* @param actionId the ID of the action
+	* @return the settings for the social equity action
+	* @throws SystemException if a system exception occurred
+	*/
 	public java.util.List<com.liferay.portlet.social.model.SocialEquitySetting> getEquitySettings(
 		long groupId, long classNameId, java.lang.String actionId)
 		throws com.liferay.portal.kernel.exception.SystemException {
@@ -264,6 +285,24 @@ public class SocialEquitySettingLocalServiceWrapper
 			classNameId, actionId);
 	}
 
+	/**
+	* Updates settings for the model (asset type) in the group.
+	*
+	* <p>
+	* This method accepts a list of social equity action mappings. A
+	* <code>SocialEquityActionMapping</code> contains both participation and
+	* information settings for an action. The
+	* <code>SocialEquityActionMapping</code> class is used by the portal to
+	* store the default settings for social equity actions.
+	* </p>
+	*
+	* @param groupId the primary key of the group
+	* @param className the class name of the target asset
+	* @param equityActionMappings the equity action mappings containing the
+	settings to be stored
+	* @throws PortalException if the group could not be found
+	* @throws SystemException if a system exception occurred
+	*/
 	public void updateEquitySettings(long groupId, java.lang.String className,
 		java.util.List<com.liferay.portlet.social.model.SocialEquityActionMapping> equityActionMappings)
 		throws com.liferay.portal.kernel.exception.PortalException,
@@ -272,11 +311,26 @@ public class SocialEquitySettingLocalServiceWrapper
 			className, equityActionMappings);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public SocialEquitySettingLocalService getWrappedSocialEquitySettingLocalService() {
 		return _socialEquitySettingLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedSocialEquitySettingLocalService(
+		SocialEquitySettingLocalService socialEquitySettingLocalService) {
+		_socialEquitySettingLocalService = socialEquitySettingLocalService;
+	}
+
+	public SocialEquitySettingLocalService getWrappedService() {
+		return _socialEquitySettingLocalService;
+	}
+
+	public void setWrappedService(
 		SocialEquitySettingLocalService socialEquitySettingLocalService) {
 		_socialEquitySettingLocalService = socialEquitySettingLocalService;
 	}

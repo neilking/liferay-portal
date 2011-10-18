@@ -106,9 +106,11 @@ MBThread thread = messageDisplay.getThread();
 		function(messageId) {
 			var A = AUI();
 
-			Liferay.Service.MB.MBMessageFlag.addAnswerFlag(
+			Liferay.Service.MB.MBMessage.updateAnswer(
 				{
-					messageId: messageId
+					messageId: messageId,
+					answer: true,
+					cascade: false
 				}
 			);
 
@@ -157,9 +159,11 @@ MBThread thread = messageDisplay.getThread();
 		function(messageId) {
 			var A = AUI();
 
-			Liferay.Service.MB.MBMessageFlag.deleteAnswerFlag(
+			Liferay.Service.MB.MBMessage.updateAnswer(
 				{
-					messageId: messageId
+					messageId: messageId,
+					answer: false,
+					cascade: false
 				}
 			);
 
@@ -189,7 +193,7 @@ MBThread thread = messageDisplay.getThread();
 </aui:script>
 
 <%
-MBMessageFlagLocalServiceUtil.addReadFlags(themeDisplay.getUserId(), thread);
+MBThreadFlagLocalServiceUtil.addThreadFlag(themeDisplay.getUserId(), thread);
 
 message = messageDisplay.getMessage();
 
@@ -198,7 +202,7 @@ PortalUtil.setPageDescription(message.getSubject(), request);
 
 List<AssetTag> assetTags = AssetTagLocalServiceUtil.getTags(MBMessage.class.getName(), message.getMessageId());
 
-PortalUtil.setPageKeywords(ListUtil.toString(assetTags, "name"), request);
+PortalUtil.setPageKeywords(ListUtil.toString(assetTags, AssetTag.NAME_ACCESSOR), request);
 
 MBUtil.addPortletBreadcrumbEntries(message, request, renderResponse);
 %>

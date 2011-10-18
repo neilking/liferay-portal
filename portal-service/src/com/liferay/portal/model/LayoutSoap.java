@@ -57,7 +57,9 @@ public class LayoutSoap implements Serializable {
 		soapModel.setWapColorSchemeId(model.getWapColorSchemeId());
 		soapModel.setCss(model.getCss());
 		soapModel.setPriority(model.getPriority());
-		soapModel.setLayoutPrototypeId(model.getLayoutPrototypeId());
+		soapModel.setLayoutPrototypeUuid(model.getLayoutPrototypeUuid());
+		soapModel.setLayoutPrototypeLinkEnabled(model.getLayoutPrototypeLinkEnabled());
+		soapModel.setTemplateLayoutUuid(model.getTemplateLayoutUuid());
 
 		return soapModel;
 	}
@@ -330,12 +332,33 @@ public class LayoutSoap implements Serializable {
 		_priority = priority;
 	}
 
-	public long getLayoutPrototypeId() {
-		return _layoutPrototypeId;
+	public String getLayoutPrototypeUuid() {
+		return _layoutPrototypeUuid;
 	}
 
-	public void setLayoutPrototypeId(long layoutPrototypeId) {
-		_layoutPrototypeId = layoutPrototypeId;
+	public void setLayoutPrototypeUuid(String layoutPrototypeUuid) {
+		_layoutPrototypeUuid = layoutPrototypeUuid;
+	}
+
+	public boolean getLayoutPrototypeLinkEnabled() {
+		return _layoutPrototypeLinkEnabled;
+	}
+
+	public boolean isLayoutPrototypeLinkEnabled() {
+		return _layoutPrototypeLinkEnabled;
+	}
+
+	public void setLayoutPrototypeLinkEnabled(
+		boolean layoutPrototypeLinkEnabled) {
+		_layoutPrototypeLinkEnabled = layoutPrototypeLinkEnabled;
+	}
+
+	public String getTemplateLayoutUuid() {
+		return _templateLayoutUuid;
+	}
+
+	public void setTemplateLayoutUuid(String templateLayoutUuid) {
+		_templateLayoutUuid = templateLayoutUuid;
 	}
 
 	private String _uuid;
@@ -364,5 +387,7 @@ public class LayoutSoap implements Serializable {
 	private String _wapColorSchemeId;
 	private String _css;
 	private int _priority;
-	private long _layoutPrototypeId;
+	private String _layoutPrototypeUuid;
+	private boolean _layoutPrototypeLinkEnabled;
+	private String _templateLayoutUuid;
 }

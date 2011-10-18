@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
+import com.liferay.portal.kernel.upload.UploadException;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.CharPool;
@@ -51,7 +52,6 @@ import com.liferay.portal.util.PrefsPropsUtil;
 import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.util.WebKeys;
-import com.liferay.util.servlet.UploadException;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -253,8 +253,8 @@ public class InstallPluginAction extends PortletAction {
 	}
 
 	protected void localDeploy(ActionRequest actionRequest) throws Exception {
-		UploadPortletRequest uploadRequest = PortalUtil.getUploadPortletRequest(
-			actionRequest);
+		UploadPortletRequest uploadPortletRequest =
+			PortalUtil.getUploadPortletRequest(actionRequest);
 
 		String fileName = null;
 
@@ -266,7 +266,8 @@ public class InstallPluginAction extends PortletAction {
 				BaseDeployer.DEPLOY_TO_PREFIX + deploymentContext + ".war";
 		}
 		else {
-			fileName = GetterUtil.getString(uploadRequest.getFileName("file"));
+			fileName = GetterUtil.getString(uploadPortletRequest.getFileName(
+				"file"));
 
 			int pos = fileName.lastIndexOf(CharPool.PERIOD);
 
@@ -275,7 +276,7 @@ public class InstallPluginAction extends PortletAction {
 			}
 		}
 
-		File file = uploadRequest.getFile("file");
+		File file = uploadPortletRequest.getFile("file");
 
 		byte[] bytes = FileUtil.getBytes(file);
 
@@ -508,9 +509,8 @@ public class InstallPluginAction extends PortletAction {
 	protected void unignorePackages(ActionRequest actionRequest)
 		throws Exception {
 
-		String[] pluginPackagesUnignored = StringUtil.split(
-			ParamUtil.getString(actionRequest, "pluginPackagesUnignored"),
-			StringPool.NEW_LINE);
+		String[] pluginPackagesUnignored = StringUtil.splitLines(
+			ParamUtil.getString(actionRequest, "pluginPackagesUnignored"));
 
 		String[] pluginPackagesIgnored = PrefsPropsUtil.getStringArray(
 			PropsKeys.PLUGIN_NOTIFICATIONS_PACKAGES_IGNORED,

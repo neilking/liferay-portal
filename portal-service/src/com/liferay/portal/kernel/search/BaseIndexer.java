@@ -53,6 +53,8 @@ import com.liferay.portal.service.RegionServiceUtil;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portlet.asset.service.AssetCategoryLocalServiceUtil;
 import com.liferay.portlet.asset.service.AssetTagLocalServiceUtil;
+import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
+import com.liferay.portlet.dynamicdatamapping.util.DDMIndexerUtil;
 import com.liferay.portlet.expando.model.ExpandoBridge;
 import com.liferay.portlet.expando.model.ExpandoColumnConstants;
 import com.liferay.portlet.expando.util.ExpandoBridgeFactoryUtil;
@@ -78,6 +80,18 @@ public abstract class BaseIndexer implements Indexer {
 		PropsUtil.get(PropsKeys.INDEX_FILTER_SEARCH_LIMIT));
 
 	private static final boolean _FILTER_SEARCH = false;
+
+	public void delete(long companyId, String uid) throws SearchException {
+		try {
+			SearchEngineUtil.deleteDocument(companyId, uid);
+		}
+		catch (SearchException se) {
+			throw se;
+		}
+		catch (Exception e) {
+			throw new SearchException(e);
+		}
+	}
 
 	public void delete(Object obj) throws SearchException {
 		try {
@@ -145,6 +159,38 @@ public abstract class BaseIndexer implements Indexer {
 		}
 
 		return facetQuery;
+	}
+
+	public BooleanQuery getFullQuery(SearchContext searchContext)
+		throws SearchException {
+
+		try {
+			searchContext.setSearchEngineId(getSearchEngineId());
+
+			searchContext.setEntryClassNames(
+				new String[] {getClassName(searchContext)});
+
+			BooleanQuery contextQuery = BooleanQueryFactoryUtil.create(
+				searchContext);
+
+			addSearchAssetCategoryIds(contextQuery, searchContext);
+			addSearchAssetTagNames(contextQuery, searchContext);
+			addSearchEntryClassNames(contextQuery, searchContext);
+			addSearchGroupId(contextQuery, searchContext);
+
+			BooleanQuery fullQuery = createFullQuery(
+				contextQuery, searchContext);
+
+			fullQuery.setQueryConfig(searchContext.getQueryConfig());
+
+			return fullQuery;
+		}
+		catch (SearchException se) {
+			throw se;
+		}
+		catch (Exception e) {
+			throw new SearchException(e);
+		}
 	}
 
 	public IndexerPostProcessor[] getIndexerPostProcessors() {
@@ -278,21 +324,7 @@ public abstract class BaseIndexer implements Indexer {
 
 	public Hits search(SearchContext searchContext) throws SearchException {
 		try {
-			searchContext.setSearchEngineId(getSearchEngineId());
-
-			searchContext.setEntryClassNames(
-				new String[] {getClassName(searchContext)});
-
-			BooleanQuery contextQuery = BooleanQueryFactoryUtil.create(
-				searchContext);
-
-			addSearchAssetCategoryIds(contextQuery, searchContext);
-			addSearchAssetTagNames(contextQuery, searchContext);
-			addSearchEntryClassNames(contextQuery, searchContext);
-			addSearchGroupId(contextQuery, searchContext);
-
-			BooleanQuery fullQuery = createFullQuery(
-				contextQuery, searchContext);
+			BooleanQuery fullQuery = getFullQuery(searchContext);
 
 			fullQuery.setQueryConfig(searchContext.getQueryConfig());
 
@@ -374,6 +406,21 @@ public abstract class BaseIndexer implements Indexer {
 		searchContext.addFacet(multiValueFacet);
 	}
 
+	protected void addSearchDDMStruture(
+			BooleanQuery searchQuery, SearchContext searchContext,
+			DDMStructure ddmStructure)
+		throws Exception {
+
+		Set<String> fieldNames = ddmStructure.getFieldNames();
+
+		for (String fieldName : fieldNames) {
+			String name = DDMIndexerUtil.encodeName(
+				ddmStructure.getStructureId(), fieldName);
+
+			addSearchTerm(searchQuery, searchContext, name, false);
+		}
+	}
+
 	protected void addSearchEntryClassNames(
 			BooleanQuery contextQuery, SearchContext searchContext)
 		throws Exception {
@@ -410,10 +457,10 @@ public abstract class BaseIndexer implements Indexer {
 
 				if (Validator.isNotNull(keywords)) {
 					if (searchContext.isAndSearch()) {
-						searchQuery.addRequiredTerm(fieldName, keywords, true);
+						searchQuery.addRequiredTerm(fieldName, keywords);
 					}
 					else {
-						searchQuery.addTerm(fieldName, keywords, true);
+						searchQuery.addTerm(fieldName, keywords);
 					}
 				}
 			}
@@ -441,7 +488,7 @@ public abstract class BaseIndexer implements Indexer {
 			return;
 		}
 
-		searchQuery.addTerms(Field.KEYWORDS, keywords, true);
+		searchQuery.addTerms(Field.KEYWORDS, keywords);
 
 		addSearchExpando(searchQuery, searchContext, keywords);
 	}
@@ -553,6 +600,38 @@ public abstract class BaseIndexer implements Indexer {
 		return fullQuery;
 	}
 
+	protected void deleteDocument(long companyId, long field1)
+		throws Exception {
+
+		deleteDocument(companyId, String.valueOf(field1));
+	}
+
+	protected void deleteDocument(long companyId, long field1, String field2)
+		throws Exception {
+
+		deleteDocument(companyId, String.valueOf(field1), field2);
+	}
+
+	protected void deleteDocument(long companyId, String field1)
+		throws Exception {
+
+		Document document = new DocumentImpl();
+
+		document.addUID(getPortletId(), field1);
+
+		SearchEngineUtil.deleteDocument(companyId, document.get(Field.UID));
+	}
+
+	protected void deleteDocument(long companyId, String field1, String field2)
+		throws Exception {
+
+		Document document = new DocumentImpl();
+
+		document.addUID(getPortletId(), field1, field2);
+
+		SearchEngineUtil.deleteDocument(companyId, document.get(Field.UID));
+	}
+
 	protected abstract void doDelete(Object obj) throws Exception;
 
 	protected abstract Document doGetDocument(Object obj) throws Exception;
@@ -601,8 +680,9 @@ public abstract class BaseIndexer implements Indexer {
 				Indexer indexer = IndexerRegistryUtil.getIndexer(
 					entryClassName);
 
-				if (indexer.hasPermission(
-						permissionChecker, entryClassPK, ActionKeys.VIEW)) {
+				if ((indexer.isFilterSearch() && indexer.hasPermission(
+						permissionChecker, entryClassPK, ActionKeys.VIEW)) ||
+					!indexer.isFilterSearch()) {
 
 					docs.add(document);
 					scores.add(hits.score(i));
@@ -676,12 +756,12 @@ public abstract class BaseIndexer implements Indexer {
 			AssetCategoryLocalServiceUtil.getCategoryNames(
 				className, classPK);
 
-		document.addKeyword(Field.ASSET_CATEGORY_NAMES, assetCategoryNames);
+		document.addText(Field.ASSET_CATEGORY_NAMES, assetCategoryNames);
 
 		String[] assetTagNames = AssetTagLocalServiceUtil.getTagNames(
 			className, classPK);
 
-		document.addKeyword(Field.ASSET_TAG_NAMES, assetTagNames);
+		document.addText(Field.ASSET_TAG_NAMES, assetTagNames);
 
 		document.addKeyword(Field.ENTRY_CLASS_NAME, className);
 		document.addKeyword(Field.ENTRY_CLASS_PK, classPK);

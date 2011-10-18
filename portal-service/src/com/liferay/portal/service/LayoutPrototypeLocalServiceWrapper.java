@@ -24,7 +24,8 @@ package com.liferay.portal.service;
  * @generated
  */
 public class LayoutPrototypeLocalServiceWrapper
-	implements LayoutPrototypeLocalService {
+	implements LayoutPrototypeLocalService,
+		ServiceWrapper<LayoutPrototypeLocalService> {
 	public LayoutPrototypeLocalServiceWrapper(
 		LayoutPrototypeLocalService layoutPrototypeLocalService) {
 		_layoutPrototypeLocalService = layoutPrototypeLocalService;
@@ -260,6 +261,13 @@ public class LayoutPrototypeLocalServiceWrapper
 			companyId, nameMap, description, active);
 	}
 
+	public com.liferay.portal.model.LayoutPrototype getLayoutPrototypeByUuid(
+		java.lang.String uuid)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return _layoutPrototypeLocalService.getLayoutPrototypeByUuid(uuid);
+	}
+
 	public java.util.List<com.liferay.portal.model.LayoutPrototype> search(
 		long companyId, java.lang.Boolean active, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator obc)
@@ -283,11 +291,26 @@ public class LayoutPrototypeLocalServiceWrapper
 			nameMap, description, active);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public LayoutPrototypeLocalService getWrappedLayoutPrototypeLocalService() {
 		return _layoutPrototypeLocalService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedLayoutPrototypeLocalService(
+		LayoutPrototypeLocalService layoutPrototypeLocalService) {
+		_layoutPrototypeLocalService = layoutPrototypeLocalService;
+	}
+
+	public LayoutPrototypeLocalService getWrappedService() {
+		return _layoutPrototypeLocalService;
+	}
+
+	public void setWrappedService(
 		LayoutPrototypeLocalService layoutPrototypeLocalService) {
 		_layoutPrototypeLocalService = layoutPrototypeLocalService;
 	}

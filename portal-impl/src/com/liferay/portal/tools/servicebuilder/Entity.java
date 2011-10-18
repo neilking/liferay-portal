@@ -14,17 +14,23 @@
 
 package com.liferay.portal.tools.servicebuilder;
 
+import com.liferay.portal.kernel.util.Accessor;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.security.permission.ResourceActionsUtil;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Brian Wing Shun Chan
+ * @author Shuyang Zhou
  */
 public class Entity {
 
@@ -34,6 +40,15 @@ public class Entity {
 		"liferaySessionFactory";
 
 	public static final String DEFAULT_TX_MANAGER = "liferayTransactionManager";
+
+	public static final Accessor<Entity, String> NAME_ACCESSOR =
+		new Accessor<Entity, String>() {
+
+			public String get(Entity entity) {
+				return entity.getName();
+			}
+
+		};
 
 	public static EntityColumn getColumn(
 		String name, List<EntityColumn> columnList) {
@@ -62,22 +77,22 @@ public class Entity {
 
 	public Entity(String name) {
 		this(
-			null, null, null, name,  null,null, null, false, false, true, null,
-			null, null, null, null, true, false, null, null, null, null, null,
-			null, null, null, null);
+			null, null, null, name,  null,null, null, false, false, false, true,
+			null, null, null, null, null, true, false, null, null, null, null,
+			null, null, null, null, null);
 	}
 
 	public Entity(
 		String packagePath, String portletName, String portletShortName,
 		String name, String humanName, String table, String alias, boolean uuid,
-		boolean localService, boolean remoteService, String persistenceClass,
-		String finderClass, String dataSource, String sessionFactory,
-		String txManager, boolean cacheEnabled, boolean jsonEnabled,
-		List<EntityColumn> pkList, List<EntityColumn> regularColList,
-		List<EntityColumn> blobList, List<EntityColumn> collectionList,
-		List<EntityColumn> columnList, EntityOrder order,
-		List<EntityFinder> finderList, List<Entity> referenceList,
-		List<String> txRequiredList) {
+		boolean uuidAccessor, boolean localService, boolean remoteService,
+		String persistenceClass, String finderClass, String dataSource,
+		String sessionFactory, String txManager, boolean cacheEnabled,
+		boolean jsonEnabled, List<EntityColumn> pkList,
+		List<EntityColumn> regularColList, List<EntityColumn> blobList,
+		List<EntityColumn> collectionList, List<EntityColumn> columnList,
+		EntityOrder order, List<EntityFinder> finderList,
+		List<Entity> referenceList, List<String> txRequiredList) {
 
 		_packagePath = packagePath;
 		_portletName = portletName;
@@ -88,6 +103,7 @@ public class Entity {
 		_table = table;
 		_alias = alias;
 		_uuid = uuid;
+		_uuidAccessor = uuidAccessor;
 		_localService = localService;
 		_remoteService = remoteService;
 		_persistenceClass = persistenceClass;
@@ -107,6 +123,21 @@ public class Entity {
 		_finderList = finderList;
 		_referenceList = referenceList;
 		_txRequiredList = txRequiredList;
+
+		if (_finderList != null) {
+			Set<EntityColumn> finderColumns = new HashSet<EntityColumn>();
+
+			for (EntityFinder entityFinder : _finderList) {
+				finderColumns.addAll(entityFinder.getColumns());
+			}
+
+			_finderColumnsList = new ArrayList<EntityColumn>(finderColumns);
+
+			Collections.sort(_finderColumnsList);
+		}
+		else {
+			_finderColumnsList = Collections.emptyList();
+		}
 
 		if ((_blobList != null) && !_blobList.isEmpty()) {
 			for (EntityColumn col : _blobList) {
@@ -197,6 +228,10 @@ public class Entity {
 
 	public String getFinderClass() {
 		return _finderClass;
+	}
+
+	public List<EntityColumn> getFinderColumnsList() {
+		return _finderColumnsList;
 	}
 
 	public List<EntityFinder> getFinderList() {
@@ -461,6 +496,10 @@ public class Entity {
 		return _uuid;
 	}
 
+	public boolean hasUuidAccessor() {
+		return _uuidAccessor;
+	}
+
 	public boolean isAttachedModel() {
 		if (hasColumn("classNameId") && hasColumn("classPK")) {
 			EntityColumn classNameIdCol = getColumn("classNameId");
@@ -598,6 +637,15 @@ public class Entity {
 		return true;
 	}
 
+	public boolean isPermissionedModel() {
+		if (hasColumn("resourceBlockId")) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
 	public boolean isPortalReference() {
 		return _portalReference;
 	}
@@ -654,6 +702,7 @@ public class Entity {
 	private List<EntityColumn> _columnList;
 	private String _dataSource;
 	private String _finderClass;
+	private List<EntityColumn> _finderColumnsList;
 	private List<EntityFinder> _finderList;
 	private String _humanName;
 	private boolean _jsonEnabled;
@@ -676,5 +725,6 @@ public class Entity {
 	private String _txManager;
 	private List<String> _txRequiredList;
 	private boolean _uuid;
+	private boolean _uuidAccessor;
 
 }

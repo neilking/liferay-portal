@@ -40,21 +40,41 @@ AUI().add(
 			var id = config.id || A.guid();
 
 			if (config.cache === false) {
-				uri = Liferay.Util.addParams(A.guid() + '=' + (+new Date), uri);
+				uri = Liferay.Util.addParams(A.guid() + '=' + A.Lang.now(), uri);
 			}
 
 			var dialog = Window._map[id];
+
+			var defaultDialogConfig = null;
 
 			if (!dialog) {
 				var dialogConfig = config.dialog || {};
 
 				var dialogIframeConfig = config.dialogIframe || {};
 
-				A.mix(dialogConfig, CONFIG_DEFAULTS_DIALOG);
+				var openingUtil = A.Object.getValue(openingWindow, 'Liferay.Util'.split('.'));
+
+				if (openingUtil) {
+					var openingWindowName = openingUtil.getWindowName();
+
+					var openingDialog = Window._map[openingWindowName];
+
+					if (openingDialog) {
+						defaultDialogConfig = {
+							draggable: openingDialog.get('draggable'),
+							stack: openingDialog.get('stack')
+						};
+					}
+				}
+
+				dialogConfig = A.merge(CONFIG_DEFAULTS_DIALOG, defaultDialogConfig, dialogConfig);
 
 				A.mix(
 					dialogIframeConfig,
 					{
+						bindLoadHandler: function() {
+							Liferay.on('popupReady', A.bind(this.fire, this, 'load'));
+						},
 						id: id,
 						iframeId: id,
 						uri: uri
@@ -80,18 +100,23 @@ AUI().add(
 					}
 				);
 
-				dialog.iframe.after(
-					'load',
+				Liferay.after(
+					'popupReady',
 					function(event) {
-						var dialogIframeNode = event.currentTarget.node;
+						if (event.windowName == id) {
+							var dialogIframeNode = event.currentTarget.node;
 
-						Util.afterIframeLoaded(event);
+							event.dialog = dialog;
+							event.details[0].dialog = dialog;
 
-						var dialogUtil = dialogIframeNode.get('contentWindow.Liferay.Util');
+							Util.afterIframeLoaded(event);
 
-						dialogUtil.Window._opener = openingWindow;
+							var dialogUtil = event.win.Liferay.Util;
 
-						dialogUtil.Window._name = id;
+							dialogUtil.Window._opener = openingWindow;
+
+							dialogUtil.Window._name = id;
+						}
 					}
 				);
 

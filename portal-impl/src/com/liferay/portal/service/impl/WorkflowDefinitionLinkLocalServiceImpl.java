@@ -17,9 +17,10 @@ package com.liferay.portal.service.impl;
 import com.liferay.portal.NoSuchWorkflowDefinitionLinkException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.spring.aop.Skip;
+import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ObjectValuePair;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -171,6 +172,7 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 			companyId, workflowDefinitionName, workflowDefinitionVersion);
 	}
 
+	@Skip
 	public boolean hasWorkflowDefinitionLink(
 			long companyId, long groupId, String className)
 		throws PortalException, SystemException {
@@ -178,6 +180,7 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 		return hasWorkflowDefinitionLink(companyId, groupId, className, 0);
 	}
 
+	@Skip
 	public boolean hasWorkflowDefinitionLink(
 			long companyId, long groupId, String className, long classPK)
 		throws PortalException, SystemException {
@@ -186,6 +189,7 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 			companyId, groupId, className, classPK, 0);
 	}
 
+	@Skip
 	public boolean hasWorkflowDefinitionLink(
 			long companyId, long groupId, String className, long classPK,
 			long typePK)
@@ -196,7 +200,7 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 		}
 
 		try {
-			getWorkflowDefinitionLink(
+			workflowDefinitionLinkLocalService.getWorkflowDefinitionLink(
 				companyId, groupId, className, classPK, typePK);
 
 			return true;
@@ -217,7 +221,7 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 		}
 		else {
 			String[] workflowDefinitionParts = StringUtil.split(
-				workflowDefinition, StringPool.AT);
+				workflowDefinition, CharPool.AT);
 
 			String workflowDefinitionName = workflowDefinitionParts[0];
 			int workflowDefinitionVersion = GetterUtil.getInteger(

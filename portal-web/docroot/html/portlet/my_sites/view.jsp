@@ -103,10 +103,11 @@ pageContext.setAttribute("portletURL", portletURL);
 	headerNames.add("name");
 	headerNames.add("members");
 
-	if (tabs1.equals("my-sites")) {
+	if (PropsValues.LIVE_USERS_ENABLED && tabs1.equals("my-sites")) {
 		headerNames.add("online-now");
 	}
 
+	headerNames.add("tags");
 	headerNames.add(StringPool.BLANK);
 
 	searchContainer.setHeaderNames(headerNames);
@@ -150,20 +151,20 @@ pageContext.setAttribute("portletURL", portletURL);
 		if (rowURL != null) {
 			sb.append("<a href=\"");
 			sb.append(rowURL.toString());
-			sb.append("\" target=\"_blank\"><b>");
+			sb.append("\" target=\"_blank\"><strong>");
 			sb.append(HtmlUtil.escape(group.getDescriptiveName()));
-			sb.append("</b></a>");
+			sb.append("</strong></a>");
 		}
 		else {
-			sb.append("<b>");
+			sb.append("<strong>");
 			sb.append(HtmlUtil.escape(group.getDescriptiveName()));
-			sb.append("</b>");
+			sb.append("</strong>");
 		}
 
 		if (!tabs1.equals("my-sites") && Validator.isNotNull(group.getDescription())) {
-			sb.append("<br /><i>");
+			sb.append("<br /><em>");
 			sb.append(group.getDescription());
-			sb.append("</i>");
+			sb.append("</em>");
 		}
 
 		row.addText(sb.toString());
@@ -180,11 +181,25 @@ pageContext.setAttribute("portletURL", portletURL);
 
 		// Online Now
 
-		if (tabs1.equals("my-sites")) {
+		if (tabs1.equals("my-sites") && PropsValues.LIVE_USERS_ENABLED) {
 			int onlineCount = LiveUsers.getGroupUsersCount(company.getCompanyId(), group.getGroupId());
 
 			row.addText(String.valueOf(onlineCount));
 		}
+	%>
+
+		<liferay-util:buffer var="assetTagsSummary">
+			<liferay-ui:asset-tags-summary
+				className="<%= Group.class.getName() %>"
+				classPK="<%= group.getGroupId() %>"
+			/>
+		</liferay-util:buffer>
+
+	<%
+
+		// Tags
+
+		row.addText(assetTagsSummary);
 
 		// Action
 

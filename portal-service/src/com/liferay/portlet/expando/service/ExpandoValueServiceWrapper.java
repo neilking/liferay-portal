@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.expando.service;
 
+import com.liferay.portal.service.ServiceWrapper;
+
 /**
  * <p>
  * This class is a wrapper for {@link ExpandoValueService}.
@@ -23,7 +25,8 @@ package com.liferay.portlet.expando.service;
  * @see       ExpandoValueService
  * @generated
  */
-public class ExpandoValueServiceWrapper implements ExpandoValueService {
+public class ExpandoValueServiceWrapper implements ExpandoValueService,
+	ServiceWrapper<ExpandoValueService> {
 	public ExpandoValueServiceWrapper(ExpandoValueService expandoValueService) {
 		_expandoValueService = expandoValueService;
 	}
@@ -46,6 +49,15 @@ public class ExpandoValueServiceWrapper implements ExpandoValueService {
 			columnName, classPK, data);
 	}
 
+	public void addValues(long companyId, java.lang.String className,
+		java.lang.String tableName, long classPK,
+		java.util.Map<java.lang.String, java.io.Serializable> attributeValues)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		_expandoValueService.addValues(companyId, className, tableName,
+			classPK, attributeValues);
+	}
+
 	public java.io.Serializable getData(long companyId,
 		java.lang.String className, java.lang.String tableName,
 		java.lang.String columnName, long classPK)
@@ -53,6 +65,15 @@ public class ExpandoValueServiceWrapper implements ExpandoValueService {
 			com.liferay.portal.kernel.exception.SystemException {
 		return _expandoValueService.getData(companyId, className, tableName,
 			columnName, classPK);
+	}
+
+	public java.util.Map<java.lang.String, java.io.Serializable> getData(
+		long companyId, java.lang.String className, java.lang.String tableName,
+		java.util.Collection<java.lang.String> columnNames, long classPK)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return _expandoValueService.getData(companyId, className, tableName,
+			columnNames, classPK);
 	}
 
 	public com.liferay.portal.kernel.json.JSONObject getJSONData(
@@ -64,12 +85,26 @@ public class ExpandoValueServiceWrapper implements ExpandoValueService {
 			tableName, columnName, classPK);
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #getWrappedService}
+	 */
 	public ExpandoValueService getWrappedExpandoValueService() {
 		return _expandoValueService;
 	}
 
+	/**
+	 * @deprecated Renamed to {@link #setWrappedService}
+	 */
 	public void setWrappedExpandoValueService(
 		ExpandoValueService expandoValueService) {
+		_expandoValueService = expandoValueService;
+	}
+
+	public ExpandoValueService getWrappedService() {
+		return _expandoValueService;
+	}
+
+	public void setWrappedService(ExpandoValueService expandoValueService) {
 		_expandoValueService = expandoValueService;
 	}
 

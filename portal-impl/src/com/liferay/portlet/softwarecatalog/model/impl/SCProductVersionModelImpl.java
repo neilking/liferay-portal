@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.CacheModel;
@@ -33,8 +34,6 @@ import com.liferay.portlet.softwarecatalog.model.SCProductVersionModel;
 import com.liferay.portlet.softwarecatalog.model.SCProductVersionSoap;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Proxy;
 
 import java.sql.Types;
 
@@ -91,6 +90,11 @@ public class SCProductVersionModelImpl extends BaseModelImpl<SCProductVersion>
 	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
 				"value.object.finder.cache.enabled.com.liferay.portlet.softwarecatalog.model.SCProductVersion"),
 			true);
+	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.column.bitmask.enabled.com.liferay.portlet.softwarecatalog.model.SCProductVersion"),
+			true);
+	public static long DIRECTDOWNLOADURL_COLUMN_BITMASK = 1L;
+	public static long PRODUCTENTRYID_COLUMN_BITMASK = 2L;
 
 	/**
 	 * Converts the soap model instance into a normal model instance.
@@ -134,18 +138,19 @@ public class SCProductVersionModelImpl extends BaseModelImpl<SCProductVersion>
 		return models;
 	}
 
-	public Class<?> getModelClass() {
-		return SCProductVersion.class;
-	}
-
-	public String getModelClassName() {
-		return SCProductVersion.class.getName();
-	}
-
 	public static final String MAPPING_TABLE_SCFRAMEWORKVERSI_SCPRODUCTVERS_NAME =
-		com.liferay.portlet.softwarecatalog.model.impl.SCFrameworkVersionModelImpl.MAPPING_TABLE_SCFRAMEWORKVERSI_SCPRODUCTVERS_NAME;
+		"SCFrameworkVersi_SCProductVers";
+	public static final Object[][] MAPPING_TABLE_SCFRAMEWORKVERSI_SCPRODUCTVERS_COLUMNS =
+		{
+			{ "frameworkVersionId", Types.BIGINT },
+			{ "productVersionId", Types.BIGINT }
+		};
+	public static final String MAPPING_TABLE_SCFRAMEWORKVERSI_SCPRODUCTVERS_SQL_CREATE =
+		"create table SCFrameworkVersi_SCProductVers (frameworkVersionId LONG not null,productVersionId LONG not null,primary key (frameworkVersionId, productVersionId))";
 	public static final boolean FINDER_CACHE_ENABLED_SCFRAMEWORKVERSI_SCPRODUCTVERS =
-		com.liferay.portlet.softwarecatalog.model.impl.SCFrameworkVersionModelImpl.FINDER_CACHE_ENABLED_SCFRAMEWORKVERSI_SCPRODUCTVERS;
+		GetterUtil.getBoolean(com.liferay.portal.util.PropsUtil.get(
+				"value.object.finder.cache.enabled.SCFrameworkVersi_SCProductVers"),
+			true);
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(com.liferay.portal.util.PropsUtil.get(
 				"lock.expiration.time.com.liferay.portlet.softwarecatalog.model.SCProductVersion"));
 
@@ -166,6 +171,14 @@ public class SCProductVersionModelImpl extends BaseModelImpl<SCProductVersion>
 
 	public void setPrimaryKeyObj(Serializable primaryKeyObj) {
 		setPrimaryKey(((Long)primaryKeyObj).longValue());
+	}
+
+	public Class<?> getModelClass() {
+		return SCProductVersion.class;
+	}
+
+	public String getModelClassName() {
+		return SCProductVersion.class.getName();
 	}
 
 	@JSON
@@ -241,7 +254,19 @@ public class SCProductVersionModelImpl extends BaseModelImpl<SCProductVersion>
 	}
 
 	public void setProductEntryId(long productEntryId) {
+		_columnBitmask |= PRODUCTENTRYID_COLUMN_BITMASK;
+
+		if (!_setOriginalProductEntryId) {
+			_setOriginalProductEntryId = true;
+
+			_originalProductEntryId = _productEntryId;
+		}
+
 		_productEntryId = productEntryId;
+	}
+
+	public long getOriginalProductEntryId() {
+		return _originalProductEntryId;
 	}
 
 	@JSON
@@ -297,6 +322,8 @@ public class SCProductVersionModelImpl extends BaseModelImpl<SCProductVersion>
 	}
 
 	public void setDirectDownloadURL(String directDownloadURL) {
+		_columnBitmask |= DIRECTDOWNLOADURL_COLUMN_BITMASK;
+
 		if (_originalDirectDownloadURL == null) {
 			_originalDirectDownloadURL = _directDownloadURL;
 		}
@@ -321,20 +348,19 @@ public class SCProductVersionModelImpl extends BaseModelImpl<SCProductVersion>
 		_repoStoreArtifact = repoStoreArtifact;
 	}
 
+	public long getColumnBitmask() {
+		return _columnBitmask;
+	}
+
 	@Override
 	public SCProductVersion toEscapedModel() {
-		if (isEscapedModel()) {
-			return (SCProductVersion)this;
+		if (_escapedModelProxy == null) {
+			_escapedModelProxy = (SCProductVersion)ProxyUtil.newProxyInstance(_classLoader,
+					_escapedModelProxyInterfaces,
+					new AutoEscapeBeanHandler(this));
 		}
-		else {
-			if (_escapedModelProxy == null) {
-				_escapedModelProxy = (SCProductVersion)Proxy.newProxyInstance(_classLoader,
-						_escapedModelProxyInterfaces,
-						new AutoEscapeBeanHandler(this));
-			}
 
-			return _escapedModelProxy;
-		}
+		return _escapedModelProxy;
 	}
 
 	@Override
@@ -423,7 +449,13 @@ public class SCProductVersionModelImpl extends BaseModelImpl<SCProductVersion>
 	public void resetOriginalValues() {
 		SCProductVersionModelImpl scProductVersionModelImpl = this;
 
+		scProductVersionModelImpl._originalProductEntryId = scProductVersionModelImpl._productEntryId;
+
+		scProductVersionModelImpl._setOriginalProductEntryId = false;
+
 		scProductVersionModelImpl._originalDirectDownloadURL = scProductVersionModelImpl._directDownloadURL;
+
+		scProductVersionModelImpl._columnBitmask = 0;
 	}
 
 	@Override
@@ -607,6 +639,8 @@ public class SCProductVersionModelImpl extends BaseModelImpl<SCProductVersion>
 	private Date _createDate;
 	private Date _modifiedDate;
 	private long _productEntryId;
+	private long _originalProductEntryId;
+	private boolean _setOriginalProductEntryId;
 	private String _version;
 	private String _changeLog;
 	private String _downloadPageURL;
@@ -614,5 +648,6 @@ public class SCProductVersionModelImpl extends BaseModelImpl<SCProductVersion>
 	private String _originalDirectDownloadURL;
 	private boolean _repoStoreArtifact;
 	private transient ExpandoBridge _expandoBridge;
+	private long _columnBitmask;
 	private SCProductVersion _escapedModelProxy;
 }

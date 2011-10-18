@@ -25,12 +25,12 @@ public class InvoiceOrderTest extends BaseTestCase {
 		selenium.open("/web/guest/home/");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isElementPresent("link=Shopping Test Page")) {
+				if (selenium.isVisible("link=Shopping Test Page")) {
 					break;
 				}
 			}
@@ -40,49 +40,32 @@ public class InvoiceOrderTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Shopping Test Page", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Shopping Test Page",
+			RuntimeVariables.replace("Shopping Test Page"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		selenium.clickAt("link=Orders", RuntimeVariables.replace(""));
+		selenium.clickAt("link=Orders", RuntimeVariables.replace("Orders"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
 		assertEquals(RuntimeVariables.replace("Joe Bloggs"),
 			selenium.getText("//tr[3]/td[5]"));
-		selenium.clickAt("link=Checkout", RuntimeVariables.replace(""));
+		assertEquals(RuntimeVariables.replace("Checkout"),
+			selenium.getText("//td[4]/a"));
+		selenium.clickAt("//td[4]/a", RuntimeVariables.replace("Checkout"));
 		selenium.waitForPageToLoad("30000");
-		selenium.saveScreenShotAndSource();
-		assertTrue(selenium.isTextPresent("Please take care of my order."));
-
-		for (int second = 0;; second++) {
-			if (second >= 60) {
-				fail("timeout");
-			}
-
-			try {
-				if (selenium.isElementPresent("//input[@value='Invoice']")) {
-					break;
-				}
-			}
-			catch (Exception e) {
-			}
-
-			Thread.sleep(1000);
-		}
-
-		selenium.saveScreenShotAndSource();
+		assertTrue(selenium.isTextPresent("Shopping Category Item Comments"));
 		selenium.clickAt("//input[@value='Invoice']",
-			RuntimeVariables.replace(""));
-		selenium.selectWindow("undefined");
-		selenium.saveScreenShotAndSource();
+			RuntimeVariables.replace("Invoice"));
+		selenium.waitForPopUp("", RuntimeVariables.replace("30000"));
+		selenium.selectWindow("name=undefined");
 
 		for (int second = 0;; second++) {
-			if (second >= 60) {
+			if (second >= 90) {
 				fail("timeout");
 			}
 
 			try {
-				if (selenium.isTextPresent("Invoice")) {
+				if (RuntimeVariables.replace("Invoice")
+										.equals(selenium.getText(
+								"//form[@id='_34_fm']/span/strong"))) {
 					break;
 				}
 			}
@@ -92,10 +75,9 @@ public class InvoiceOrderTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		selenium.saveScreenShotAndSource();
-		assertTrue(selenium.isTextPresent("Invoice"));
+		assertEquals(RuntimeVariables.replace("Invoice"),
+			selenium.getText("//form[@id='_34_fm']/span/strong"));
 		selenium.close();
 		selenium.selectWindow("null");
-		selenium.saveScreenShotAndSource();
 	}
 }
