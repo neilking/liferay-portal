@@ -29,6 +29,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.KeyValuePair;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.PrimitiveLongList;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -440,6 +441,9 @@ public class PortletDataContextImpl implements PortletDataContext {
 
 		List<Role> roles = RoleLocalServiceUtil.getRoles(_companyId);
 
+		PrimitiveLongList roleIds = new PrimitiveLongList(roles.size());
+		Map<Long, String> roleIdsToNames = new HashMap<Long, String>();
+
 		for (Role role : roles) {
 			int type = role.getType();
 
@@ -450,12 +454,9 @@ public class PortletDataContextImpl implements PortletDataContext {
 				 (group.isLayoutSetPrototype() || group.isSite()))) {
 
 				String name = role.getName();
-				String actionIds = getActionIds(
-					role, resourceName, String.valueOf(resourcePK));
 
-				KeyValuePair permission = new KeyValuePair(name, actionIds);
-
-				permissions.add(permission);
+				roleIds.add(role.getRoleId());
+				roleIdsToNames.put(role.getRoleId(), name);
 			}
 			else if ((type == RoleConstants.TYPE_PROVIDER) && role.isTeam()) {
 				Team team = TeamLocalServiceUtil.getTeam(role.getClassPK());
@@ -463,13 +464,54 @@ public class PortletDataContextImpl implements PortletDataContext {
 				if (team.getGroupId() == _groupId) {
 					String name =
 						PermissionExporter.ROLE_TEAM_PREFIX + team.getName();
-					String actionIds = getActionIds(
-						role, resourceName, String.valueOf(resourcePK));
 
-					KeyValuePair permission = new KeyValuePair(name, actionIds);
-
-					permissions.add(permission);
+					roleIds.add(role.getRoleId());
+					roleIdsToNames.put(role.getRoleId(), name);
 				}
+			}
+		}
+
+		List<String> actionIds = ResourceActionsUtil.getModelResourceActions(
+			resourceName);
+
+		if (PropsValues.PERMISSIONS_USER_CHECK_ALGORITHM == 5) {
+			for (Map.Entry<Long, String> entry : roleIdsToNames.entrySet()) {
+				long roleId = entry.getKey();
+				String name = entry.getValue();
+
+				String availableActionIds = getActionIds_5(
+					_companyId, roleId, resourceName,
+					String.valueOf(resourcePK), actionIds);
+
+				KeyValuePair permission = new KeyValuePair(
+					name, availableActionIds);
+
+				permissions.add(permission);
+			}
+
+		}
+		else if (PropsValues.PERMISSIONS_USER_CHECK_ALGORITHM == 6) {
+
+			Map<Long, Set<String>> roleIdsToActionIds = getActionIds_6(
+				_companyId, roleIds.getArray(), resourceName,
+				String.valueOf(resourcePK), actionIds);
+
+			for (Map.Entry<Long, String> entry : roleIdsToNames.entrySet()) {
+				long roleId = entry.getKey();
+				String name = entry.getValue();
+
+				Set<String> availableActionIds = roleIdsToActionIds.get(roleId);
+
+				if ((availableActionIds == null) ||
+					availableActionIds.isEmpty()) {
+
+					continue;
+				}
+
+				KeyValuePair permission = new KeyValuePair(
+					name, StringUtil.merge(availableActionIds));
+
+				permissions.add(permission);
 			}
 		}
 
@@ -1306,37 +1348,35 @@ public class PortletDataContextImpl implements PortletDataContext {
 		return serviceContext;
 	}
 
-	protected String getActionIds(
-			Role role, String className, String primKey)
-		throws PortalException, SystemException {
+	protected String getActionIds_5(
+			long companyId, long roleId, String className, String primKey,
+			List<String> actionIds)
+		throws SystemException {
 
-		List<String> allActionIds = ResourceActionsUtil.getModelResourceActions(
-			className);
+		List<String> availableActionIds = new ArrayList<String>(
+			actionIds.size());
 
-		List<String> actionIds = new ArrayList<String>(allActionIds.size());
+		for (String actionId : actionIds) {
+			if (PermissionLocalServiceUtil.hasRolePermission(
+					roleId, companyId, className,
+					ResourceConstants.SCOPE_INDIVIDUAL, primKey, actionId)) {
 
-		for (String actionId : allActionIds) {
-			if (PropsValues.PERMISSIONS_USER_CHECK_ALGORITHM == 5) {
-				if (PermissionLocalServiceUtil.hasRolePermission(
-						role.getRoleId(), role.getCompanyId(), className,
-						ResourceConstants.SCOPE_INDIVIDUAL, primKey,
-						actionId)) {
-
-					actionIds.add(actionId);
-				}
-			}
-			else if (PropsValues.PERMISSIONS_USER_CHECK_ALGORITHM == 6) {
-				if (ResourcePermissionLocalServiceUtil.hasResourcePermission(
-						role.getCompanyId(), className,
-						ResourceConstants.SCOPE_INDIVIDUAL, primKey,
-						role.getRoleId(), actionId)) {
-
-					actionIds.add(actionId);
-				}
+				availableActionIds.add(actionId);
 			}
 		}
 
-		return StringUtil.merge(actionIds);
+		return StringUtil.merge(availableActionIds);
+	}
+
+	protected Map<Long, Set<String>> getActionIds_6(
+			long companyId, long[] roleIds, String className, String primKey,
+			List<String> actionIds)
+		throws PortalException, SystemException {
+
+		return ResourcePermissionLocalServiceUtil.
+			getAvailableResourcePermissionActionIds(
+				companyId, className, ResourceConstants.SCOPE_INDIVIDUAL,
+				primKey, roleIds, actionIds);
 	}
 
 	protected long getClassPK(ClassedModel classedModel) {

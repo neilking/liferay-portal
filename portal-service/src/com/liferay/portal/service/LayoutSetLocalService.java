@@ -143,6 +143,10 @@ public interface LayoutSetLocalService extends PersistedModelLocalService {
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery)
 		throws com.liferay.portal.kernel.exception.SystemException;
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public com.liferay.portal.model.LayoutSet fetchLayoutSet(long layoutSetId)
+		throws com.liferay.portal.kernel.exception.SystemException;
+
 	/**
 	* Returns the layout set with the primary key.
 	*
@@ -265,6 +269,11 @@ public interface LayoutSetLocalService extends PersistedModelLocalService {
 
 	public void updateLogo(long groupId, boolean privateLayout, boolean logo,
 		java.io.InputStream is)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException;
+
+	public void updateLogo(long groupId, boolean privateLayout, boolean logo,
+		java.io.InputStream is, boolean cleanUpStream)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException;
 

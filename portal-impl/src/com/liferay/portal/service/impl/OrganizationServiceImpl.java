@@ -305,10 +305,7 @@ public class OrganizationServiceImpl extends OrganizationServiceBaseImpl {
 			organizationLocalService.getUserOrganizations(
 				permissionChecker.getUserId());
 
-		Long[][] leftAndRightOrganizationIds =
-			UsersAdminUtil.getLeftAndRightOrganizationIds(userOrganizations);
-
-		params.put("organizationsTree", leftAndRightOrganizationIds);
+		params.put("organizationsTree", userOrganizations);
 
 		List<Organization> manageableOrganizations =
 			organizationLocalService.search(

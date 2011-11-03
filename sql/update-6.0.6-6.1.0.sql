@@ -127,7 +127,8 @@ create table DDMStructure (
 	name STRING null,
 	description STRING null,
 	xsd TEXT null,
-	storageType VARCHAR(75) null
+	storageType VARCHAR(75) null,
+	type_ INTEGER
 );
 
 create table DDMStructureLink (
@@ -450,6 +451,10 @@ create table MDRRuleGroupInstance (
 	priority INTEGER
 );
 
+alter table Organization_ add treePath STRING null;
+alter table Organization_ drop column leftOrganizationId;
+alter table Organization_ drop column rightOrganizationId;
+
 alter table PollsVote add companyId LONG;
 alter table PollsVote add userName VARCHAR(75) null;
 alter table PollsVote add createDate DATE null;
@@ -555,7 +560,7 @@ create table SocialActivitySetting (
 	classNameId LONG,
 	activityType INTEGER,
 	name VARCHAR(75) null,
-	value VARCHAR(75) null
+	value VARCHAR(1024) null
 );
 
 alter table SocialEquityLog add extraData VARCHAR(255) null;

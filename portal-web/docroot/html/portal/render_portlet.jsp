@@ -778,6 +778,12 @@ if (portlet.isActive() && portlet.isReady() && access && supportsMimeType) {
 	}
 }
 
+// Make sure the Tiles context is reset for the next portlet
+
+if ((invokerPortlet != null) && (invokerPortlet.isStrutsPortlet() || invokerPortlet.isStrutsBridgePortlet())) {
+	request.removeAttribute(ComponentConstants.COMPONENT_CONTEXT);
+}
+
 if ((layout.isTypePanel() || layout.isTypeControlPanel()) && !portletDisplay.getId().equals(PortletKeys.CONTROL_PANEL_MENU)) {
 	PortalUtil.setPageTitle(portletDisplay.getTitle(), request);
 }
@@ -1057,8 +1063,9 @@ if (themeDisplay.isStatePopUp()) {
 				'visibleChange',
 				function(event) {
 					if (!event.newVal && event.src !== 'hideLink') {
-						var topWindow = Liferay.Util.getTop();
-						var topA = topWindow.AUI();
+						var refreshWindow = dialog._refreshWindow || Liferay.Util.getTop();
+
+						var topA = refreshWindow.AUI();
 
 						new topA.LoadingMask(
 							{
@@ -1066,7 +1073,7 @@ if (themeDisplay.isStatePopUp()) {
 							}
 						).show();
 
-						topWindow.location.href = '<%= doCloseRedirect %>';
+						refreshWindow.location.href = '<%= doCloseRedirect %>';
 					}
 				}
 			);

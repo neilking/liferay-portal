@@ -56,7 +56,6 @@ import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.util.comparator.OrganizationNameComparator;
 import com.liferay.portlet.expando.model.ExpandoBridge;
-import com.liferay.portlet.usersadmin.util.UsersAdminUtil;
 
 import java.io.Serializable;
 
@@ -211,13 +210,7 @@ public class OrganizationLocalServiceImpl
 			Indexer indexer = IndexerRegistryUtil.getIndexer(
 				Organization.class);
 
-			if (parentOrganizationId > 0) {
-				indexer.reindex(
-					new String[] {String.valueOf(organization.getCompanyId())});
-			}
-			else {
-				indexer.reindex(organization);
-			}
+			indexer.reindex(organization);
 		}
 
 		return organization;
@@ -274,7 +267,7 @@ public class OrganizationLocalServiceImpl
 
 		Group group = organization.getGroup();
 
-		LayoutSet publicLayoutSet =	layoutSetLocalService.getLayoutSet(
+		LayoutSet publicLayoutSet = layoutSetLocalService.getLayoutSet(
 			group.getGroupId(), false);
 
 		if (publicLayoutSet.isLogo()) {
@@ -421,9 +414,6 @@ public class OrganizationLocalServiceImpl
 		Indexer indexer = IndexerRegistryUtil.getIndexer(Organization.class);
 
 		indexer.delete(organization);
-
-		indexer.reindex(
-			new String[] {String.valueOf(organization.getCompanyId())});
 	}
 
 	/**
@@ -754,7 +744,7 @@ public class OrganizationLocalServiceImpl
 
 			return search(
 				user.getCompanyId(),
-				OrganizationConstants.ANY_PARENT_ORGANIZATION_ID, null,	null,
+				OrganizationConstants.ANY_PARENT_ORGANIZATION_ID, null, null,
 				null, null, organizationParams, start, end);
 		}
 		else {
@@ -927,15 +917,20 @@ public class OrganizationLocalServiceImpl
 			LinkedHashMap<String, Object> params =
 				new LinkedHashMap<String, Object>();
 
-			Long[][] leftAndRightOrganizationIds =
-				UsersAdminUtil.getLeftAndRightOrganizationIds(organizationId);
+			List<Organization> organizationsTree =
+				new ArrayList<Organization>();
+
+			Organization organization =
+				organizationPersistence.findByPrimaryKey(organizationId);
 
 			if (!includeSpecifiedOrganization) {
-				leftAndRightOrganizationIds[0][0] =
-					leftAndRightOrganizationIds[0][0].longValue() + 1;
+				organizationsTree.add(organization);
+			}
+			else {
+				organizationsTree.add(organization.getParentOrganization());
 			}
 
-			params.put("usersOrgsTree", leftAndRightOrganizationIds);
+			params.put("usersOrgsTree", organizationsTree);
 
 			if (userFinder.countByUser(userId, params) > 0) {
 				return true;
@@ -961,15 +956,23 @@ public class OrganizationLocalServiceImpl
 	 * </p>
 	 *
 	 * @param  companyId the primary key of the organization's company
-	 * @param  force whether to force the rebuild even if the tree is not stale
 	 * @throws SystemException if a system exception occurred
 	 * @see    com.liferay.portal.service.persistence.OrganizationPersistence#rebuildTree(
 	 *         long, boolean)
 	 */
-	public void rebuildTree(long companyId, boolean force)
-		throws SystemException {
+	public void rebuildTree(long companyId)
+		throws PortalException, SystemException {
 
-		organizationPersistence.rebuildTree(companyId, force);
+		List<Organization> organizations =
+			organizationPersistence.findByCompanyId(companyId);
+
+		for (Organization organization : organizations) {
+			String treePath = organization.buildTreePath();
+
+			organization.setTreePath(treePath);
+
+			organizationPersistence.update(organization, false);
+		}
 	}
 
 	public List<Organization> search(
@@ -1610,6 +1613,11 @@ public class OrganizationLocalServiceImpl
 		String oldName = organization.getName();
 
 		organization.setParentOrganizationId(parentOrganizationId);
+
+		String treePath = organization.buildTreePath();
+
+		organization.setTreePath(treePath);
+
 		organization.setName(name);
 		organization.setType(type);
 		organization.setRecursable(recursable);
@@ -1655,8 +1663,9 @@ public class OrganizationLocalServiceImpl
 		Indexer indexer = IndexerRegistryUtil.getIndexer(Organization.class);
 
 		if (oldParentOrganizationId != parentOrganizationId) {
-			indexer.reindex(
-				new String[] {String.valueOf(organization.getCompanyId())});
+			long[] organizationIds = getReindexOrganizationIds(organization);
+
+			indexer.reindex(organizationIds);
 		}
 		else {
 			indexer.reindex(organization);
@@ -1735,6 +1744,46 @@ public class OrganizationLocalServiceImpl
 		organizations.addAll(parentOrganizatons);
 
 		return organizations;
+	}
+
+	protected long[] getReindexOrganizationIds(Organization organization)
+		throws PortalException, SystemException {
+
+		List<Organization> organizationsTree = new ArrayList<Organization>();
+
+		organizationsTree.add(organization);
+
+		LinkedHashMap<String, Object> params =
+			new LinkedHashMap<String, Object>();
+
+		params.put("organizationsTree", organizationsTree);
+
+		List<Organization> organizations = search(
+			organization.getCompanyId(), params, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS);
+
+		long[] organizationIds = new long[organizations.size()];
+
+		for (int i = 0; i < organizations.size(); i++) {
+			Organization curOrganization = organizations.get(i);
+
+			String treePath = curOrganization.buildTreePath();
+
+			curOrganization.setTreePath(treePath.toString());
+
+			organizationPersistence.update(curOrganization, false);
+
+			organizationIds[i] = curOrganization.getOrganizationId();
+		}
+
+		if (!ArrayUtil.contains(
+				organizationIds, organization.getOrganizationId())) {
+
+			organizationIds = ArrayUtil.append(
+				organizationIds, organization.getOrganizationId());
+		}
+
+		return organizationIds;
 	}
 
 	protected boolean isParentOrganization(

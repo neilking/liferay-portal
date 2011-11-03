@@ -158,6 +158,7 @@ import com.liferay.portal.service.persistence.LayoutSetBranchPersistence;
 import com.liferay.portal.service.persistence.LayoutSetPersistence;
 import com.liferay.portal.service.persistence.LayoutSetPrototypePersistence;
 import com.liferay.portal.service.persistence.ListTypePersistence;
+import com.liferay.portal.service.persistence.LockFinder;
 import com.liferay.portal.service.persistence.LockPersistence;
 import com.liferay.portal.service.persistence.MembershipRequestPersistence;
 import com.liferay.portal.service.persistence.OrgGroupPermissionFinder;
@@ -399,6 +400,11 @@ public abstract class ResourcePermissionLocalServiceBaseImpl
 	public long dynamicQueryCount(DynamicQuery dynamicQuery)
 		throws SystemException {
 		return resourcePermissionPersistence.countWithDynamicQuery(dynamicQuery);
+	}
+
+	public ResourcePermission fetchResourcePermission(long resourcePermissionId)
+		throws SystemException {
+		return resourcePermissionPersistence.fetchByPrimaryKey(resourcePermissionId);
 	}
 
 	/**
@@ -1595,6 +1601,24 @@ public abstract class ResourcePermissionLocalServiceBaseImpl
 	 */
 	public void setLockPersistence(LockPersistence lockPersistence) {
 		this.lockPersistence = lockPersistence;
+	}
+
+	/**
+	 * Returns the lock finder.
+	 *
+	 * @return the lock finder
+	 */
+	public LockFinder getLockFinder() {
+		return lockFinder;
+	}
+
+	/**
+	 * Sets the lock finder.
+	 *
+	 * @param lockFinder the lock finder
+	 */
+	public void setLockFinder(LockFinder lockFinder) {
+		this.lockFinder = lockFinder;
 	}
 
 	/**
@@ -4136,6 +4160,8 @@ public abstract class ResourcePermissionLocalServiceBaseImpl
 	protected LockLocalService lockLocalService;
 	@BeanReference(type = LockPersistence.class)
 	protected LockPersistence lockPersistence;
+	@BeanReference(type = LockFinder.class)
+	protected LockFinder lockFinder;
 	@BeanReference(type = MembershipRequestLocalService.class)
 	protected MembershipRequestLocalService membershipRequestLocalService;
 	@BeanReference(type = MembershipRequestService.class)

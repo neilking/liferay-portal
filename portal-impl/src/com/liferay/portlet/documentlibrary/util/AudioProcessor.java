@@ -18,7 +18,6 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.MessageBusUtil;
-import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -30,11 +29,6 @@ import com.liferay.portal.util.PrefsPropsUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.documentlibrary.NoSuchFileEntryException;
 import com.liferay.portlet.documentlibrary.store.DLStoreUtil;
-
-import com.xuggle.mediatool.IMediaReader;
-import com.xuggle.mediatool.IMediaWriter;
-import com.xuggle.mediatool.ToolFactory;
-import com.xuggle.xuggler.ICodec;
 
 import java.io.File;
 import java.io.InputStream;
@@ -72,12 +66,10 @@ public class AudioProcessor extends DefaultPreviewableProcessor {
 		return _instance.doGetPreviewFileSize(fileVersion);
 	}
 
-	public static boolean hasAudio(FileEntry fileEntry, String version) {
+	public static boolean hasAudio(FileVersion fileVersion) {
 		boolean hasAudio = false;
 
 		try {
-			FileVersion fileVersion = fileEntry.getFileVersion(version);
-
 			hasAudio = _instance._hasAudio(fileVersion);
 
 			if (!hasAudio) {
@@ -89,21 +81,6 @@ public class AudioProcessor extends DefaultPreviewableProcessor {
 		}
 
 		return hasAudio;
-	}
-
-	public static boolean isSupportedAudio(
-		FileEntry fileEntry, String version) {
-
-		try {
-			FileVersion fileVersion = fileEntry.getFileVersion(version);
-
-			return _instance._isSupportedAudio(fileVersion);
-		}
-		catch (Exception e) {
-			_log.error(e, e);
-		}
-
-		return false;
 	}
 
 	public static boolean isSupportedAudio(String mimeType) {
@@ -184,20 +161,13 @@ public class AudioProcessor extends DefaultPreviewableProcessor {
 			FileVersion fileVersion, File srcFile, File destFile)
 		throws Exception {
 
-		IMediaReader iMediaReader = ToolFactory.makeReader(
-			srcFile.getCanonicalPath());
-
-		IMediaWriter iMediaWriter = ToolFactory.makeWriter(
-			destFile.getCanonicalPath(), iMediaReader);
-
-		iMediaWriter.addAudioStream(
-			0, 0, ICodec.ID.CODEC_ID_MP3, _CHANNELS, _SAMPLE_RATE);
-
-		iMediaReader.addListener(iMediaWriter);
-
 		try {
-			while (iMediaReader.readPacket() == null) {
-			}
+			LiferayAudioConverter liferayAudioConverter =
+				new LiferayAudioConverter(
+					srcFile.getCanonicalPath(), destFile.getCanonicalPath(),
+					_SAMPLE_RATE);
+
+			liferayAudioConverter.convert();
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -240,14 +210,16 @@ public class AudioProcessor extends DefaultPreviewableProcessor {
 	}
 
 	private boolean _hasAudio(FileVersion fileVersion) throws Exception {
+		if (!_isSupportedAudio(fileVersion)) {
+			return false;
+		}
+
 		boolean previewExists = DLStoreUtil.hasFile(
 			fileVersion.getCompanyId(), REPOSITORY_ID,
 			getPreviewFilePath(fileVersion));
 
-		if (PropsValues.DL_FILE_ENTRY_PREVIEW_ENABLED) {
-			if (previewExists) {
-				return true;
-			}
+		if (PropsValues.DL_FILE_ENTRY_PREVIEW_ENABLED && previewExists) {
+			return true;
 		}
 
 		return false;
@@ -293,8 +265,6 @@ public class AudioProcessor extends DefaultPreviewableProcessor {
 		MessageBusUtil.sendMessage(
 			DestinationNames.DOCUMENT_LIBRARY_AUDIO_PROCESSOR, fileVersion);
 	}
-
-	private static final int _CHANNELS = 2;
 
 	private static int _SAMPLE_RATE = 44100;
 

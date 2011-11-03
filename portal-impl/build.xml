@@ -217,6 +217,7 @@ public class Creole10Parser]]></replacevalue>
 			<arg value="lang.dir=${lang.dir}" />
 			<arg value="lang.file=${lang.file}" />
 			<arg value="lang.plugin=false" />
+			<arg value="lang.translate=true" />
 		</java>
 
 		<copy file="${lang.dir}/${lang.file}.properties" tofile="${lang.dir}/${lang.file}_en.properties" />
@@ -271,7 +272,7 @@ public class Creole10Parser]]></replacevalue>
 				<available file="${jdk.src.dir}/src/j2se/src/share/classes/com/sun/tools/doclets/internal/toolkit/util/SourceToHTMLConverter.java" />
 			</not>
 			<then>
-				<fail message="The JDK source code is either incompatible or extracted incorrectly." />
+				<fail>The JDK source code is either incompatible or extracted incorrectly.</fail>
 			</then>
 		</if>
 

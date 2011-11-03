@@ -31,6 +31,7 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
@@ -51,6 +52,7 @@ import com.liferay.portal.service.CountryServiceUtil;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.service.RegionServiceUtil;
 import com.liferay.portal.util.PortalUtil;
+import com.liferay.portlet.asset.model.AssetCategory;
 import com.liferay.portlet.asset.service.AssetCategoryLocalServiceUtil;
 import com.liferay.portlet.asset.service.AssetTagLocalServiceUtil;
 import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
@@ -78,8 +80,6 @@ public abstract class BaseIndexer implements Indexer {
 
 	public static final int INDEX_FILTER_SEARCH_LIMIT = GetterUtil.getInteger(
 		PropsUtil.get(PropsKeys.INDEX_FILTER_SEARCH_LIMIT));
-
-	private static final boolean _FILTER_SEARCH = false;
 
 	public void delete(long companyId, String uid) throws SearchException {
 		try {
@@ -243,6 +243,10 @@ public abstract class BaseIndexer implements Indexer {
 		return _FILTER_SEARCH;
 	}
 
+	public boolean isIndexerEnabled() {
+		return _INDEXER_ENABLED;
+	}
+
 	public boolean isStagingAware() {
 		return _stagingAware;
 	}
@@ -271,7 +275,7 @@ public abstract class BaseIndexer implements Indexer {
 
 	public void reindex(Object obj) throws SearchException {
 		try {
-			if (SearchEngineUtil.isIndexReadOnly()) {
+			if (SearchEngineUtil.isIndexReadOnly() || !isIndexerEnabled()) {
 				return;
 			}
 
@@ -287,7 +291,7 @@ public abstract class BaseIndexer implements Indexer {
 
 	public void reindex(String className, long classPK) throws SearchException {
 		try {
-			if (SearchEngineUtil.isIndexReadOnly()) {
+			if (SearchEngineUtil.isIndexReadOnly() || !isIndexerEnabled()) {
 				return;
 			}
 
@@ -308,7 +312,7 @@ public abstract class BaseIndexer implements Indexer {
 
 	public void reindex(String[] ids) throws SearchException {
 		try {
-			if (SearchEngineUtil.isIndexReadOnly()) {
+			if (SearchEngineUtil.isIndexReadOnly() || !isIndexerEnabled()) {
 				return;
 			}
 
@@ -747,14 +751,18 @@ public abstract class BaseIndexer implements Indexer {
 
 		document.addUID(portletId, classPK);
 
-		long[] assetCategoryIds = AssetCategoryLocalServiceUtil.getCategoryIds(
-			className, classPK);
+		List<AssetCategory> assetCategories =
+			AssetCategoryLocalServiceUtil.getCategories(className, classPK);
+
+		long[] assetCategoryIds = StringUtil.split(
+			ListUtil.toString(
+				assetCategories, AssetCategory.CATEGORY_ID_ACCESSOR),
+			0L);
 
 		document.addKeyword(Field.ASSET_CATEGORY_IDS, assetCategoryIds);
 
-		String[] assetCategoryNames =
-			AssetCategoryLocalServiceUtil.getCategoryNames(
-				className, classPK);
+		String[] assetCategoryNames = StringUtil.split(
+			ListUtil.toString(assetCategories, AssetCategory.NAME_ACCESSOR));
 
 		document.addText(Field.ASSET_CATEGORY_NAMES, assetCategoryNames);
 
@@ -911,6 +919,10 @@ public abstract class BaseIndexer implements Indexer {
 	protected void setStagingAware(boolean stagingAware) {
 		_stagingAware = stagingAware;
 	}
+
+	private static final boolean _FILTER_SEARCH = false;
+
+	private static final boolean _INDEXER_ENABLED = true;
 
 	private static Log _log = LogFactoryUtil.getLog(BaseIndexer.class);
 

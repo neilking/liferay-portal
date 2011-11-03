@@ -14,12 +14,14 @@
 
 package com.liferay.portal.tools.samplesqlbuilder;
 
+import com.liferay.portal.dao.db.MySQLDB;
 import com.liferay.portal.freemarker.FreeMarkerUtil;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBFactoryUtil;
 import com.liferay.portal.kernel.io.CharPipe;
 import com.liferay.portal.kernel.io.OutputStreamWriter;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
+import com.liferay.portal.kernel.io.unsync.UnsyncBufferedWriter;
 import com.liferay.portal.kernel.io.unsync.UnsyncTeeWriter;
 import com.liferay.portal.kernel.util.DateUtil_IW;
 import com.liferay.portal.kernel.util.FileUtil;
@@ -28,7 +30,6 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil_IW;
-import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Contact;
 import com.liferay.portal.model.Group;
@@ -38,18 +39,12 @@ import com.liferay.portal.model.Role;
 import com.liferay.portal.model.User;
 import com.liferay.portal.tools.ArgumentsUtil;
 import com.liferay.portal.util.InitUtil;
-import com.liferay.portlet.asset.model.AssetEntry;
 import com.liferay.portlet.blogs.model.BlogsEntry;
-import com.liferay.portlet.blogs.model.BlogsStatsUser;
 import com.liferay.portlet.documentlibrary.model.DLFileEntry;
 import com.liferay.portlet.documentlibrary.model.DLFolder;
 import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
 import com.liferay.portlet.messageboards.model.MBCategory;
-import com.liferay.portlet.messageboards.model.MBDiscussion;
 import com.liferay.portlet.messageboards.model.MBMessage;
-import com.liferay.portlet.messageboards.model.MBStatsUser;
-import com.liferay.portlet.messageboards.model.MBThread;
-import com.liferay.portlet.social.model.SocialActivity;
 import com.liferay.portlet.wiki.model.WikiNode;
 import com.liferay.portlet.wiki.model.WikiPage;
 import com.liferay.util.SimpleCounter;
@@ -85,6 +80,8 @@ public class SampleSQLBuilder {
 
 		String baseDir = arguments.get("sample.sql.base.dir");
 		String outputDir = arguments.get("sample.sql.output.dir");
+		boolean outputMerge = GetterUtil.getBoolean(
+			arguments.get("sample.sql.output.merge"));
 		String dbType = arguments.get("sample.sql.db.type");
 		int maxBlogsEntryCommentCount = GetterUtil.getInteger(
 			arguments.get("sample.sql.blogs.entry.comment.count"));
@@ -120,9 +117,9 @@ public class SampleSQLBuilder {
 			arguments.get("sample.sql.security.enabled"));
 
 		new SampleSQLBuilder(
-			arguments, baseDir, outputDir, dbType, maxBlogsEntryCommentCount,
-			maxBlogsEntryCount, maxDLFileEntryCount, dlFileEntrySize,
-			maxDLFolderCount, maxDLFolderDepth, maxGroupCount,
+			arguments, baseDir, outputDir, outputMerge, dbType,
+			maxBlogsEntryCommentCount, maxBlogsEntryCount, maxDLFileEntryCount,
+			dlFileEntrySize, maxDLFolderCount, maxDLFolderDepth, maxGroupCount,
 			maxMBCategoryCount, maxMBMessageCount, maxMBThreadCount,
 			maxUserCount, maxUserToGroupCount, maxWikiNodeCount,
 			maxWikiPageCommentCount, maxWikiPageCount, securityEnabled);
@@ -130,16 +127,17 @@ public class SampleSQLBuilder {
 
 	public SampleSQLBuilder(
 		Map<String, String> arguments, String baseDir, String outputDir,
-		String dbType, int maxBlogsEntryCommentCount, int maxBlogsEntryCount,
-		int maxDLFileEntryCount, int dlFileEntrySize, int maxDLFolderCount,
-		int maxDLFolderDepth, int maxGroupCount, int maxMBCategoryCount,
-		int maxMBMessageCount, int maxMBThreadCount, int maxUserCount,
-		int maxUserToGroupCount, int maxWikiNodeCount,
+		boolean outputMerge, String dbType, int maxBlogsEntryCommentCount,
+		int maxBlogsEntryCount, int maxDLFileEntryCount, int dlFileEntrySize,
+		int maxDLFolderCount, int maxDLFolderDepth, int maxGroupCount,
+		int maxMBCategoryCount, int maxMBMessageCount, int maxMBThreadCount,
+		int maxUserCount, int maxUserToGroupCount, int maxWikiNodeCount,
 		int maxWikiPageCommentCount, int maxWikiPageCount,
 		boolean securityEnabled) {
 
 		try {
 			_outputDir = outputDir;
+			_outputMerge = outputMerge;
 			_dbType = dbType;
 			_maxBlogsEntryCommentCount = maxBlogsEntryCommentCount;
 			_maxBlogsEntryCount = maxBlogsEntryCount;
@@ -172,6 +170,7 @@ public class SampleSQLBuilder {
 			_permissionCounter = new SimpleCounter();
 			_resourceCounter = new SimpleCounter();
 			_resourceCodeCounter = new SimpleCounter();
+			_resourcePermissionCounter = new SimpleCounter();
 			_socialActivityCounter = new SimpleCounter();
 
 			_userScreenNameIncrementer = new SimpleCounter();
@@ -179,9 +178,18 @@ public class SampleSQLBuilder {
 			_dataFactory = new DataFactory(
 				baseDir, _maxGroupCount, _maxUserToGroupCount, _counter,
 				_permissionCounter, _resourceCounter, _resourceCodeCounter,
-				_socialActivityCounter);
+				_resourcePermissionCounter, _socialActivityCounter);
 
 			_db = DBFactoryUtil.getDB(_dbType);
+
+			if (_db instanceof MySQLDB) {
+				_db = new SampleMySQLDB();
+			}
+
+			// Clean up previous output
+
+			FileUtil.delete(_outputDir + "/sample-" + _dbType + ".sql");
+			FileUtil.deltree(_outputDir + "/output");
 
 			// Generic
 
@@ -189,7 +197,7 @@ public class SampleSQLBuilder {
 
 			_tempDir.mkdirs();
 
-			final CharPipe charPipe = new CharPipe(1024 * 1024 * 10);
+			final CharPipe charPipe = new CharPipe(_WRITER_BUFFER_SIZE * 4);
 
 			generateSQL(charPipe);
 
@@ -235,30 +243,12 @@ public class SampleSQLBuilder {
 		}
 	}
 
-	public void insertAssetEntry(AssetEntry assetEntry) throws Exception {
-		Map<String, Object> context = getContext();
-
-		put(context, "assetEntry", assetEntry);
-
-		processTemplate(_tplAssetEntry, context);
-	}
-
 	public void insertBlogsEntry(BlogsEntry blogsEntry) throws Exception {
 		Map<String, Object> context = getContext();
 
 		put(context, "blogsEntry", blogsEntry);
 
 		processTemplate(_tplBlogsEntry, context);
-	}
-
-	public void insertBlogsStatsUser(BlogsStatsUser blogsStatsUser)
-		throws Exception {
-
-		Map<String, Object> context = getContext();
-
-		put(context, "blogsStatsUser", blogsStatsUser);
-
-		processTemplate(_tplBlogsStatsUser, context);
 	}
 
 	public void insertDLFileEntry(
@@ -319,14 +309,6 @@ public class SampleSQLBuilder {
 		processTemplate(_tplMBCategory, context);
 	}
 
-	public void insertMBDiscussion(MBDiscussion mbDiscussion) throws Exception {
-		Map<String, Object> context = getContext();
-
-		put(context, "mbDiscussion", mbDiscussion);
-
-		processTemplate(_tplMBDiscussion, context);
-	}
-
 	public void insertMBMessage(MBMessage mbMessage) throws Exception {
 		Map<String, Object> context = getContext();
 
@@ -335,20 +317,15 @@ public class SampleSQLBuilder {
 		processTemplate(_tplMBMessage, context);
 	}
 
-	public void insertMBStatsUser(MBStatsUser mbStatsUser) throws Exception {
+	public void insertResourcePermission(String name, long primKey)
+		throws Exception {
+
 		Map<String, Object> context = getContext();
 
-		put(context, "mbStatsUser", mbStatsUser);
+		put(context, "resourceName", name);
+		put(context, "resourcePrimkey", String.valueOf(primKey));
 
-		processTemplate(_tplMBStatsUser, context);
-	}
-
-	public void insertMBThread(MBThread mbThread) throws Exception {
-		Map<String, Object> context = getContext();
-
-		put(context, "mbThread", mbThread);
-
-		processTemplate(_tplMBThread, context);
+		processTemplate(_tplResourcePermission, context);
 	}
 
 	public void insertSecurity(String name, long primKey) throws Exception {
@@ -367,16 +344,6 @@ public class SampleSQLBuilder {
 		put(context, "resource", resource);
 
 		processTemplate(_tplSecurity, context);
-	}
-
-	public void insertSocialActivity(SocialActivity socialActivity)
-		throws Exception {
-
-		Map<String, Object> context = getContext();
-
-		put(context, "socialActivity", socialActivity);
-
-		processTemplate(_tplSocialActivity, context);
 	}
 
 	public void insertUser(
@@ -399,14 +366,6 @@ public class SampleSQLBuilder {
 		processTemplate(_tplUser, context);
 	}
 
-	public void insertWikiNode(WikiNode wikiNode) throws Exception {
-		Map<String, Object> context = getContext();
-
-		put(context, "wikiNode", wikiNode);
-
-		processTemplate(_tplWikiNode, context);
-	}
-
 	public void insertWikiPage(WikiNode wikiNode, WikiPage wikiPage)
 		throws Exception {
 
@@ -418,6 +377,33 @@ public class SampleSQLBuilder {
 		processTemplate(_tplWikiPage, context);
 	}
 
+	protected Writer createFileWriter(String fileName) throws IOException {
+		File file = new File(fileName);
+
+		return createFileWriter(file);
+	}
+
+	protected Writer createFileWriter(File file) throws IOException {
+		FileOutputStream fileOutputStream = new FileOutputStream(file);
+
+		Writer writer = new OutputStreamWriter(fileOutputStream);
+
+		return createUnsyncBufferedWriter(writer);
+	}
+
+	protected Writer createUnsyncBufferedWriter(Writer writer) {
+		return new UnsyncBufferedWriter(writer, _WRITER_BUFFER_SIZE) {
+
+			@Override
+			public void flush() {
+
+				// Disable FreeMarker from flushing
+
+			}
+
+		};
+	}
+
 	protected void compressInsertSQL(String insertSQL) throws IOException {
 		String tableName = insertSQL.substring(0, insertSQL.indexOf(' '));
 
@@ -427,7 +413,7 @@ public class SampleSQLBuilder {
 
 		StringBundler sb = _insertSQLs.get(tableName);
 
-		if (sb == null) {
+		if ((sb == null) || (sb.index() == 0)) {
 			sb = new StringBundler();
 
 			_insertSQLs.put(tableName, sb);
@@ -443,6 +429,8 @@ public class SampleSQLBuilder {
 		sb.append(values);
 
 		if (sb.index() >= _OPTIMIZE_BUFFER_SIZE) {
+			sb.append(";\n");
+
 			String sql = _db.buildSQL(sb.toString());
 
 			sb.setIndex(0);
@@ -474,7 +462,7 @@ public class SampleSQLBuilder {
 	}
 
 	protected void generateSQL(final CharPipe charPipe) {
-		final Writer writer = charPipe.getWriter();
+		final Writer writer = createUnsyncBufferedWriter(charPipe.getWriter());
 
 		Thread thread = new Thread() {
 
@@ -482,7 +470,7 @@ public class SampleSQLBuilder {
 			public void run() {
 				try {
 					_writerSampleSQL = new UnsyncTeeWriter(
-						writer, new FileWriter(_outputDir +  "/sample.sql"));
+						writer, createFileWriter(_outputDir +  "/sample.sql"));
 
 					createSample();
 
@@ -507,16 +495,16 @@ public class SampleSQLBuilder {
 
 				processTemplate(_tplSample, context);
 
-				_writerBlogsCSV.flush();
-				_writerCompanyCSV.flush();
-				_writerDocumentLibraryCSV.flush();
-				_writerMessageBoardsCSV.flush();
-				_writerUsersCSV.flush();
-				_writerWikiCSV.flush();
+				_writerBlogsCSV.close();
+				_writerCompanyCSV.close();
+				_writerDocumentLibraryCSV.close();
+				_writerMessageBoardsCSV.close();
+				_writerUsersCSV.close();
+				_writerWikiCSV.close();
 			}
 
 			protected Writer getWriter(String fileName) throws Exception {
-				return new FileWriter(new File(_outputDir + "/" + fileName));
+				return createFileWriter(new File(_outputDir + "/" + fileName));
 			}
 
 		};
@@ -550,7 +538,7 @@ public class SampleSQLBuilder {
 		put(context, "maxWikiNodeCount", _maxWikiNodeCount);
 		put(context, "maxWikiPageCommentCount", _maxWikiPageCommentCount);
 		put(context, "maxWikiPageCount", _maxWikiPageCount);
-		put(context, "portalUUIDUtil", PortalUUIDUtil.getPortalUUID());
+		put(context, "portalUUIDUtil", SequentialUUID.getSequentialUUID());
 		put(context, "sampleSQLBuilder", this);
 		put(context, "stringUtil", StringUtil_IW.getInstance());
 		put(context, "userScreenNameIncrementer", _userScreenNameIncrementer);
@@ -565,14 +553,19 @@ public class SampleSQLBuilder {
 	}
 
 	protected File getInsertSQLFile(String tableName) {
-		return new File(_tempDir, tableName);
+		return new File(_tempDir, tableName + ".sql");
 	}
 
 	protected void mergeSQL() throws IOException {
-		FileOutputStream fileOutputStream = new FileOutputStream(
-			_outputDir + "/sample-" + _dbType + ".sql");
+		File outputFile = new File(_outputDir + "/sample-" + _dbType + ".sql");
 
-		FileChannel fileChannel = fileOutputStream.getChannel();
+		FileOutputStream fileOutputStream = null;
+		FileChannel fileChannel = null;
+
+		if (_outputMerge) {
+			fileOutputStream = new FileOutputStream(outputFile);
+			fileChannel = fileOutputStream.getChannel();
+		}
 
 		Set<Map.Entry<String, StringBundler>> insertSQLs =
 			_insertSQLs.entrySet();
@@ -590,21 +583,32 @@ public class SampleSQLBuilder {
 
 			insertSQLWriter.close();
 
-			File insertSQLFile = getInsertSQLFile(tableName);
+			if (_outputMerge) {
+				File insertSQLFile = getInsertSQLFile(tableName);
 
-			FileInputStream insertSQLFileInputStream = new FileInputStream(
-				insertSQLFile);
+				FileInputStream insertSQLFileInputStream = new FileInputStream(
+					insertSQLFile);
 
-			FileChannel insertSQLFileChannel =
-				insertSQLFileInputStream.getChannel();
+				FileChannel insertSQLFileChannel =
+					insertSQLFileInputStream.getChannel();
 
-			insertSQLFileChannel.transferTo(
-				0, insertSQLFileChannel.size(), fileChannel);
+				insertSQLFileChannel.transferTo(
+					0, insertSQLFileChannel.size(), fileChannel);
 
-			insertSQLFileChannel.close();
+				insertSQLFileChannel.close();
+
+				insertSQLFile.delete();
+			}
 		}
 
-		Writer writer = new OutputStreamWriter(fileOutputStream);
+		Writer writer = null;
+
+		if (_outputMerge) {
+			writer = new OutputStreamWriter(fileOutputStream);
+		}
+		else {
+			writer = new FileWriter(getInsertSQLFile("others"));
+		}
 
 		for (String sql : _otherSQLs) {
 			sql = _db.buildSQL(sql);
@@ -614,6 +618,16 @@ public class SampleSQLBuilder {
 		}
 
 		writer.close();
+
+		File outputFolder = new File(_outputDir, "output");
+
+		if (!_outputMerge && !_tempDir.renameTo(outputFolder)) {
+
+			// This will only happen when temp and output folders are on
+			// different file systems
+
+			FileUtil.copyDirectory(_tempDir, outputFolder);
+		}
 	}
 
 	protected void processTemplate(String name, Map<String, Object> context)
@@ -634,7 +648,7 @@ public class SampleSQLBuilder {
 		if (writer == null) {
 			File file = getInsertSQLFile(tableName);
 
-			writer = new FileWriter(file);
+			writer = createFileWriter(file);
 
 			_insertSQLWriters.put(tableName, writer);
 		}
@@ -643,6 +657,8 @@ public class SampleSQLBuilder {
 	}
 
 	private static final int _OPTIMIZE_BUFFER_SIZE = 8192;
+
+	private static final int _WRITER_BUFFER_SIZE = 16 * 1024 * 1024;
 
 	private static final String _TPL_ROOT =
 		"com/liferay/portal/tools/samplesqlbuilder/dependencies/";
@@ -672,29 +688,26 @@ public class SampleSQLBuilder {
 	private int _maxWikiPageCount;
 	private List<String> _otherSQLs = new ArrayList<String>();
 	private String _outputDir;
+	private boolean _outputMerge;
 	private SimpleCounter _permissionCounter;
 	private SimpleCounter _resourceCodeCounter;
 	private SimpleCounter _resourceCounter;
+	private SimpleCounter _resourcePermissionCounter;
 	private boolean _securityEnabled;
 	private SimpleCounter _socialActivityCounter;
 	private File _tempDir;
-	private String _tplAssetEntry = _TPL_ROOT + "asset_entry.ftl";
 	private String _tplBlogsEntry = _TPL_ROOT + "blogs_entry.ftl";
-	private String _tplBlogsStatsUser = _TPL_ROOT + "blogs_stats_user.ftl";
 	private String _tplDLFileEntry = _TPL_ROOT + "dl_file_entry.ftl";
 	private String _tplDLFolder = _TPL_ROOT + "dl_folder.ftl";
 	private String _tplDLFolders = _TPL_ROOT + "dl_folders.ftl";
 	private String _tplGroup = _TPL_ROOT + "group.ftl";
 	private String _tplMBCategory = _TPL_ROOT + "mb_category.ftl";
-	private String _tplMBDiscussion = _TPL_ROOT + "mb_discussion.ftl";
-	private String _tplMBMessage = _TPL_ROOT + "mb_message.ftl";
-	private String _tplMBStatsUser = _TPL_ROOT + "mb_stats_user.ftl";
-	private String _tplMBThread = _TPL_ROOT + "mb_thread.ftl";
+	private String _tplMBMessage = _TPL_ROOT + "mb_message.ftl";;
+	private String _tplResourcePermission =
+		_TPL_ROOT + "resource_permission.ftl";
 	private String _tplSample = _TPL_ROOT + "sample.ftl";
 	private String _tplSecurity = _TPL_ROOT + "security.ftl";
-	private String _tplSocialActivity = _TPL_ROOT + "social_activity.ftl";
 	private String _tplUser = _TPL_ROOT + "user.ftl";
-	private String _tplWikiNode = _TPL_ROOT + "wiki_node.ftl";
 	private String _tplWikiPage = _TPL_ROOT + "wiki_page.ftl";
 	private SimpleCounter _userScreenNameIncrementer;
 	private Writer _writerBlogsCSV;

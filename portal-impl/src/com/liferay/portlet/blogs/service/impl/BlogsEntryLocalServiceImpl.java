@@ -531,7 +531,7 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 			long userId, long entryId, String title, String description,
 			String content, int displayDateMonth, int displayDateDay,
 			int displayDateYear, int displayDateHour, int displayDateMinute,
-			boolean allowPingbacks,	boolean allowTrackbacks,
+			boolean allowPingbacks, boolean allowTrackbacks,
 			String[] trackbacks, boolean smallImage, String smallImageURL,
 			String smallImageFileName, InputStream smallImageInputStream,
 			ServiceContext serviceContext)
@@ -661,6 +661,7 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 		BlogsEntry entry = blogsEntryPersistence.findByPrimaryKey(entryId);
 
 		int oldStatus = entry.getStatus();
+		long oldStatusByUserId = entry.getStatusByUserId();
 
 		entry.setModifiedDate(serviceContext.getModifiedDate(now));
 		entry.setStatus(status);
@@ -688,10 +689,18 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 
 				// Social
 
-				socialActivityLocalService.addUniqueActivity(
-					entry.getUserId(), entry.getGroupId(),
-					BlogsEntry.class.getName(), entryId,
-					BlogsActivityKeys.ADD_ENTRY, StringPool.BLANK, 0);
+				if (oldStatusByUserId == 0) {
+					socialActivityLocalService.addUniqueActivity(
+						entry.getUserId(), entry.getGroupId(),
+						BlogsEntry.class.getName(), entryId,
+						BlogsActivityKeys.ADD_ENTRY, StringPool.BLANK, 0);
+				}
+				else {
+					socialActivityLocalService.addActivity(
+						entry.getUserId(), entry.getGroupId(),
+						BlogsEntry.class.getName(), entryId,
+						BlogsActivityKeys.UPDATE_ENTRY, StringPool.BLANK, 0);
+				}
 
 				socialEquityLogLocalService.addEquityLogs(
 					userId, BlogsEntry.class.getName(), entryId,

@@ -60,7 +60,7 @@ public class IGUtil {
 		PortletURL portletURL = renderResponse.createRenderURL();
 
 		if (strutsAction.equals("/image_gallery_display/select_folder")) {
-			ThemeDisplay themeDisplay =	(ThemeDisplay)request.getAttribute(
+			ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
 			portletURL.setWindowState(LiferayWindowState.POP_UP);
@@ -68,8 +68,7 @@ public class IGUtil {
 			portletURL.setParameter("struts_action", strutsAction);
 
 			PortalUtil.addPortletBreadcrumbEntry(
-				request, themeDisplay.translate("images-home"),
-				portletURL.toString());
+				request, themeDisplay.translate("home"), portletURL.toString());
 		}
 		else {
 			portletURL.setParameter(

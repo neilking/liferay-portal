@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.PropertiesUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
@@ -692,7 +693,19 @@ public abstract class BaseDB implements DB {
 
 		variables.put("counter", new SimpleCounter());
 
-		template = VelocityUtil.evaluate(template, variables);
+		Thread currentThread = Thread.currentThread();
+
+		ClassLoader classLoader = currentThread.getContextClassLoader();
+
+		try {
+			currentThread.setContextClassLoader(
+				PortalClassLoaderUtil.getClassLoader());
+
+			template = VelocityUtil.evaluate(template, variables);
+		}
+		finally {
+			currentThread.setContextClassLoader(classLoader);
+		}
 
 		// Trim insert statements because it breaks MySQL Query Browser
 
@@ -902,7 +915,7 @@ public abstract class BaseDB implements DB {
 			return template;
 		}
 
-		StringBundler sb = new StringBundler();
+		StringBundler sb = null;
 
 		int endIndex = 0;
 
@@ -911,6 +924,10 @@ public abstract class BaseDB implements DB {
 		while (matcher.find()) {
 			int startIndex = matcher.start();
 
+			if (sb == null) {
+				sb = new StringBundler();
+			}
+
 			sb.append(template.substring(endIndex, startIndex));
 
 			endIndex = matcher.end();
@@ -918,6 +935,10 @@ public abstract class BaseDB implements DB {
 			String matched = template.substring(startIndex, endIndex);
 
 			sb.append(_templateMap.get(matched));
+		}
+
+		if (sb == null) {
+			return template;
 		}
 
 		if (template.length() > endIndex) {

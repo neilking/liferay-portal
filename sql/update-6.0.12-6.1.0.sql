@@ -124,7 +124,8 @@ create table DDMStructure (
 	name STRING null,
 	description STRING null,
 	xsd TEXT null,
-	storageType VARCHAR(75) null
+	storageType VARCHAR(75) null,
+	type_ INTEGER
 );
 
 create table DDMStructureLink (
@@ -147,7 +148,7 @@ create table DDMTemplate (
 	name STRING null,
 	description STRING null,
 	type_ VARCHAR(75) null,
-	mode VARCHAR(75) null,
+	mode_ VARCHAR(75) null,
 	language VARCHAR(75) null,
 	script TEXT null
 );
@@ -174,6 +175,7 @@ create table DLFileEntryMetadata (
 );
 
 create table DLFileEntryType (
+	uuid_ VARCHAR(75) null,
 	fileEntryTypeId LONG not null primary key,
 	groupId LONG,
 	companyId LONG,
@@ -215,6 +217,7 @@ COMMIT_TRANSACTION;
 update DLFileShortcut set repositoryId = groupId;
 
 alter table DLFileVersion add repositoryId LONG;
+alter table DLFileVersion add folderId LONG;
 alter table DLFileVersion add fileEntryTypeId LONG;
 
 COMMIT_TRANSACTION;
@@ -423,6 +426,15 @@ create table MDRRuleGroupInstance (
 	priority INTEGER
 );
 
+alter table Organization_ add treePath STRING null;
+alter table Organization_ drop column leftOrganizationId;
+alter table Organization_ drop column rightOrganizationId;
+
+alter table PollsVote add companyId LONG;
+alter table PollsVote add userName VARCHAR(75) null;
+alter table PollsVote add createDate DATE null;
+alter table PollsVote add modifiedDate DATE null;
+
 create table Repository (
 	repositoryId LONG not null primary key,
 	groupId LONG,
@@ -487,7 +499,7 @@ create table SocialActivityCounter (
 	classNameId LONG,
 	classPK LONG,
 	name VARCHAR(75) null,
-	type_ INTEGER,
+	ownerType INTEGER,
 	currentValue INTEGER,
 	totalValue INTEGER,
 	graceValue INTEGER,
@@ -514,7 +526,7 @@ create table SocialActivitySetting (
 	classNameId LONG,
 	activityType INTEGER,
 	name VARCHAR(75) null,
-	value VARCHAR(75) null
+	value VARCHAR(1024) null
 );
 
 update Role_ set name = 'Site Administrator' where name = 'Community Administrator';

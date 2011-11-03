@@ -158,6 +158,12 @@ public class MBThreadLocalServiceUtil {
 		return getService().dynamicQueryCount(dynamicQuery);
 	}
 
+	public static com.liferay.portlet.messageboards.model.MBThread fetchMBThread(
+		long threadId)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return getService().fetchMBThread(threadId);
+	}
+
 	/**
 	* Returns the message boards thread with the primary key.
 	*
@@ -279,6 +285,12 @@ public class MBThreadLocalServiceUtil {
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		getService().deleteThreads(groupId, categoryId);
+	}
+
+	public static com.liferay.portlet.messageboards.model.MBThread fetchThread(
+		long threadId)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return getService().fetchThread(threadId);
 	}
 
 	public static int getCategoryThreadsCount(long groupId, long categoryId,

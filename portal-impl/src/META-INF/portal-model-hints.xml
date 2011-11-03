@@ -440,8 +440,9 @@
 		<field name="organizationId" type="long" />
 		<field name="companyId" type="long" />
 		<field name="parentOrganizationId" type="long" />
-		<field name="leftOrganizationId" type="long" />
-		<field name="rightOrganizationId" type="long" />
+		<field name="treePath" type="String">
+			<hint name="max-length">4000</hint>
+		</field>
 		<field name="name" type="String">
 			<hint name="display-width">150</hint>
 			<hint name="max-length">100</hint>
@@ -1397,6 +1398,7 @@
 		<field name="userName" type="String" />
 		<field name="createDate" type="Date" />
 		<field name="repositoryId" type="long" />
+		<field name="folderId" type="long" />
 		<field name="fileEntryId" type="long" />
 		<field name="extension" type="String" />
 		<field name="mimeType" type="String" />
@@ -1558,6 +1560,7 @@
 			<hint-collection name="CLOB" />
 		</field>
 		<field name="storageType" type="String" />
+		<field name="type" type="int" />
 	</model>
 	<model name="com.liferay.portlet.dynamicdatamapping.model.DDMStructureLink">
 		<field name="structureLinkId" type="long" />
@@ -1646,7 +1649,6 @@
 		<field name="version" type="double" />
 		<field name="title" type="String" localized="true">
 			<hint name="max-length">4000</hint>
-			<validator name="required" />
 		</field>
 		<field name="urlTitle" type="String">
 			<hint name="max-length">150</hint>
@@ -2366,7 +2368,9 @@
 		<field name="classNameId" type="long" />
 		<field name="activityType" type="int" />
 		<field name="name" type="String" />
-		<field name="value" type="String" />
+		<field name="value" type="String">
+			<hint name="max-length">1024</hint>
+		</field>
 	</model>
 	<model name="com.liferay.portlet.social.model.SocialEquityAssetEntry">
 		<field name="equityAssetEntryId" type="long" />

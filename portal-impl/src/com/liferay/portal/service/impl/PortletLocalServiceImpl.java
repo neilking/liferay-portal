@@ -841,10 +841,15 @@ public class PortletLocalServiceImpl extends PortletLocalServiceBaseImpl {
 	}
 
 	private String _getPortletId(String securityPath) {
-		if (_portletIdsByStrutsPath.size() == 0) {
+		if (_portletIdsByStrutsPath.isEmpty()) {
 			for (Portlet portlet : _getPortletsPool().values()) {
-				_portletIdsByStrutsPath.put(
-					portlet.getStrutsPath(), portlet.getPortletId());
+				String strutsPath = portlet.getStrutsPath();
+
+				if (_portletIdsByStrutsPath.containsKey(strutsPath)) {
+					_log.warn("Duplicate struts path " + strutsPath);
+				}
+
+				_portletIdsByStrutsPath.put(strutsPath, portlet.getPortletId());
 			}
 		}
 
@@ -1097,6 +1102,17 @@ public class PortletLocalServiceImpl extends PortletLocalServiceBaseImpl {
 			GetterUtil.getString(
 				portletElement.elementText("struts-path"),
 				portletModel.getStrutsPath()));
+
+		String strutsPath = portletModel.getStrutsPath();
+
+		if (Validator.isNotNull(strutsPath)) {
+			if (_portletIdsByStrutsPath.containsKey(strutsPath)) {
+				_log.warn("Duplicate struts path " + strutsPath);
+			}
+
+			_portletIdsByStrutsPath.put(strutsPath, portletId);
+		}
+
 		portletModel.setParentStrutsPath(
 			GetterUtil.getString(
 				portletElement.elementText("parent-struts-path"),

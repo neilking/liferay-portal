@@ -23,6 +23,8 @@ public interface WebKeys {
 
 	public static final String ASSET_RENDERER_FACTORY = "ASSET_RENDERER_FACTORY";
 
+	public static final String ASSET_RENDERER_FACTORY_CLASS_TYPE_ID = "ASSET_RENDERER_FACTORY_CLASS_TYPE_ID";
+
 	public static final String AUI_SCRIPT_DATA = "LIFERAY_SHARED_AUI_SCRIPT_DATA";
 
 	public static final String AUTHENTICATION_TOKEN = "LIFERAY_SHARED_AUTHENTICATION_TOKEN";
@@ -136,6 +138,8 @@ public interface WebKeys {
 	public static final String USER_ID = "USER_ID";
 
 	public static final String USER_PASSWORD = "USER_PASSWORD";
+
+	public static final String USER_UUID = "USER_UUID";
 
 	public static final String VELOCITY_TAGLIB = "VELOCITY_TAGLIB";
 

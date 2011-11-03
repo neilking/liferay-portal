@@ -398,11 +398,11 @@ public class EditFileEntryAction extends PortletAction {
 		}
 		else if (e instanceof FileSizeException) {
 			long maxSizeMB = PrefsPropsUtil.getLong(
-				PropsKeys.DL_FILE_MAX_SIZE)	/ 1024 / 1024;
+				PropsKeys.DL_FILE_MAX_SIZE) / 1024 / 1024;
 
 			errorMessage = LanguageUtil.format(
 				themeDisplay.getLocale(),
-				"file-size-is-larger-than-x-megabytes",	maxSizeMB);
+				"file-size-is-larger-than-x-megabytes", maxSizeMB);
 		}
 		else {
 			errorMessage = LanguageUtil.get(
@@ -508,7 +508,7 @@ public class EditFileEntryAction extends PortletAction {
 		}
 		else {
 			long[] deleteFileEntryIds = StringUtil.split(
-				ParamUtil.getString(actionRequest, "fileEntryIds"), 0L);
+				ParamUtil.getString(actionRequest, "deleteEntryIds"), 0L);
 
 			for (int i = 0; i < deleteFileEntryIds.length; i++) {
 				DLAppServiceUtil.deleteFileEntry(deleteFileEntryIds[i]);

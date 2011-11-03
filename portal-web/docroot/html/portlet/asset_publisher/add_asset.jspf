@@ -63,11 +63,11 @@ Map<String, PortletURL> addPortletURLs = getAddPortletURLs(liferayPortletRequest
 
 			defaultAssetPublisherPortletId = typeSettingsProperties.getProperty(LayoutTypePortletConstants.DEFAULT_ASSET_PUBLISHER_PORTLET_ID);
 
-			if (defaultAssetPublisherPortletId != null) {
+			if (defaultAssetPublisher) {
 				addPortletURLString = HttpUtil.addParameter(addPortletURLString, "layoutUuid", layout.getUuid());
 			}
 
-			String taglibEditURL = "javascript:Liferay.Util.openWindow({dialog: {width: 960}, id: '" + liferayPortletResponse.getNamespace() + "', title: '" + ResourceActionsUtil.getModelResource(locale, className) + "', uri:'" + addPortletURLString + "'});";
+			String taglibEditURL = "javascript:Liferay.Util.openWindow({dialog: {width: 960}, id: '" + liferayPortletResponse.getNamespace() + "', title: '" + ResourceActionsUtil.getModelResource(locale, className) + "', uri:'" + HtmlUtil.escapeURL(addPortletURLString) + "'});";
 		%>
 
 			<liferay-ui:icon
@@ -93,6 +93,8 @@ public PortletURL getAddPortletURL(LiferayPortletRequest liferayPortletRequest, 
 		return null;
 	}
 
+	liferayPortletRequest.setAttribute(WebKeys.ASSET_RENDERER_FACTORY_CLASS_TYPE_ID, classTypeId);
+
 	PortletURL addPortletURL = assetRendererFactory.getURLAdd(liferayPortletRequest, liferayPortletResponse);
 
 	if (addPortletURL == null) {
@@ -109,7 +111,7 @@ public PortletURL getAddPortletURL(LiferayPortletRequest liferayPortletRequest, 
 
 	redirectURL.setParameter("struts_action", "/asset_publisher/add_asset_redirect");
 
-	addPortletURL.setParameter("redirect", HtmlUtil.escapeURL(redirectURL.toString()));
+	addPortletURL.setParameter("redirect", redirectURL.toString());
 
 	String referringPortletResource = ParamUtil.getString(liferayPortletRequest, "portletResource");
 

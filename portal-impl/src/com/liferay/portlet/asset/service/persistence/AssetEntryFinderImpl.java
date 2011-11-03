@@ -61,7 +61,7 @@ public class AssetEntryFinderImpl
 
 			SQLQuery q = buildAssetQuerySQL(entryQuery, true, session);
 
-			Iterator<Long> itr = q.list().iterator();
+			Iterator<Long> itr = q.iterate();
 
 			if (itr.hasNext()) {
 				Long count = itr.next();
@@ -315,9 +315,9 @@ public class AssetEntryFinderImpl
 
 		// Other conditions
 
-		int datesIndex = sb.index();
-
-		sb.append("[$DATES$]");
+		sb.append(
+			getDates(
+				entryQuery.getPublishDate(), entryQuery.getExpirationDate()));
 		sb.append(getGroupIds(entryQuery.getGroupIds()));
 		sb.append(getClassNameIds(entryQuery.getClassNameIds()));
 
@@ -351,11 +351,6 @@ public class AssetEntryFinderImpl
 				sb.append(entryQuery.getOrderByType2());
 			}
 		}
-
-		sb.setStringAt(
-			getDates(
-				entryQuery.getPublishDate(), entryQuery.getExpirationDate()),
-			datesIndex);
 
 		if (sb.index() > whereIndex) {
 			String where = sb.stringAt(whereIndex);

@@ -160,12 +160,6 @@
 /sql/update-*
 /sql/velocity.log*
 
-/support-maven/target
-
-/support-maven/archetypes/liferay-portlet-archetype/target
-
-/support-maven/plugins/liferay-maven-plugin/target
-
 /support-tomcat/*.iml
 /support-tomcat/*.ipr
 /support-tomcat/*.iws

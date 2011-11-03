@@ -160,6 +160,12 @@ public class OrganizationLocalServiceUtil {
 		return getService().dynamicQueryCount(dynamicQuery);
 	}
 
+	public static com.liferay.portal.model.Organization fetchOrganization(
+		long organizationId)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return getService().fetchOrganization(organizationId);
+	}
+
 	/**
 	* Returns the organization with the primary key.
 	*
@@ -772,14 +778,14 @@ public class OrganizationLocalServiceUtil {
 	* </p>
 	*
 	* @param companyId the primary key of the organization's company
-	* @param force whether to force the rebuild even if the tree is not stale
 	* @throws SystemException if a system exception occurred
 	* @see com.liferay.portal.service.persistence.OrganizationPersistence#rebuildTree(
 	long, boolean)
 	*/
-	public static void rebuildTree(long companyId, boolean force)
-		throws com.liferay.portal.kernel.exception.SystemException {
-		getService().rebuildTree(companyId, force);
+	public static void rebuildTree(long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		getService().rebuildTree(companyId);
 	}
 
 	public static java.util.List<com.liferay.portal.model.Organization> search(

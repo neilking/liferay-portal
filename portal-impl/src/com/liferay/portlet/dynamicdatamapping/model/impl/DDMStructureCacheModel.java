@@ -20,6 +20,8 @@ import com.liferay.portal.model.CacheModel;
 
 import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
 
+import java.io.Serializable;
+
 import java.util.Date;
 
 /**
@@ -29,10 +31,11 @@ import java.util.Date;
  * @see DDMStructure
  * @generated
  */
-public class DDMStructureCacheModel implements CacheModel<DDMStructure> {
+public class DDMStructureCacheModel implements CacheModel<DDMStructure>,
+	Serializable {
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(29);
+		StringBundler sb = new StringBundler(31);
 
 		sb.append("{uuid=");
 		sb.append(uuid);
@@ -62,6 +65,8 @@ public class DDMStructureCacheModel implements CacheModel<DDMStructure> {
 		sb.append(xsd);
 		sb.append(", storageType=");
 		sb.append(storageType);
+		sb.append(", type=");
+		sb.append(type);
 		sb.append("}");
 
 		return sb.toString();
@@ -140,6 +145,8 @@ public class DDMStructureCacheModel implements CacheModel<DDMStructure> {
 			ddmStructureImpl.setStorageType(storageType);
 		}
 
+		ddmStructureImpl.setType(type);
+
 		ddmStructureImpl.resetOriginalValues();
 
 		return ddmStructureImpl;
@@ -159,4 +166,5 @@ public class DDMStructureCacheModel implements CacheModel<DDMStructure> {
 	public String description;
 	public String xsd;
 	public String storageType;
+	public int type;
 }

@@ -22,6 +22,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author Sergio González
  */
@@ -33,7 +36,7 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 		updateFileVersions();
 	}
 
-	protected long getLatestFileVersionId(long folderId, String name)
+	protected List<Long> getFileVersionIds(long folderId, String name)
 		throws Exception {
 
 		Connection con = null;
@@ -52,11 +55,15 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 
 			rs = ps.executeQuery();
 
-			if (rs.next()) {
-				return rs.getLong("fileVersionId");
+			List<Long> fileVersionIds = new ArrayList<Long>();
+
+			while (rs.next()) {
+				long fileVersionId = rs.getLong("fileVersionId");
+
+				fileVersionIds.add(fileVersionId);
 			}
 
-			return 0;
+			return fileVersionIds;
 		}
 		finally {
 			DataAccess.cleanUp(con, ps, rs);
@@ -92,15 +99,21 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 						"' where uuid_ = '" + uuid_ + "' and groupId = " +
 							groupId);
 
-				long fileVersionId = getLatestFileVersionId(folderId, name);
+				long latestFileVersionId = 0;
+
+				List<Long> fileVersionIds = getFileVersionIds(folderId, name);
+
+				if (!fileVersionIds.isEmpty()) {
+					latestFileVersionId = fileVersionIds.get(0);
+				}
 
 				runSQL(
-					"update ExpandoRow set classPK = " + fileVersionId +
-						 " where classPK = " + fileEntryId);
+					"update ExpandoRow set classPK = " + latestFileVersionId +
+						" where classPK = " + fileEntryId);
 
 				runSQL(
-					"update ExpandoValue set classPK = " + fileVersionId +
-						 " where classPK = " + fileEntryId);
+					"update ExpandoValue set classPK = " + latestFileVersionId +
+						" where classPK = " + fileEntryId);
 			}
 		}
 		finally {
@@ -159,11 +172,13 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 				String description = rs.getString("description");
 				String extraSettings = rs.getString("extraSettings");
 
-				long fileVersionId = getLatestFileVersionId(folderId, name);
+				List<Long> fileVersionIds = getFileVersionIds(folderId, name);
 
-				updateFileVersion(
-					fileVersionId, extension, title, description,
-					extraSettings);
+				for (long fileVersionId : fileVersionIds) {
+					updateFileVersion(
+						fileVersionId, extension, title, description,
+						extraSettings);
+				}
 			}
 		}
 		finally {

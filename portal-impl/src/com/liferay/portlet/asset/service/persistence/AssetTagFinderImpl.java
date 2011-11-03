@@ -34,6 +34,7 @@ import com.liferay.portlet.asset.model.AssetTag;
 import com.liferay.portlet.asset.model.impl.AssetTagImpl;
 import com.liferay.util.dao.orm.CustomSQLUtil;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -68,6 +69,9 @@ public class AssetTagFinderImpl
 
 	public static String FIND_BY_G_N_P =
 		AssetTagFinder.class.getName() + ".findByG_N_P";
+
+	public static String FIND_BY_G_N_S_E =
+			AssetTagFinder.class.getName() + ".findByG_N_S_E";
 
 	public int countByG_C_N(long groupId, long classNameId, String name)
 		throws SystemException {
@@ -213,6 +217,51 @@ public class AssetTagFinderImpl
 			groupId, name, tagProperties, start, end, obc, false);
 	}
 
+	public List<AssetTag> findByG_N_S_E(
+			long groupId, String name, int startPeriod, int endPeriod)
+		throws SystemException {
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			String sql = CustomSQLUtil.get(FIND_BY_G_N_S_E);
+			SQLQuery q = session.createSQLQuery(sql);
+
+			QueryPos qPos = QueryPos.getInstance(q);
+
+			qPos.add(groupId);
+			qPos.add(name);
+			qPos.add(startPeriod);
+			qPos.add(endPeriod);
+
+			List<AssetTag> assetTags = new ArrayList<AssetTag>();
+
+			Iterator<Object[]> itr = q.iterate();
+
+			while (itr.hasNext()) {
+				Object[] array = itr.next();
+
+				AssetTag assetTag = new AssetTagImpl();
+
+				assetTag.setTagId(GetterUtil.getLong(array[0]));
+				assetTag.setName(GetterUtil.getString(array[1]));
+				assetTag.setAssetCount(GetterUtil.getInteger(array[2]));
+
+				assetTags.add(assetTag);
+			}
+
+			return assetTags;
+		}
+		catch (Exception e) {
+			throw new SystemException(e);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
 	protected String getJoin(String[] tagProperties) {
 		if (tagProperties.length == 0) {
 			return StringPool.BLANK;
@@ -261,7 +310,7 @@ public class AssetTagFinderImpl
 			qPos.add(groupId);
 			qPos.add(name);
 
-			Iterator<Long> itr = q.list().iterator();
+			Iterator<Long> itr = q.iterate();
 
 			if (itr.hasNext()) {
 				Long count = itr.next();
@@ -309,7 +358,7 @@ public class AssetTagFinderImpl
 			qPos.add(name);
 			qPos.add(name);
 
-			Iterator<Long> itr = q.list().iterator();
+			Iterator<Long> itr = q.iterate();
 
 			if (itr.hasNext()) {
 				Long count = itr.next();
@@ -360,7 +409,7 @@ public class AssetTagFinderImpl
 			qPos.add(name);
 			qPos.add(name);
 
-			Iterator<Long> itr = q.list().iterator();
+			Iterator<Long> itr = q.iterate();
 
 			if (itr.hasNext()) {
 				Long count = itr.next();
@@ -407,26 +456,11 @@ public class AssetTagFinderImpl
 			qPos.add(groupId);
 			qPos.add(name);
 
-			List<AssetTag> list = q.list();
+			List<AssetTag> tags = q.list();
 
-			if (list.size() == 0) {
-				StringBundler sb = new StringBundler(6);
-
-				sb.append("No AssetTag exists with the key ");
-				sb.append("{groupId=");
-				sb.append(groupId);
-				sb.append(", name=");
-				sb.append(name);
-				sb.append("}");
-
-				throw new NoSuchTagException(sb.toString());
+			if (!tags.isEmpty()) {
+				return tags.get(0);
 			}
-			else {
-				return list.get(0);
-			}
-		}
-		catch (NoSuchTagException nste) {
-			throw nste;
 		}
 		catch (Exception e) {
 			throw new SystemException(e);
@@ -434,6 +468,17 @@ public class AssetTagFinderImpl
 		finally {
 			closeSession(session);
 		}
+
+		StringBundler sb = new StringBundler(6);
+
+		sb.append("No AssetTag exists with the key ");
+		sb.append("{groupId=");
+		sb.append(groupId);
+		sb.append(", name=");
+		sb.append(name);
+		sb.append("}");
+
+		throw new NoSuchTagException(sb.toString());
 	}
 
 	protected List<AssetTag> doFindByG_C_N(

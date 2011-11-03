@@ -31,6 +31,7 @@ import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.servlet.BrowserSnifferUtil;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -80,7 +81,6 @@ import com.liferay.portal.service.permission.PortletPermissionUtil;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.theme.ThemeDisplayFactory;
 import com.liferay.portal.util.CookieKeys;
-import com.liferay.portal.util.FriendlyURLNormalizer;
 import com.liferay.portal.util.LayoutClone;
 import com.liferay.portal.util.LayoutCloneFactory;
 import com.liferay.portal.util.PortalUtil;
@@ -1038,7 +1038,6 @@ public class ServicePreAction extends Action {
 
 				siteSettingsURL.setParameter(
 					"struts_action", "/sites_admin/edit_site");
-
 				siteSettingsURL.setParameter("closeRedirect", currentURL);
 				siteSettingsURL.setParameter(
 					"groupId", String.valueOf(scopeGroupId));
@@ -1069,6 +1068,7 @@ public class ServicePreAction extends Action {
 					siteMapSettingsURL.setParameter("tabs1", "public-pages");
 				}
 
+				siteMapSettingsURL.setParameter("closeRedirect", currentURL);
 				siteMapSettingsURL.setParameter(
 					"groupId", String.valueOf(scopeGroupId));
 
@@ -1562,7 +1562,7 @@ public class ServicePreAction extends Action {
 	protected String getFriendlyURL(String friendlyURL) {
 		friendlyURL = GetterUtil.getString(friendlyURL);
 
-		return FriendlyURLNormalizer.normalize(friendlyURL);
+		return FriendlyURLNormalizerUtil.normalize(friendlyURL);
 	}
 
 	protected Object[] getViewableLayouts(

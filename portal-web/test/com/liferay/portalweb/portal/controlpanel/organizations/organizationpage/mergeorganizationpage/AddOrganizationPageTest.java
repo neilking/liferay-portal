@@ -141,8 +141,7 @@ public class AddOrganizationPageTest extends BaseTestCase {
 				}
 
 				selenium.select("//select[@id='_125_publicLayoutSetPrototypeId']",
-					RuntimeVariables.replace(
-						"label=Site with Blog, Wiki and Forum"));
+					RuntimeVariables.replace("label=Community Site"));
 				selenium.clickAt("//input[@value='Save']",
 					RuntimeVariables.replace("Save"));
 				selenium.waitForPageToLoad("30000");
@@ -233,7 +232,7 @@ public class AddOrganizationPageTest extends BaseTestCase {
 				}
 
 				assertEquals(RuntimeVariables.replace(
-						"Your request completed successfully."),
+						"Your request completed successfully. The page will be refreshed when you close this dialog. Alternatively you can hide this dialog."),
 					selenium.getText("//div[@class='portlet-msg-success']"));
 
 				boolean pagePresent = selenium.isElementPresent(

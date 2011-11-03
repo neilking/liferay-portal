@@ -14,14 +14,18 @@
 
 package com.liferay.portlet.layoutsadmin.action;
 
+import com.liferay.portal.ImageTypeException;
 import com.liferay.portal.NoSuchGroupException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.io.ByteArrayFileInputStream;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.upload.UploadException;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PropertiesParamUtil;
+import com.liferay.portal.kernel.util.StreamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
@@ -35,7 +39,9 @@ import com.liferay.portal.service.LayoutSetServiceUtil;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.WebKeys;
+import com.liferay.portlet.documentlibrary.FileSizeException;
 
+import java.io.File;
 import java.io.InputStream;
 
 import javax.portlet.ActionRequest;
@@ -74,6 +80,16 @@ public class EditLayoutSetAction extends EditLayoutsAction {
 				updateLayoutSet(actionRequest, actionResponse);
 			}
 
+			String closeRedirect = ParamUtil.getString(
+				actionRequest, "closeRedirect");
+
+			if (Validator.isNotNull(closeRedirect)) {
+				SessionMessages.add(
+					actionRequest,
+					portletConfig.getPortletName() + ".doCloseRedirect",
+					closeRedirect);
+			}
+
 			sendRedirect(actionRequest, actionResponse);
 		}
 		catch (Exception e) {
@@ -83,6 +99,12 @@ public class EditLayoutSetAction extends EditLayoutsAction {
 				SessionErrors.add(actionRequest, e.getClass().getName());
 
 				setForward(actionRequest, "portlet.layouts_admin.error");
+			}
+			else if (e instanceof FileSizeException ||
+					 e instanceof ImageTypeException ||
+					 e instanceof UploadException) {
+
+				SessionErrors.add(actionRequest, e.getClass().getName());
 			}
 			else {
 				throw e;
@@ -123,7 +145,7 @@ public class EditLayoutSetAction extends EditLayoutsAction {
 		}
 
 		return mapping.findForward(
-			getForward(renderRequest, "portlet.layouts_admin.edit_pages"));
+			getForward(renderRequest, "portlet.layouts_admin.edit_layouts"));
 	}
 
 	protected void updateLayoutSet(
@@ -170,31 +192,41 @@ public class EditLayoutSetAction extends EditLayoutsAction {
 
 		boolean useLogo = ParamUtil.getBoolean(actionRequest, "useLogo");
 
-		InputStream inputStream = uploadPortletRequest.getFileAsStream(
-			"logoFileName");
+		InputStream inputStream = null;
 
-		if (useLogo && (inputStream == null)) {
-			if (hasLogo) {
-				return;
+		try {
+			File file = uploadPortletRequest.getFile("logoFileName");
+
+			if (useLogo && !file.exists()) {
+				if (hasLogo) {
+					return;
+				}
+
+				throw new UploadException("No logo uploaded for use");
 			}
 
-			throw new UploadException("No logo uploaded for use");
-		}
+			if (file.exists()) {
+				inputStream = new ByteArrayFileInputStream(file, 1024);
+			}
 
-		if (inputStream != null) {
-			inputStream.mark(0);
-		}
+			if (inputStream != null) {
+				inputStream.mark(0);
+			}
 
-		LayoutSetServiceUtil.updateLogo(
-			liveGroupId, privateLayout, useLogo, inputStream);
-
-		if (inputStream != null) {
-			inputStream.reset();
-		}
-
-		if (stagingGroupId > 0) {
 			LayoutSetServiceUtil.updateLogo(
-				stagingGroupId, privateLayout, useLogo, inputStream);
+				liveGroupId, privateLayout, useLogo, inputStream, false);
+
+			if (inputStream != null) {
+				inputStream.reset();
+			}
+
+			if (stagingGroupId > 0) {
+				LayoutSetServiceUtil.updateLogo(
+					stagingGroupId, privateLayout, useLogo, inputStream, false);
+			}
+		}
+		finally {
+			StreamUtil.cleanUp(inputStream);
 		}
 	}
 

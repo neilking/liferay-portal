@@ -144,6 +144,8 @@ if (folder != null) {
 	for (int i = 0; i < results.size(); i++) {
 		FileEntry fileEntry = (FileEntry)results.get(i);
 
+		FileVersion fileVersion = fileEntry.getFileVersion();
+
 		DLFileShortcut fileShortcut = null;
 	%>
 
@@ -199,7 +201,7 @@ if (folder != null) {
 		Set<String> imageMimeTypes = ImageProcessor.getImageMimeTypes();
 
 		if (imageMimeTypes.contains(fileEntry.getMimeType())) {
-			sb.append("&t=");
+			sb.append("?t=");
 			sb.append(WebServerServletTokenUtil.getToken(fileEntry.getFileEntryId()));
 		}
 

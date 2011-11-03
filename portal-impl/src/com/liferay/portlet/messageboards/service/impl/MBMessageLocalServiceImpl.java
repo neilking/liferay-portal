@@ -40,7 +40,6 @@ import com.liferay.portal.kernel.workflow.WorkflowThreadLocal;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.CompanyConstants;
 import com.liferay.portal.model.Group;
-import com.liferay.portal.model.GroupedModel;
 import com.liferay.portal.model.ModelHintsUtil;
 import com.liferay.portal.model.ResourceConstants;
 import com.liferay.portal.model.User;
@@ -57,7 +56,6 @@ import com.liferay.portal.util.SubscriptionSender;
 import com.liferay.portlet.asset.model.AssetEntry;
 import com.liferay.portlet.asset.model.AssetLinkConstants;
 import com.liferay.portlet.blogs.model.BlogsEntry;
-import com.liferay.portlet.blogs.social.BlogsActivityKeys;
 import com.liferay.portlet.blogs.util.LinkbackProducerUtil;
 import com.liferay.portlet.documentlibrary.DuplicateDirectoryException;
 import com.liferay.portlet.documentlibrary.DuplicateFileException;
@@ -86,8 +84,7 @@ import com.liferay.portlet.messageboards.util.comparator.MessageCreateDateCompar
 import com.liferay.portlet.messageboards.util.comparator.MessageThreadComparator;
 import com.liferay.portlet.messageboards.util.comparator.ThreadLastPostDateComparator;
 import com.liferay.portlet.social.model.SocialActivity;
-import com.liferay.portlet.wiki.model.WikiPage;
-import com.liferay.portlet.wiki.social.WikiActivityKeys;
+import com.liferay.portlet.social.model.SocialActivityConstants;
 import com.liferay.util.SerializableUtil;
 
 import java.io.InputStream;
@@ -544,10 +541,9 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 
 		// Thread
 
-		int count = mbMessagePersistence.countByT_S(
-			message.getThreadId(), WorkflowConstants.STATUS_APPROVED);
+		int count = mbMessagePersistence.countByThreadId(message.getThreadId());
 
-		if ((count == 1) && !message.isDraft()) {
+		if (count == 1) {
 
 			// Attachments
 
@@ -590,7 +586,7 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 				mbCategoryPersistence.update(category, false);
 			}
 		}
-		else if ((count > 1) || ((count == 1) && !message.isDraft())) {
+		else {
 			MBThread thread = mbThreadPersistence.findByPrimaryKey(
 				message.getThreadId());
 
@@ -663,8 +659,11 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 
 			// Thread
 
-			if (!message.isDraft()) {
-				thread.setMessageCount(count - 1);
+			if (message.isApproved()) {
+				int messageCount = mbMessagePersistence.countByT_S(
+					message.getThreadId(), WorkflowConstants.STATUS_APPROVED);
+
+				thread.setMessageCount(messageCount - 1);
 			}
 
 			mbThreadPersistence.update(thread, false);
@@ -1641,21 +1640,11 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 					if (parentMessageId !=
 							MBMessageConstants.DEFAULT_PARENT_MESSAGE_ID) {
 
-						GroupedModel groupedModel = null;
-						int activityKey = 0;
+						AssetEntry assetEntry =
+							assetEntryLocalService.fetchEntry(
+								className, classPK);
 
-						if (className.equals(BlogsEntry.class.getName())) {
-							groupedModel =
-								blogsEntryPersistence.findByPrimaryKey(classPK);
-							activityKey = BlogsActivityKeys.ADD_COMMENT;
-						}
-						else if (className.equals(WikiPage.class.getName())) {
-							groupedModel = wikiPageLocalService.getPage(
-								classPK);
-							activityKey = WikiActivityKeys.ADD_COMMENT;
-						}
-
-						if (groupedModel != null) {
+						if (assetEntry != null) {
 							JSONObject extraDataJSONObject =
 								JSONFactoryUtil.createJSONObject();
 
@@ -1663,10 +1652,11 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 								"messageId", message.getMessageId());
 
 							socialActivityLocalService.addActivity(
-								userId, groupedModel.getGroupId(),
-								className, classPK,
-								activityKey, extraDataJSONObject.toString(),
-								groupedModel.getUserId());
+								userId, assetEntry.getGroupId(), className,
+								classPK,
+								SocialActivityConstants.TYPE_ADD_COMMENT,
+								extraDataJSONObject.toString(),
+								assetEntry.getUserId());
 						}
 					}
 				}

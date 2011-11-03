@@ -17,6 +17,14 @@
 <%@ include file="/html/portal/init.jsp" %>
 
 <%
+String currentURL = PortalUtil.getCurrentURL(request);
+
+String referer = ParamUtil.getString(request, WebKeys.REFERER, currentURL);
+
+if (referer.equals(themeDisplay.getPathMain() + "/portal/update_password")) {
+	referer = themeDisplay.getPathMain() + "?doAsUserId=" + themeDisplay.getDoAsUserId();
+}
+
 PasswordPolicy passwordPolicy = user.getPasswordPolicy();
 
 String ticketKey = ParamUtil.getString(request, "ticketKey");
@@ -34,7 +42,7 @@ String ticketKey = ParamUtil.getString(request, "ticketKey");
 			<aui:input name="p_auth" type="hidden" value="<%= AuthTokenUtil.getToken(request) %>" />
 			<aui:input name="doAsUserId" type="hidden" value="<%= themeDisplay.getDoAsUserId() %>" />
 			<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
-			<aui:input name="<%= WebKeys.REFERER %>" type="hidden" value='<%= themeDisplay.getPathMain() + "?doAsUserId=" + themeDisplay.getDoAsUserId() %>' />
+			<aui:input name="<%= WebKeys.REFERER %>" type="hidden" value="<%= referer %>" />
 			<aui:input name="ticketKey" type="hidden" value="<%= ticketKey %>" />
 
 			<div class="portlet-msg-info">
