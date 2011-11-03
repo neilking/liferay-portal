@@ -53,6 +53,7 @@ import com.liferay.portal.kernel.xml.Node;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.kernel.zip.ZipReader;
 import com.liferay.portal.kernel.zip.ZipReaderFactoryUtil;
+import com.liferay.portal.model.Group;
 import com.liferay.portal.model.Layout;
 import com.liferay.portal.model.LayoutConstants;
 import com.liferay.portal.model.LayoutSet;
@@ -78,6 +79,7 @@ import com.liferay.portal.service.LayoutSetPrototypeLocalServiceUtil;
 import com.liferay.portal.service.LayoutTemplateLocalServiceUtil;
 import com.liferay.portal.service.PermissionLocalServiceUtil;
 import com.liferay.portal.service.PortletLocalServiceUtil;
+import com.liferay.portal.service.ResourceLocalServiceUtil;
 import com.liferay.portal.service.ResourcePermissionLocalServiceUtil;
 import com.liferay.portal.service.RoleLocalServiceUtil;
 import com.liferay.portal.service.ServiceContext;
@@ -682,10 +684,11 @@ public class LayoutImporter {
 			return;
 		}
 
+		Group group = layout.getGroup();
+
 		typeSettings.setProperty(
 			"url",
-			url.substring(0, x) + layout.getGroup().getFriendlyURL() +
-				url.substring(y));
+			url.substring(0, x) + group.getFriendlyURL() + url.substring(y));
 	}
 
 	protected void importJournalArticle(
@@ -886,6 +889,32 @@ public class LayoutImporter {
 
 				importedLayout.setIconImageId(iconImageId);
 			}
+
+			// Resources
+
+			boolean addGroupPermissions = true;
+
+			Group group = layout.getGroup();
+
+			if (privateLayout && group.isUser()) {
+				addGroupPermissions = false;
+			}
+
+			boolean addGuestPermissions = false;
+
+			if (!privateLayout || layout.isTypeControlPanel()) {
+				addGuestPermissions = true;
+			}
+
+			ResourceLocalServiceUtil.addResources(
+				user.getCompanyId(), groupId, user.getUserId(),
+				Layout.class.getName(), importedLayout.getPlid(), false,
+				addGroupPermissions, addGuestPermissions);
+
+			LayoutSet layoutSet = LayoutSetLocalServiceUtil.getLayoutSet(
+				groupId, privateLayout);
+
+			importedLayout.setLayoutSet(layoutSet);
 		}
 		else {
 			importedLayout = existingLayout;

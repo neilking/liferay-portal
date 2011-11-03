@@ -152,6 +152,12 @@ public class DDMTemplateLocalServiceWrapper implements DDMTemplateLocalService,
 		return _ddmTemplateLocalService.dynamicQueryCount(dynamicQuery);
 	}
 
+	public com.liferay.portlet.dynamicdatamapping.model.DDMTemplate fetchDDMTemplate(
+		long templateId)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _ddmTemplateLocalService.fetchDDMTemplate(templateId);
+	}
+
 	/**
 	* Returns the d d m template with the primary key.
 	*
@@ -328,6 +334,12 @@ public class DDMTemplateLocalServiceWrapper implements DDMTemplateLocalService,
 		long structureId)
 		throws com.liferay.portal.kernel.exception.SystemException {
 		return _ddmTemplateLocalService.getTemplates(structureId);
+	}
+
+	public java.util.List<com.liferay.portlet.dynamicdatamapping.model.DDMTemplate> getTemplates(
+		long structureId, java.lang.String type)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _ddmTemplateLocalService.getTemplates(structureId, type);
 	}
 
 	public java.util.List<com.liferay.portlet.dynamicdatamapping.model.DDMTemplate> getTemplates(

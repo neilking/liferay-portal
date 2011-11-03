@@ -32,8 +32,8 @@ import com.liferay.portlet.dynamicdatamapping.util.DDMXMLUtil;
 import com.liferay.portlet.journal.model.JournalArticle;
 import com.liferay.portlet.journal.model.JournalTemplate;
 import com.liferay.portlet.journal.model.JournalTemplateConstants;
-import com.liferay.portlet.journal.service.JournalArticleLocalServiceUtil;
-import com.liferay.portlet.journal.service.JournalTemplateLocalServiceUtil;
+import com.liferay.portlet.journal.service.JournalArticleServiceUtil;
+import com.liferay.portlet.journal.service.JournalTemplateServiceUtil;
 import com.liferay.portlet.journal.util.JournalUtil;
 
 import java.util.LinkedHashMap;
@@ -65,9 +65,8 @@ public class GetArticleAction extends Action {
 
 			String languageId = LanguageUtil.getLanguageId(request);
 
-			JournalArticle article =
-				JournalArticleLocalServiceUtil.getLatestArticle(
-					groupId, articleId, WorkflowConstants.STATUS_APPROVED);
+			JournalArticle article = JournalArticleServiceUtil.getLatestArticle(
+				groupId, articleId, WorkflowConstants.STATUS_APPROVED);
 
 			ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
 				WebKeys.THEME_DISPLAY);
@@ -149,7 +148,7 @@ public class GetArticleAction extends Action {
 			JournalTemplate template = null;
 
 			try {
-				template = JournalTemplateLocalServiceUtil.getTemplate(
+				template = JournalTemplateServiceUtil.getTemplate(
 					article.getGroupId(), templateId);
 
 				if (Validator.equals(

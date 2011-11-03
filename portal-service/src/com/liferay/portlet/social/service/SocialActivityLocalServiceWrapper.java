@@ -153,6 +153,12 @@ public class SocialActivityLocalServiceWrapper
 		return _socialActivityLocalService.dynamicQueryCount(dynamicQuery);
 	}
 
+	public com.liferay.portlet.social.model.SocialActivity fetchSocialActivity(
+		long activityId)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _socialActivityLocalService.fetchSocialActivity(activityId);
+	}
+
 	/**
 	* Returns the social activity with the primary key.
 	*
@@ -395,7 +401,8 @@ public class SocialActivityLocalServiceWrapper
 	*/
 	public void deleteActivities(
 		com.liferay.portlet.asset.model.AssetEntry assetEntry)
-		throws com.liferay.portal.kernel.exception.SystemException {
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
 		_socialActivityLocalService.deleteActivities(assetEntry);
 	}
 

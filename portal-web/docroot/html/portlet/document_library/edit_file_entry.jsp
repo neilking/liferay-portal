@@ -52,12 +52,6 @@ if (fileEntry != null) {
 	folder = fileEntry.getFolder();
 }
 
-DLFolder dlFolder = DLFolderLocalServiceUtil.fetchFolder(folderId);
-
-if (dlFolder == null) {
-	folderId = DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;
-}
-
 FileVersion fileVersion = null;
 
 long fileVersionId = 0;
@@ -100,14 +94,6 @@ if (fileEntry != null) {
 	hasLock = fileEntry.hasLock();
 	lock = fileEntry.getLock();
 }
-
-long fileMaxSize = PrefsPropsUtil.getLong(PropsKeys.DL_FILE_MAX_SIZE);
-
-if (fileMaxSize == 0) {
-	fileMaxSize = PrefsPropsUtil.getLong(PropsKeys.UPLOAD_SERVLET_REQUEST_IMPL_MAX_SIZE);
-}
-
-fileMaxSize /= 1024;
 
 PortletURL portletURL = renderResponse.createRenderURL();
 
@@ -197,6 +183,16 @@ else if (dlFileEntryType != null) {
 		<liferay-ui:message key="the-source-file-does-not-have-the-same-extension-as-the-original-file" />
 	</liferay-ui:error>
 
+	<%
+	long fileMaxSize = PrefsPropsUtil.getLong(PropsKeys.DL_FILE_MAX_SIZE);
+
+	if (fileMaxSize == 0) {
+		fileMaxSize = PrefsPropsUtil.getLong(PropsKeys.UPLOAD_SERVLET_REQUEST_IMPL_MAX_SIZE);
+	}
+
+	fileMaxSize /= 1024;
+	%>
+
 	<liferay-ui:error exception="<%= FileSizeException.class %>">
 		<liferay-ui:message arguments="<%= fileMaxSize %>" key="please-enter-a-file-with-a-valid-file-size-no-larger-than-x" />
 	</liferay-ui:error>
@@ -219,17 +215,6 @@ else if (dlFileEntryType != null) {
 				</div>
 			</c:if>
 		</aui:field-wrapper>
-
-		<c:if test="<%= dlFolder == null %>">
-
-			<%
-			folderId = 0;
-			%>
-
-			<aui:script>
-				document.<portlet:namespace />fm.<portlet:namespace />folderId.value = 0;
-			</aui:script>
-		</c:if>
 
 		<%
 		String folderName = StringPool.BLANK;
@@ -276,7 +261,15 @@ else if (dlFileEntryType != null) {
 			<c:if test="<%= (folder == null) || (folder.getModel() instanceof DLFolder) %>">
 
 				<%
-				List<DLFileEntryType> dlFileEntryTypes = DLFileEntryTypeLocalServiceUtil.getFolderFileEntryTypes(DLUtil.getGroupIds(themeDisplay), folderId, true);
+				boolean inherited = false;
+
+				if (folder != null) {
+					DLFolder dlFolder = (DLFolder)folder.getModel();
+
+					inherited = !dlFolder.isOverrideFileEntryTypes();
+				}
+
+				List<DLFileEntryType> dlFileEntryTypes = DLFileEntryTypeLocalServiceUtil.getFolderFileEntryTypes(DLUtil.getGroupIds(themeDisplay), folderId, inherited);
 				%>
 
 				<c:choose>

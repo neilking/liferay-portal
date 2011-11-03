@@ -158,6 +158,12 @@ public class SocialActivityLocalServiceUtil {
 		return getService().dynamicQueryCount(dynamicQuery);
 	}
 
+	public static com.liferay.portlet.social.model.SocialActivity fetchSocialActivity(
+		long activityId)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return getService().fetchSocialActivity(activityId);
+	}
+
 	/**
 	* Returns the social activity with the primary key.
 	*
@@ -403,7 +409,8 @@ public class SocialActivityLocalServiceUtil {
 	*/
 	public static void deleteActivities(
 		com.liferay.portlet.asset.model.AssetEntry assetEntry)
-		throws com.liferay.portal.kernel.exception.SystemException {
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
 		getService().deleteActivities(assetEntry);
 	}
 

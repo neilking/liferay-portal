@@ -110,39 +110,21 @@ public class OrganizationWrapper implements Organization,
 	}
 
 	/**
-	* Returns the left organization ID of this organization.
+	* Returns the tree path of this organization.
 	*
-	* @return the left organization ID of this organization
+	* @return the tree path of this organization
 	*/
-	public long getLeftOrganizationId() {
-		return _organization.getLeftOrganizationId();
+	public java.lang.String getTreePath() {
+		return _organization.getTreePath();
 	}
 
 	/**
-	* Sets the left organization ID of this organization.
+	* Sets the tree path of this organization.
 	*
-	* @param leftOrganizationId the left organization ID of this organization
+	* @param treePath the tree path of this organization
 	*/
-	public void setLeftOrganizationId(long leftOrganizationId) {
-		_organization.setLeftOrganizationId(leftOrganizationId);
-	}
-
-	/**
-	* Returns the right organization ID of this organization.
-	*
-	* @return the right organization ID of this organization
-	*/
-	public long getRightOrganizationId() {
-		return _organization.getRightOrganizationId();
-	}
-
-	/**
-	* Sets the right organization ID of this organization.
-	*
-	* @param rightOrganizationId the right organization ID of this organization
-	*/
-	public void setRightOrganizationId(long rightOrganizationId) {
-		_organization.setRightOrganizationId(rightOrganizationId);
+	public void setTreePath(java.lang.String treePath) {
+		_organization.setTreePath(treePath);
 	}
 
 	/**
@@ -353,6 +335,12 @@ public class OrganizationWrapper implements Organization,
 		_organization.persist();
 	}
 
+	public java.lang.String buildTreePath()
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return _organization.buildTreePath();
+	}
+
 	public com.liferay.portal.model.Address getAddress() {
 		return _organization.getAddress();
 	}
@@ -379,6 +367,10 @@ public class OrganizationWrapper implements Organization,
 
 	public com.liferay.portal.model.Group getGroup() {
 		return _organization.getGroup();
+	}
+
+	public long getGroupId() {
+		return _organization.getGroupId();
 	}
 
 	public long getLogoId() {

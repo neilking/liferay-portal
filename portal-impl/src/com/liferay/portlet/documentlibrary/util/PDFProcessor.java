@@ -21,13 +21,14 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.MessageBusUtil;
-import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.OSDetector;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFileVersion;
+import com.liferay.portal.util.PrefsPropsUtil;
 import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.documentlibrary.NoSuchFileEntryException;
@@ -45,6 +46,8 @@ import java.util.List;
 import java.util.Vector;
 
 import javax.imageio.ImageIO;
+
+import javax.portlet.PortletPreferences;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
@@ -65,6 +68,32 @@ public class PDFProcessor extends DefaultPreviewableProcessor {
 
 	public static final String THUMBNAIL_TYPE = ImageProcessor.TYPE_PNG;
 
+	public static String getGlobalSearchPath() throws Exception {
+		PortletPreferences preferences = PrefsPropsUtil.getPreferences();
+
+		String globalSearchPath = preferences.getValue(
+			PropsKeys.IMAGEMAGICK_GLOBAL_SEARCH_PATH, null);
+
+		if (Validator.isNotNull(globalSearchPath)) {
+			return globalSearchPath;
+		}
+
+		String filterName = null;
+
+		if (OSDetector.isApple()) {
+			filterName = "apple";
+		}
+		else if (OSDetector.isWindows()) {
+			filterName = "windows";
+		}
+		else {
+			filterName = "unix";
+		}
+
+		return PropsUtil.get(
+			PropsKeys.IMAGEMAGICK_GLOBAL_SEARCH_PATH, new Filter(filterName));
+	}
+
 	public static void generateImages(FileVersion fileVersion)
 		throws Exception {
 
@@ -78,11 +107,9 @@ public class PDFProcessor extends DefaultPreviewableProcessor {
 		return _instance.doGetPreviewAsStream(fileVersion, index);
 	}
 
-	public static int getPreviewFileCount(FileEntry fileEntry, String version) {
+	public static int getPreviewFileCount(FileVersion fileVersion) {
 		try {
-			FileVersion fileVersion = fileEntry.getFileVersion(version);
-
-			return _instance.getPreviewFileCount(fileVersion);
+			return _instance.doGetPreviewFileCount(fileVersion);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -109,12 +136,10 @@ public class PDFProcessor extends DefaultPreviewableProcessor {
 		return _instance.doGetThumbnailFileSize(fileVersion);
 	}
 
-	public static boolean hasImages(FileEntry fileEntry, String version) {
+	public static boolean hasImages(FileVersion fileVersion) {
 		boolean hasImages = false;
 
 		try {
-			FileVersion fileVersion = fileEntry.getFileVersion(version);
-
 			hasImages = _instance._hasImages(fileVersion);
 
 			if (!hasImages) {
@@ -128,8 +153,8 @@ public class PDFProcessor extends DefaultPreviewableProcessor {
 		return hasImages;
 	}
 
-	public static boolean isImageMagickEnabled() {
-		if (PropsValues.IMAGEMAGICK_ENABLED) {
+	public static boolean isImageMagickEnabled() throws Exception {
+		if (PrefsPropsUtil.getBoolean(PropsKeys.IMAGEMAGICK_ENABLED)) {
 			return true;
 		}
 
@@ -149,41 +174,28 @@ public class PDFProcessor extends DefaultPreviewableProcessor {
 		return false;
 	}
 
-	public PDFProcessor() {
-		FileUtil.mkdirs(PREVIEW_TMP_PATH);
-		FileUtil.mkdirs(THUMBNAIL_TMP_PATH);
-
-		if (isImageMagickEnabled() && (_convertCmd == null)) {
-			String filterName = null;
-
-			if (OSDetector.isApple()) {
-				filterName = "apple";
-			}
-			else if (OSDetector.isWindows()) {
-				filterName = "windows";
-			}
-			else {
-				filterName = "unix";
-			}
-
-			String globalSearchPath = PropsUtil.get(
-				PropsKeys.IMAGEMAGICK_GLOBAL_SEARCH_PATH,
-				new Filter(filterName));
+	public static void reset() throws Exception {
+		if (isImageMagickEnabled()) {
+			String globalSearchPath = getGlobalSearchPath();
 
 			ProcessStarter.setGlobalSearchPath(globalSearchPath);
 
 			_convertCmd = new ConvertCmd();
 		}
+		else {
+			_convertCmd = null;
+		}
 	}
 
-	public void trigger(FileEntry fileEntry) {
-		try {
-			FileVersion fileVersion = fileEntry.getLatestFileVersion();
+	public PDFProcessor() {
+		FileUtil.mkdirs(PREVIEW_TMP_PATH);
+		FileUtil.mkdirs(THUMBNAIL_TMP_PATH);
 
-			trigger(fileVersion);
+		try {
+			reset();
 		}
 		catch (Exception e) {
-			_log.error(e, e);
+			_log.warn(e, e);
 		}
 	}
 
@@ -322,9 +334,7 @@ public class PDFProcessor extends DefaultPreviewableProcessor {
 
 		IMOperation imOperation = new IMOperation();
 
-		imOperation.background("White");
-
-		imOperation.flatten();
+		imOperation.alpha("off");
 
 		imOperation.density(dpi, dpi);
 

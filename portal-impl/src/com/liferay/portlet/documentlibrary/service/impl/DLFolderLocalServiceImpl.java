@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.model.ResourceConstants;
 import com.liferay.portal.model.User;
@@ -34,6 +35,7 @@ import com.liferay.portlet.documentlibrary.DuplicateFolderNameException;
 import com.liferay.portlet.documentlibrary.FolderNameException;
 import com.liferay.portlet.documentlibrary.NoSuchDirectoryException;
 import com.liferay.portlet.documentlibrary.NoSuchFileEntryException;
+import com.liferay.portlet.documentlibrary.model.DLFileEntryTypeConstants;
 import com.liferay.portlet.documentlibrary.model.DLFolder;
 import com.liferay.portlet.documentlibrary.model.DLFolderConstants;
 import com.liferay.portlet.documentlibrary.service.base.DLFolderLocalServiceBaseImpl;
@@ -152,10 +154,6 @@ public class DLFolderLocalServiceImpl extends DLFolderLocalServiceBaseImpl {
 		deleteFolder(dlFolder);
 	}
 
-	public DLFolder fetchFolder(long folderId) throws SystemException {
-		return dlFolderPersistence.fetchByPrimaryKey(folderId);
-	}
-
 	public List<DLFolder> getCompanyFolders(long companyId, int start, int end)
 		throws SystemException {
 
@@ -178,7 +176,21 @@ public class DLFolderLocalServiceImpl extends DLFolderLocalServiceBaseImpl {
 			long groupId, long folderId, int status)
 		throws SystemException {
 
-		return dlFolderFinder.countFE_FS_ByG_F_S(groupId, folderId, status);
+		int fileEntriesCount = 0;
+
+		if ((status == WorkflowConstants.STATUS_ANY)) {
+			fileEntriesCount = dlFileEntryPersistence.countByG_F(
+				groupId, folderId);
+		}
+		else {
+			fileEntriesCount = dlFolderFinder.countFE_ByG_F_S(
+				groupId, folderId, status);
+		}
+
+		int fileShortcutsCount = dlFileShortcutPersistence.countByG_F_S(
+			groupId, folderId, 0);
+
+		return fileEntriesCount + fileShortcutsCount;
 	}
 
 	public DLFolder getFolder(long folderId)
@@ -231,7 +243,7 @@ public class DLFolderLocalServiceImpl extends DLFolderLocalServiceBaseImpl {
 
 	public List<DLFolder> getFolders(
 			long groupId, long parentFolderId, boolean includeMountfolders,
-			int start, int end,	OrderByComparator obc)
+			int start, int end, OrderByComparator obc)
 		throws SystemException {
 
 		if (includeMountfolders) {
@@ -418,12 +430,14 @@ public class DLFolderLocalServiceImpl extends DLFolderLocalServiceBaseImpl {
 			new ArrayList<ObjectValuePair<Long, String>>();
 
 		if (fileEntryTypeIds.isEmpty()) {
-			fileEntryTypeIds.add(new Long(0));
+			fileEntryTypeIds.add(
+				DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_ALL);
 		}
 		else {
 			workflowDefinitions.add(
 				new ObjectValuePair<Long, String>(
-					new Long(0), StringPool.BLANK));
+					DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_ALL,
+					StringPool.BLANK));
 		}
 
 		for (long fileEntryTypeId : fileEntryTypeIds) {

@@ -37,6 +37,7 @@ import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.FileUtil;
+import com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -71,7 +72,6 @@ import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.service.base.GroupLocalServiceBaseImpl;
 import com.liferay.portal.theme.ThemeLoader;
 import com.liferay.portal.theme.ThemeLoaderFactory;
-import com.liferay.portal.util.FriendlyURLNormalizer;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.PortletCategoryKeys;
 import com.liferay.portal.util.PortletKeys;
@@ -766,19 +766,6 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 		friendlyURL = getFriendlyURL(friendlyURL);
 
 		return groupPersistence.fetchByC_F(companyId, friendlyURL);
-	}
-
-	/**
-	 * Returns the group with the matching primary key.
-	 *
-	 * @param  groupId the primary key of the group
-	 * @return the group with the primary key, or <code>null</code> if a group
-	 *         with the primary key could not be found
-	 * @throws SystemException if a system exception occurred
-	 */
-	@ThreadLocalCachable
-	public Group fetchGroup(long groupId) throws SystemException {
-		return groupPersistence.fetchByPrimaryKey(groupId);
 	}
 
 	/**
@@ -1522,7 +1509,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 	 */
 	public List<Group> search(
 			long companyId, long[] classNameIds, String name,
-			String description,	LinkedHashMap<String, Object> params, int start,
+			String description, LinkedHashMap<String, Object> params, int start,
 			int end)
 		throws SystemException {
 
@@ -2181,7 +2168,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 	}
 
 	protected String getFriendlyURL(String friendlyURL) {
-		return FriendlyURLNormalizer.normalize(friendlyURL);
+		return FriendlyURLNormalizerUtil.normalize(friendlyURL);
 	}
 
 	protected String getOrgGroupName(long classPK, String name) {

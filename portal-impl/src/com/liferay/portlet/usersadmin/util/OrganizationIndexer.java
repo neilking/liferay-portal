@@ -28,6 +28,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Organization;
 import com.liferay.portal.service.OrganizationLocalServiceUtil;
 import com.liferay.portal.util.PortletKeys;
+import com.liferay.portal.util.PropsValues;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -63,6 +64,11 @@ public class OrganizationIndexer extends BaseIndexer {
 	}
 
 	@Override
+	public boolean isIndexerEnabled() {
+		return PropsValues.ORGANIZATIONS_INDEXER_ENABLED;
+	}
+
+	@Override
 	public void postProcessContextQuery(
 			BooleanQuery contextQuery, SearchContext searchContext)
 		throws Exception {
@@ -70,31 +76,24 @@ public class OrganizationIndexer extends BaseIndexer {
 		LinkedHashMap<String, Object> params =
 			(LinkedHashMap<String, Object>)searchContext.getAttribute("params");
 
-		if (params != null) {
-			Long[][] leftAndRightOrganizationIds = (Long[][])params.get(
-				"organizationsTree");
+		if (params == null) {
+			return;
+		}
 
-			if (leftAndRightOrganizationIds != null) {
-				BooleanQuery organizationsTreeQuery =
-					BooleanQueryFactoryUtil.create(searchContext);
+		List<Organization> organizationsTree = (List<Organization>)params.get(
+			"organizationsTree");
 
-				if (leftAndRightOrganizationIds.length == 0) {
-					organizationsTreeQuery.addRequiredTerm(
-						Field.ORGANIZATION_ID, -1);
-				}
-				else if (leftAndRightOrganizationIds.length > 0) {
-					for (Long[] leftAndRightOrganizationId :
-							leftAndRightOrganizationIds) {
+		if ((organizationsTree != null) && !organizationsTree.isEmpty()) {
+			BooleanQuery booleanQuery = BooleanQueryFactoryUtil.create(
+				searchContext);
 
-						organizationsTreeQuery.addNumericRangeTerm(
-							"leftOrganizationId", leftAndRightOrganizationId[0],
-							leftAndRightOrganizationId[1]);
-					}
-				}
+			for (Organization organization : organizationsTree) {
+				String treePath = organization.buildTreePath();
 
-				contextQuery.add(
-					organizationsTreeQuery, BooleanClauseOccur.MUST);
+				booleanQuery.addTerm("treePath", treePath, true);
 			}
+
+			contextQuery.add(booleanQuery, BooleanClauseOccur.MUST);
 		}
 	}
 
@@ -145,12 +144,12 @@ public class OrganizationIndexer extends BaseIndexer {
 			Field.ORGANIZATION_ID, organization.getOrganizationId());
 		document.addKeyword(Field.TYPE, organization.getType());
 
-		document.addNumber(
-			"leftOrganizationId", organization.getLeftOrganizationId());
 		document.addKeyword(
 			"parentOrganizationId", organization.getParentOrganizationId());
-		document.addNumber(
-			"rightOrganizationId", organization.getRightOrganizationId());
+
+		String treePath = organization.buildTreePath();
+
+		document.addKeyword("treePath", treePath);
 
 		populateAddresses(
 			document, organization.getAddresses(), organization.getRegionId(),
@@ -215,8 +214,12 @@ public class OrganizationIndexer extends BaseIndexer {
 
 			for (long organizationId : organizationIds) {
 				Organization organization =
-					OrganizationLocalServiceUtil.getOrganization(
+					OrganizationLocalServiceUtil.fetchOrganization(
 						organizationId);
+
+				if (organization == null) {
+					continue;
+				}
 
 				Document document = getDocument(organization);
 

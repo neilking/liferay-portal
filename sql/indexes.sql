@@ -169,6 +169,7 @@ create index IX_17692B58 on DDMStructureLink (structureId);
 create index IX_DB24DDDD on DDMTemplate (groupId);
 create index IX_33BEF579 on DDMTemplate (language);
 create index IX_C9757A51 on DDMTemplate (structureId);
+create index IX_5BC0E264 on DDMTemplate (structureId, type_);
 create index IX_5B019FE8 on DDMTemplate (structureId, type_, mode_);
 create index IX_C4F283C8 on DDMTemplate (type_);
 create index IX_F2A243A7 on DDMTemplate (uuid_);
@@ -221,6 +222,7 @@ create unique index IX_FDB4A946 on DLFileShortcut (uuid_, groupId);
 create index IX_C68DC967 on DLFileVersion (fileEntryId);
 create index IX_D47BB14D on DLFileVersion (fileEntryId, status);
 create unique index IX_E2815081 on DLFileVersion (fileEntryId, version);
+create index IX_DFD809D3 on DLFileVersion (groupId, folderId, status);
 
 create index IX_A74DB14C on DLFolder (companyId);
 create index IX_F2EA1ACE on DLFolder (groupId);

@@ -174,7 +174,7 @@ if (Validator.isNull(displayStyle)) {
 
 boolean showAssetTitle = GetterUtil.getBoolean(preferences.getValue("showAssetTitle", null), true);
 boolean showContextLink = GetterUtil.getBoolean(preferences.getValue("showContextLink", null), true);
-int abstractLength = GetterUtil.getInteger(preferences.getValue("abstractLength", StringPool.BLANK), 200);
+int abstractLength = GetterUtil.getInteger(preferences.getValue("abstractLength", null), 200);
 String assetLinkBehavior = GetterUtil.getString(preferences.getValue("assetLinkBehavior", "showFullContent"));
 String orderByColumn1 = GetterUtil.getString(preferences.getValue("orderByColumn1", "modifiedDate"));
 String orderByColumn2 = GetterUtil.getString(preferences.getValue("orderByColumn2", "title"));
@@ -183,7 +183,8 @@ String orderByType2 = GetterUtil.getString(preferences.getValue("orderByType2", 
 boolean excludeZeroViewCount = GetterUtil.getBoolean(preferences.getValue("excludeZeroViewCount", "0"));
 int delta = GetterUtil.getInteger(preferences.getValue("delta", StringPool.BLANK), SearchContainer.DEFAULT_DELTA);
 String paginationType = GetterUtil.getString(preferences.getValue("paginationType", "none"));
-boolean showAvailableLocales = GetterUtil.getBoolean(preferences.getValue("showAvailableLocales", StringPool.BLANK));
+boolean showAvailableLocales = GetterUtil.getBoolean(preferences.getValue("showAvailableLocales", null));
+boolean showMetadataDescriptions = GetterUtil.getBoolean(preferences.getValue("showMetadataDescriptions", null), true);
 
 boolean defaultAssetPublisher = false;
 
@@ -191,7 +192,7 @@ UnicodeProperties typeSettingsProperties = layout.getTypeSettingsProperties();
 
 String defaultAssetPublisherPortletId = typeSettingsProperties.getProperty(LayoutTypePortletConstants.DEFAULT_ASSET_PUBLISHER_PORTLET_ID, StringPool.BLANK);
 
-if (defaultAssetPublisherPortletId.equals(portletResource)) {
+if (defaultAssetPublisherPortletId.equals(portletDisplay.getId())) {
 	defaultAssetPublisher = true;
 }
 

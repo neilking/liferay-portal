@@ -46,7 +46,7 @@ request.setAttribute("view.jsp-showIconLabel", true);
 		/>
 	</c:if>
 
-	<div class="asset-full-content <%= showAssetTitle ? "show-asset-title" : "no-title" %>">
+	<div class="asset-full-content <%= defaultAssetPublisher ? "default-asset-publisher" : StringPool.BLANK %> <%= showAssetTitle ? "show-asset-title" : "no-title" %>">
 		<c:if test="<%= !print %>">
 			<liferay-util:include page="/html/portlet/asset_publisher/asset_actions.jsp" />
 		</c:if>
@@ -128,7 +128,7 @@ request.setAttribute("view.jsp-showIconLabel", true);
 				<liferay-ui:social-bookmarks
 					displayStyle="<%= socialBookmarksDisplayStyle %>"
 					target="_blank"
-					title="<%= assetEntry.getTitle() %>"
+					title="<%= assetEntry.getTitle(locale) %>"
 					url="<%= viewFullContentURL.toString() %>"
 				/>
 			</c:if>
@@ -157,7 +157,7 @@ request.setAttribute("view.jsp-showIconLabel", true);
 				<liferay-ui:social-bookmarks
 					displayStyle="<%= socialBookmarksDisplayStyle %>"
 					target="_blank"
-					title="<%= assetEntry.getTitle() %>"
+					title="<%= assetEntry.getTitle(locale) %>"
 					url="<%= viewFullContentURL.toString() %>"
 				/>
 			</c:if>

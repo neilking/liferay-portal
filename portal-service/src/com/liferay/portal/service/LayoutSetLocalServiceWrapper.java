@@ -148,6 +148,11 @@ public class LayoutSetLocalServiceWrapper implements LayoutSetLocalService,
 		return _layoutSetLocalService.dynamicQueryCount(dynamicQuery);
 	}
 
+	public com.liferay.portal.model.LayoutSet fetchLayoutSet(long layoutSetId)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _layoutSetLocalService.fetchLayoutSet(layoutSetId);
+	}
+
 	/**
 	* Returns the layout set with the primary key.
 	*
@@ -296,6 +301,14 @@ public class LayoutSetLocalServiceWrapper implements LayoutSetLocalService,
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		_layoutSetLocalService.updateLogo(groupId, privateLayout, logo, is);
+	}
+
+	public void updateLogo(long groupId, boolean privateLayout, boolean logo,
+		java.io.InputStream is, boolean cleanUpStream)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		_layoutSetLocalService.updateLogo(groupId, privateLayout, logo, is,
+			cleanUpStream);
 	}
 
 	public void updateLookAndFeel(long groupId, java.lang.String themeId,

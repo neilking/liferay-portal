@@ -24,9 +24,9 @@ public interface PropsKeys {
 	public static final String ADMIN_DEFAULT_ROLE_NAMES = "admin.default.role.names";
 
 	public static final String ADMIN_DEFAULT_USER_GROUP_NAMES = "admin.default.user.group.names";
-	
+
 	public static final String ADMIN_EMAIL_FROM_ADDRESS = "admin.email.from.address";
-	
+
 	public static final String ADMIN_EMAIL_FROM_NAME = "admin.email.from.name";
 
 	public static final String ADMIN_EMAIL_PASSWORD_RESET_BODY = "admin.email.password.reset.body";
@@ -841,6 +841,8 @@ public interface PropsKeys {
 
 	public static final String JCR_WORKSPACE_NAME = "jcr.workspace.name";
 
+	public static final String JCR_WRAP_SESSION = "jcr.wrap.session";
+
 	public static final String JDBC_DEFAULT_DRIVER_CLASS_NAME = "jdbc.default.driverClassName";
 
 	public static final String JDBC_DEFAULT_LIFERAY_POOL_PROVIDER = "jdbc.default.liferay.pool.provider";
@@ -1455,6 +1457,8 @@ public interface PropsKeys {
 
 	public static final String ORGANIZATIONS_FORM_UPDATE_MISCELLANEOUS = "organizations.form.update.miscellaneous";
 
+	public static final String ORGANIZATIONS_INDEXER_ENABLED = "organizations.indexer.enabled";
+
 	public static final String ORGANIZATIONS_MEMBERSHIP_STRICT = "organizations.membership.strict";
 
 	public static final String ORGANIZATIONS_ROOTABLE = "organizations.rootable";
@@ -1468,6 +1472,8 @@ public interface PropsKeys {
 	public static final String OSGI_FRAMEWORK_BEGINNING_START_LEVEL = "osgi.framework.beginning.start.level";
 
 	public static final String OSGI_FRAMEWORK_STORAGE = "osgi.framework.storage";
+
+	public static final String OSGI_REGISTER_LIFERAY_SERVICES = "osgi.register.liferay.services";
 
 	public static final String OSGI_SYSTEM_BUNDLE_EXPORT_PACKAGES = "osgi.system.bundle.export.packages";
 
@@ -1962,6 +1968,8 @@ public interface PropsKeys {
 	public static final String USERS_IMAGE_MAX_SIZE = "users.image.max.size";
 
 	public static final String USERS_IMAGE_MAX_WIDTH = "users.image.max.width";
+
+	public static final String USERS_INDEXER_ENABLED = "users.indexer.enabled";
 
 	public static final String USERS_LAST_NAME_REQUIRED = "users.last.name.required";
 

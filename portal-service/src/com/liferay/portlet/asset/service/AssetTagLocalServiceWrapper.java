@@ -151,6 +151,11 @@ public class AssetTagLocalServiceWrapper implements AssetTagLocalService,
 		return _assetTagLocalService.dynamicQueryCount(dynamicQuery);
 	}
 
+	public com.liferay.portlet.asset.model.AssetTag fetchAssetTag(long tagId)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _assetTagLocalService.fetchAssetTag(tagId);
+	}
+
 	/**
 	* Returns the asset tag with the primary key.
 	*
@@ -388,6 +393,22 @@ public class AssetTagLocalServiceWrapper implements AssetTagLocalService,
 		int end) throws com.liferay.portal.kernel.exception.SystemException {
 		return _assetTagLocalService.getTags(groupId, classNameId, name, start,
 			end);
+	}
+
+	public java.util.List<com.liferay.portlet.asset.model.AssetTag> getTags(
+		long groupId, java.lang.String socialActivityCounterName, int offset,
+		boolean includeCurrentPeriod)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _assetTagLocalService.getTags(groupId,
+			socialActivityCounterName, offset, includeCurrentPeriod);
+	}
+
+	public java.util.List<com.liferay.portlet.asset.model.AssetTag> getTags(
+		long groupId, java.lang.String socialActivityCounterName,
+		int startPeriod, int endPeriod)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _assetTagLocalService.getTags(groupId,
+			socialActivityCounterName, startPeriod, endPeriod);
 	}
 
 	public java.util.List<com.liferay.portlet.asset.model.AssetTag> getTags(

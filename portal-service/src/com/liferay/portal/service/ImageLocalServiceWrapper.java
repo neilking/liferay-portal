@@ -147,6 +147,11 @@ public class ImageLocalServiceWrapper implements ImageLocalService,
 		return _imageLocalService.dynamicQueryCount(dynamicQuery);
 	}
 
+	public com.liferay.portal.model.Image fetchImage(long imageId)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _imageLocalService.fetchImage(imageId);
+	}
+
 	/**
 	* Returns the image with the primary key.
 	*
@@ -283,6 +288,13 @@ public class ImageLocalServiceWrapper implements ImageLocalService,
 		return _imageLocalService.getImage(is);
 	}
 
+	public com.liferay.portal.model.Image getImage(java.io.InputStream is,
+		boolean cleanUpStream)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return _imageLocalService.getImage(is, cleanUpStream);
+	}
+
 	public com.liferay.portal.model.Image getImageOrDefault(long imageId) {
 		return _imageLocalService.getImageOrDefault(imageId);
 	}
@@ -319,6 +331,13 @@ public class ImageLocalServiceWrapper implements ImageLocalService,
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		return _imageLocalService.updateImage(imageId, is);
+	}
+
+	public com.liferay.portal.model.Image updateImage(long imageId,
+		java.io.InputStream is, boolean cleanUpStream)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return _imageLocalService.updateImage(imageId, is, cleanUpStream);
 	}
 
 	public com.liferay.portal.model.Image updateImage(long imageId,

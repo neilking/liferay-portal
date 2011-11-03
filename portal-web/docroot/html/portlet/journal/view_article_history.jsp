@@ -19,6 +19,8 @@
 <%
 String tabs1 = ParamUtil.getString(request, "tabs1", "web-content");
 
+String redirect = ParamUtil.getString(request, "redirect");
+
 String orderByCol = ParamUtil.getString(request, "orderByCol");
 
 JournalArticle article = (JournalArticle)request.getAttribute(WebKeys.JOURNAL_ARTICLE);
@@ -27,6 +29,7 @@ PortletURL portletURL = renderResponse.createRenderURL();
 
 portletURL.setParameter("struts_action", "/journal/view_article_history");
 portletURL.setParameter("tabs1", tabs1);
+portletURL.setParameter("redirect", redirect);
 portletURL.setParameter("groupId", String.valueOf(article.getGroupId()));
 portletURL.setParameter("articleId", article.getArticleId());
 %>
@@ -107,20 +110,7 @@ portletURL.setParameter("articleId", article.getArticleId());
 
 		// Status
 
-		String status = null;
-
-		if (articleVersion.isApproved()) {
-			status = "approved";
-		}
-		else if (articleVersion.isDraft()) {
-			status = "draft";
-		}
-		else if (articleVersion.isExpired()) {
-			status = "expired";
-		}
-		else if (articleVersion.isPending()) {
-			status = "pending";
-		}
+		String status = WorkflowConstants.toLabel(articleVersion.getStatus());
 
 		row.addText(LanguageUtil.get(pageContext, status), rowURL);
 

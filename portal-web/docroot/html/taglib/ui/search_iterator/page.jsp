@@ -147,7 +147,19 @@ int sortColumnIndex = -1;
 
 					<c:if test="<%= orderKey != null %>">
 						<span class="result-column-name">
-							<a href="<%= url %>&<%= namespace %><%= searchContainer.getOrderByColParam() %>=<%= orderKey %>&<%= namespace %><%= searchContainer.getOrderByTypeParam() %>=<%= HtmlUtil.escapeURL(orderByType) %>">
+
+							<%
+							String orderByJS = searchContainer.getOrderByJS();
+							%>
+
+							<c:choose>
+								<c:when test="<%= Validator.isNull(orderByJS) %>">
+									<a href="<%= url %>&<%= namespace %><%= searchContainer.getOrderByColParam() %>=<%= orderKey %>&<%= namespace %><%= searchContainer.getOrderByTypeParam() %>=<%= HtmlUtil.escapeURL(orderByType) %>">
+								</c:when>
+								<c:otherwise>
+									<a href="<%= StringUtil.replace(orderByJS, new String[] { "orderKey", "orderByType" }, new String[] { orderKey, orderByType }) %>">
+								</c:otherwise>
+							</c:choose>
 					</c:if>
 
 						<%
@@ -240,6 +252,7 @@ int sortColumnIndex = -1;
 
 			if (rowChecker != null) {
 				boolean rowIsChecked = rowChecker.isChecked(row.getObject());
+				boolean rowIsDisabled = rowChecker.isDisabled(row.getObject());
 
 				if (!rowIsChecked) {
 					allRowsIsChecked = false;
@@ -250,7 +263,7 @@ int sortColumnIndex = -1;
 				textSearchEntry.setAlign(rowChecker.getAlign());
 				textSearchEntry.setColspan(rowChecker.getColspan());
 				textSearchEntry.setCssClass(rowChecker.getCssClass());
-				textSearchEntry.setName(rowChecker.getRowCheckBox(rowIsChecked, row.getPrimaryKey()));
+				textSearchEntry.setName(rowChecker.getRowCheckBox(rowIsChecked, rowIsDisabled, row.getPrimaryKey()));
 				textSearchEntry.setValign(rowChecker.getValign());
 
 				row.addSearchEntry(0, textSearchEntry);

@@ -14,7 +14,6 @@
 
 package com.liferay.portlet.documentlibrary.lar;
 
-import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.lar.BasePortletDataHandler;
 import com.liferay.portal.kernel.lar.PortletDataContext;
 import com.liferay.portal.kernel.lar.PortletDataHandlerBoolean;
@@ -670,8 +669,12 @@ public class DLPortletDataHandlerImpl extends BasePortletDataHandler {
 		long fileEntryTypeId = dlFileEntry.getFileEntryTypeId();
 
 		DLFileEntryType dlFileEntryType =
-			DLFileEntryTypeLocalServiceUtil.getDLFileEntryType(
+			DLFileEntryTypeLocalServiceUtil.fetchFileEntryType(
 				fileEntryTypeId);
+
+		if (dlFileEntryType == null) {
+			return;
+		}
 
 		exportFileEntryType(
 			portletDataContext, fileEntryTypesElement, dlFileEntryType);
@@ -1230,8 +1233,8 @@ public class DLPortletDataHandlerImpl extends BasePortletDataHandler {
 		}
 
 		DLFileEntryTypeLocalServiceUtil.updateFolderFileEntryTypes(
-			(DLFolder)folder, fileEntryTypeIds, defaultFileEntryTypeId,
-			serviceContext);
+			(DLFolder)folder.getModel(), fileEntryTypeIds,
+			defaultFileEntryTypeId, serviceContext);
 	}
 
 	protected static void importMetaData(
@@ -1354,8 +1357,7 @@ public class DLPortletDataHandlerImpl extends BasePortletDataHandler {
 
 		List<DLFileEntryType> dlFileEntryTypes =
 			DLFileEntryTypeServiceUtil.getFileEntryTypes(
-				new long[] {portletDataContext.getScopeGroupId()},
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+				new long[] {portletDataContext.getScopeGroupId()});
 
 		for (DLFileEntryType dlFileEntryType : dlFileEntryTypes) {
 			exportFileEntryType(

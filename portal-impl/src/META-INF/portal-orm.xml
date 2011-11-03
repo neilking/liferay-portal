@@ -537,8 +537,7 @@
 			<id name="organizationId" />
 			<basic name="companyId" />
 			<basic name="parentOrganizationId" />
-			<basic name="leftOrganizationId" />
-			<basic name="rightOrganizationId" />
+			<basic name="treePath" />
 			<basic name="name" />
 			<basic name="type">
 				<column name="TYPE_" />
@@ -1864,6 +1863,7 @@
 				<temporal>TIMESTAMP</temporal>
 			</basic>
 			<basic name="repositoryId" />
+			<basic name="folderId" />
 			<basic name="fileEntryId" />
 			<basic name="extension" />
 			<basic name="mimeType" />
@@ -2087,6 +2087,9 @@
 			<basic name="description" />
 			<basic name="xsd" />
 			<basic name="storageType" />
+			<basic name="type">
+				<column name="TYPE_" />
+			</basic>
 			<transient name="descriptionCurrentLanguageId" />
 			<transient name="descriptionMap" />
 			<transient name="nameCurrentLanguageId" />

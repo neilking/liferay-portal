@@ -26,7 +26,6 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.CentralizedThreadLocal;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -150,6 +149,8 @@ public class SetupWizardUtil {
 		UnicodeProperties unicodeProperties =
 			PropertiesParamUtil.getProperties(request, _PROPERTIES_PREFIX);
 
+		boolean databaseConfigured = _isDatabaseConfigured(unicodeProperties);
+
 		_processAdminProperties(request, unicodeProperties);
 		_processDatabaseProperties(request, unicodeProperties);
 
@@ -168,7 +169,10 @@ public class SetupWizardUtil {
 		session.setAttribute(
 			WebKeys.SETUP_WIZARD_PROPERTIES_UPDATED, propertiesFileUpdated);
 
-		_reloadServletContext(request, unicodeProperties);
+		if (!databaseConfigured) {
+			_reloadServletContext(request, unicodeProperties);
+		}
+
 		_resetAdminPassword(request);
 	}
 
@@ -178,6 +182,30 @@ public class SetupWizardUtil {
 		name = _PROPERTIES_PREFIX.concat(name).concat(StringPool.DOUBLE_DASH);
 
 		return ParamUtil.getString(request, name, defaultValue);
+	}
+
+	private static boolean _isDatabaseConfigured(
+		UnicodeProperties unicodeProperties) {
+
+		String defaultDriverClassName = unicodeProperties.get(
+			PropsKeys.JDBC_DEFAULT_DRIVER_CLASS_NAME);
+		String defaultPassword = unicodeProperties.get(
+			PropsKeys.JDBC_DEFAULT_PASSWORD);
+		String defaultURL = unicodeProperties.get(
+			PropsKeys.JDBC_DEFAULT_URL);
+		String defaultUsername = unicodeProperties.get(
+			PropsKeys.JDBC_DEFAULT_USERNAME);
+
+		if (PropsValues.JDBC_DEFAULT_DRIVER_CLASS_NAME.equals(
+				defaultDriverClassName) &&
+			PropsValues.JDBC_DEFAULT_PASSWORD.equals(defaultPassword) &&
+			PropsValues.JDBC_DEFAULT_URL.equals(defaultURL) &&
+			PropsValues.JDBC_DEFAULT_USERNAME.equals(defaultUsername) ) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	private static void _processAdminProperties(
@@ -240,8 +268,8 @@ public class SetupWizardUtil {
 			HttpServletRequest request, UnicodeProperties unicodeProperties)
 		throws Exception {
 
-		boolean defaultDatabase = GetterUtil.getBoolean(
-			_getParameter(request, "defaultDatabase", "true"));
+		boolean defaultDatabase = ParamUtil.getBoolean(
+			request, "defaultDatabase", true);
 
 		if (defaultDatabase) {
 			unicodeProperties.remove(PropsKeys.JDBC_DEFAULT_URL);

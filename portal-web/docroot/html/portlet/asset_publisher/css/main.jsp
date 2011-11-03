@@ -95,10 +95,6 @@
 		padding: 3px;
 	}
 
-	.asset-ratings {
-		float: left;
-	}
-
 	.asset-small-image {
 		float: right;
 		padding-left: 0.5em;

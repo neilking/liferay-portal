@@ -44,7 +44,6 @@ page import="com.liferay.portlet.documentlibrary.model.DLFolderConstants" %><%@
 page import="com.liferay.portlet.documentlibrary.service.DLAppLocalServiceUtil" %><%@
 page import="com.liferay.portlet.documentlibrary.service.DLAppServiceUtil" %><%@
 page import="com.liferay.portlet.documentlibrary.service.DLFileEntryTypeLocalServiceUtil" %><%@
-page import="com.liferay.portlet.documentlibrary.service.DLFileEntryTypeServiceUtil" %><%@
 page import="com.liferay.portlet.documentlibrary.service.permission.DLFileEntryPermission" %><%@
 page import="com.liferay.portlet.documentlibrary.util.DLUtil" %><%@
 page import="com.liferay.portlet.documentlibrary.util.ImageProcessor" %><%@
@@ -156,16 +155,4 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 	</c:otherwise>
 </c:choose>
 
-<%!
-private static final String _getFileEntryImage(FileEntry fileEntry, ThemeDisplay themeDisplay) {
-	StringBundler sb = new StringBundler(5);
-
-	sb.append("<img style=\"border-width: 0; text-align: left;\" src=\"");
-	sb.append(themeDisplay.getPathThemeImages());
-	sb.append("/file_system/small/");
-	sb.append(fileEntry.getIcon());
-	sb.append(".png\">");
-
-	return sb.toString();
-}
-%>
+<%@ include file="/html/portlet/document_library/util.jspf" %>

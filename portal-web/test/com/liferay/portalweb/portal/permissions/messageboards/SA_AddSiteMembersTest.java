@@ -45,6 +45,11 @@ public class SA_AddSiteMembersTest extends BaseTestCase {
 		selenium.waitForPageToLoad("30000");
 		selenium.clickAt("link=Sites", RuntimeVariables.replace("Sites"));
 		selenium.waitForPageToLoad("30000");
+		selenium.type("//input[@id='_134_name']",
+			RuntimeVariables.replace("Site Name"));
+		selenium.clickAt("//input[@value='Search']",
+			RuntimeVariables.replace("Search"));
+		selenium.waitForPageToLoad("30000");
 		assertEquals(RuntimeVariables.replace("Actions"),
 			selenium.getText("//span[@title='Actions']/ul/li/strong/a"));
 		selenium.clickAt("//span[@title='Actions']/ul/li/strong/a",
@@ -108,12 +113,38 @@ public class SA_AddSiteMembersTest extends BaseTestCase {
 		selenium.clickAt("//input[@name='_174_allRowIds']",
 			RuntimeVariables.replace("Check All"));
 		assertTrue(selenium.isChecked("//input[@name='_174_allRowIds']"));
-		selenium.clickAt("//input[@value='Update Associations']",
-			RuntimeVariables.replace("Update Associations"));
+		selenium.clickAt("//input[@value='Save']",
+			RuntimeVariables.replace("Save"));
 		selenium.waitForPageToLoad("30000");
 		assertEquals(RuntimeVariables.replace(
 				"Your request completed successfully."),
 			selenium.getText("//div[@class='portlet-msg-success']"));
+		selenium.clickAt("link=Add Members",
+			RuntimeVariables.replace("Add Members"));
+
+		for (int second = 0;; second++) {
+			if (second >= 90) {
+				fail("timeout");
+			}
+
+			try {
+				if (selenium.isVisible(
+							"//div[@class='lfr-component lfr-menu-list']/ul/li[1]/a")) {
+					break;
+				}
+			}
+			catch (Exception e) {
+			}
+
+			Thread.sleep(1000);
+		}
+
+		assertEquals(RuntimeVariables.replace("User"),
+			selenium.getText(
+				"//div[@class='lfr-component lfr-menu-list']/ul/li[1]/a"));
+		selenium.clickAt("//div[@class='lfr-component lfr-menu-list']/ul/li[1]/a",
+			RuntimeVariables.replace("User"));
+		selenium.waitForPageToLoad("30000");
 		selenium.type("//input[@name='_174_keywords']",
 			RuntimeVariables.replace("Member"));
 		selenium.clickAt("//input[@value='Search']",
@@ -123,8 +154,8 @@ public class SA_AddSiteMembersTest extends BaseTestCase {
 		selenium.clickAt("//input[@name='_174_allRowIds']",
 			RuntimeVariables.replace("Check All"));
 		assertTrue(selenium.isChecked("//input[@name='_174_allRowIds']"));
-		selenium.clickAt("//input[@value='Update Associations']",
-			RuntimeVariables.replace("Update Associations"));
+		selenium.clickAt("//input[@value='Save']",
+			RuntimeVariables.replace("Save"));
 		selenium.waitForPageToLoad("30000");
 		assertEquals(RuntimeVariables.replace(
 				"Your request completed successfully."),

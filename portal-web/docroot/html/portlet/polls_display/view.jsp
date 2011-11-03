@@ -28,7 +28,7 @@ PollsQuestion question = (PollsQuestion)request.getAttribute(WebKeys.POLLS_QUEST
 		%>
 
 		<div class="portlet-configuration portlet-msg-info">
-			<a href="<%= portletDisplay.getURLConfiguration() %>">
+			<a href="<%= portletDisplay.getURLConfiguration() %>" onClick="<%= portletDisplay.getURLConfigurationJS() %>">
 				<liferay-ui:message key="please-configure-this-portlet-to-make-it-visible-to-all-users" />
 			</a>
 		</div>
@@ -47,7 +47,7 @@ PollsQuestion question = (PollsQuestion)request.getAttribute(WebKeys.POLLS_QUEST
 		if (!question.isExpired() && !hasVoted && PollsQuestionPermission.contains(permissionChecker, question, ActionKeys.ADD_VOTE)) {
 			String cmd = ParamUtil.getString(request, Constants.CMD);
 
-			if (cmd.equals(Constants.ADD)) {
+			if (cmd.equals(Constants.VOTE)) {
 				long choiceId = ParamUtil.getLong(request, "choiceId");
 
 				try {
@@ -155,7 +155,7 @@ boolean showIconsActions = themeDisplay.isSignedIn() && (showEditPollIcon || sho
 				</liferay-portlet:renderURL>
 
 				<%
-				String editQuestionURL = "javascript:Liferay.Util.openWindow({dialog: {width: 960}, id: '" + liferayPortletResponse.getNamespace() + "', title: '" + ResourceActionsUtil.getModelResource(locale, PollsQuestion.class.getName()) + "', uri:'" + editPollURL.toString() + "'});";
+				String editQuestionURL = "javascript:Liferay.Util.openWindow({dialog: {width: 960}, id: '" + liferayPortletResponse.getNamespace() + "', title: '" + ResourceActionsUtil.getModelResource(locale, PollsQuestion.class.getName()) + "', uri:'" + HtmlUtil.escapeURL(editPollURL.toString()) + "'});";
 				%>
 
 				<liferay-ui:icon
@@ -171,6 +171,7 @@ boolean showIconsActions = themeDisplay.isSignedIn() && (showEditPollIcon || sho
 					image="configuration"
 					message="select-web-content"
 					method="get"
+					onClick="<%= portletDisplay.getURLConfigurationJS() %>"
 					url="<%= portletDisplay.getURLConfiguration() %>"
 				/>
 			</c:if>
@@ -183,7 +184,7 @@ boolean showIconsActions = themeDisplay.isSignedIn() && (showEditPollIcon || sho
 				</liferay-portlet:renderURL>
 
 				<%
-				String addQuestionURL = "javascript:Liferay.Util.openWindow({dialog: {width: 960}, id: '" + liferayPortletResponse.getNamespace() + "', title: '" + ResourceActionsUtil.getModelResource(locale, PollsQuestion.class.getName()) + "', uri:'" + addPollURL.toString() + "'});";
+				String addQuestionURL = "javascript:Liferay.Util.openWindow({dialog: {width: 960}, id: '" + liferayPortletResponse.getNamespace() + "', title: '" + ResourceActionsUtil.getModelResource(locale, PollsQuestion.class.getName()) + "', uri:'" + HtmlUtil.escapeURL(addPollURL.toString()) + "'});";
 				%>
 
 				<liferay-ui:icon

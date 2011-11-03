@@ -156,6 +156,11 @@ public class CompanyLocalServiceUtil {
 		return getService().dynamicQueryCount(dynamicQuery);
 	}
 
+	public static com.liferay.portal.model.Company fetchCompany(long companyId)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return getService().fetchCompany(companyId);
+	}
+
 	/**
 	* Returns the company with the primary key.
 	*
@@ -355,9 +360,10 @@ public class CompanyLocalServiceUtil {
 	with the primary key could not be found
 	* @throws SystemException if a system exception occurred
 	*/
-	public static com.liferay.portal.model.Company fetchCompany(long companyId)
+	public static com.liferay.portal.model.Company fetchCompanyById(
+		long companyId)
 		throws com.liferay.portal.kernel.exception.SystemException {
-		return getService().fetchCompany(companyId);
+		return getService().fetchCompanyById(companyId);
 	}
 
 	/**

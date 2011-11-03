@@ -43,6 +43,7 @@ public class AddAPWebContentTest extends BaseTestCase {
 		selenium.clickAt("link=Asset Publisher Page",
 			RuntimeVariables.replace("Asset Publisher Page"));
 		selenium.waitForPageToLoad("30000");
+		Thread.sleep(5000);
 		selenium.clickAt("//div/span/ul/li/strong/a",
 			RuntimeVariables.replace("Add New"));
 
@@ -63,7 +64,7 @@ public class AddAPWebContentTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}
 
-		assertEquals(RuntimeVariables.replace("Web Content"),
+		assertEquals(RuntimeVariables.replace("Basic Web Content"),
 			selenium.getText(
 				"//div[@class='lfr-component lfr-menu-list']/ul/li[5]/a"));
 		selenium.click("//div[@class='lfr-component lfr-menu-list']/ul/li[5]/a");
@@ -131,7 +132,24 @@ public class AddAPWebContentTest extends BaseTestCase {
 		selenium.clickAt("//input[@value='Submit for Publication']",
 			RuntimeVariables.replace("Submit for Publication"));
 		selenium.waitForPageToLoad("30000");
+
+		for (int second = 0;; second++) {
+			if (second >= 90) {
+				fail("timeout");
+			}
+
+			try {
+				if (selenium.isVisible("//section")) {
+					break;
+				}
+			}
+			catch (Exception e) {
+			}
+
+			Thread.sleep(1000);
+		}
+
 		assertEquals(RuntimeVariables.replace("There are no results."),
-			selenium.getText("//p"));
+			selenium.getText("//div[@class='portlet-body']/p"));
 	}
 }

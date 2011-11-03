@@ -49,6 +49,7 @@ import com.liferay.portal.service.WorkflowInstanceLinkLocalService;
 import com.liferay.portal.service.persistence.CompanyPersistence;
 import com.liferay.portal.service.persistence.GroupFinder;
 import com.liferay.portal.service.persistence.GroupPersistence;
+import com.liferay.portal.service.persistence.LockFinder;
 import com.liferay.portal.service.persistence.LockPersistence;
 import com.liferay.portal.service.persistence.PortletPreferencesFinder;
 import com.liferay.portal.service.persistence.PortletPreferencesPersistence;
@@ -290,6 +291,10 @@ public abstract class MBMessageLocalServiceBaseImpl
 	public long dynamicQueryCount(DynamicQuery dynamicQuery)
 		throws SystemException {
 		return mbMessagePersistence.countWithDynamicQuery(dynamicQuery);
+	}
+
+	public MBMessage fetchMBMessage(long messageId) throws SystemException {
+		return mbMessagePersistence.fetchByPrimaryKey(messageId);
 	}
 
 	/**
@@ -1016,6 +1021,24 @@ public abstract class MBMessageLocalServiceBaseImpl
 	 */
 	public void setLockPersistence(LockPersistence lockPersistence) {
 		this.lockPersistence = lockPersistence;
+	}
+
+	/**
+	 * Returns the lock finder.
+	 *
+	 * @return the lock finder
+	 */
+	public LockFinder getLockFinder() {
+		return lockFinder;
+	}
+
+	/**
+	 * Sets the lock finder.
+	 *
+	 * @param lockFinder the lock finder
+	 */
+	public void setLockFinder(LockFinder lockFinder) {
+		this.lockFinder = lockFinder;
 	}
 
 	/**
@@ -1977,6 +2000,8 @@ public abstract class MBMessageLocalServiceBaseImpl
 	protected LockLocalService lockLocalService;
 	@BeanReference(type = LockPersistence.class)
 	protected LockPersistence lockPersistence;
+	@BeanReference(type = LockFinder.class)
+	protected LockFinder lockFinder;
 	@BeanReference(type = PortletPreferencesLocalService.class)
 	protected PortletPreferencesLocalService portletPreferencesLocalService;
 	@BeanReference(type = PortletPreferencesService.class)

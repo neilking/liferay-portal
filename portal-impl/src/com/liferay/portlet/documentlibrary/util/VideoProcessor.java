@@ -19,7 +19,6 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.MessageBusUtil;
-import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -31,12 +30,6 @@ import com.liferay.portal.util.PrefsPropsUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.documentlibrary.NoSuchFileEntryException;
 import com.liferay.portlet.documentlibrary.store.DLStoreUtil;
-
-import com.xuggle.mediatool.IMediaReader;
-import com.xuggle.mediatool.IMediaWriter;
-import com.xuggle.mediatool.ToolFactory;
-
-import java.awt.image.BufferedImage;
 
 import java.io.File;
 import java.io.InputStream;
@@ -90,12 +83,10 @@ public class VideoProcessor extends DefaultPreviewableProcessor {
 		return _videoMimeTypes;
 	}
 
-	public static boolean hasVideo(FileEntry fileEntry, String version) {
+	public static boolean hasVideo(FileVersion fileVersion) {
 		boolean hasVideo = false;
 
 		try {
-			FileVersion fileVersion = fileEntry.getFileVersion(version);
-
 			hasVideo = _instance._hasVideo(fileVersion);
 
 			if (!hasVideo) {
@@ -107,21 +98,6 @@ public class VideoProcessor extends DefaultPreviewableProcessor {
 		}
 
 		return hasVideo;
-	}
-
-	public static boolean isSupportedVideo(
-		FileEntry fileEntry, String version) {
-
-		try {
-			FileVersion fileVersion = fileEntry.getFileVersion(version);
-
-			return _instance._isSupportedVideo(fileVersion);
-		}
-		catch (Exception e) {
-			_log.error(e, e);
-		}
-
-		return false;
 	}
 
 	public static boolean isSupportedVideo(String mimeType) {
@@ -157,24 +133,13 @@ public class VideoProcessor extends DefaultPreviewableProcessor {
 		File thumbnailTempFile = getThumbnailTempFile(tempFileId);
 
 		try {
-			IMediaReader iMediaReader = ToolFactory.makeReader(
-				file.getCanonicalPath());
-
-			iMediaReader.setBufferedImageTypeToGenerate(
-				BufferedImage.TYPE_3BYTE_BGR);
-
-			CaptureFrameListener captureFrameListener =
-				new CaptureFrameListener(
-					thumbnailTempFile, THUMBNAIL_TYPE, height, width);
-
-			iMediaReader.addListener(captureFrameListener);
-
 			try {
-				while (iMediaReader.readPacket() == null) {
-					if (captureFrameListener.isWritten()) {
-						break;
-					}
-				}
+				LiferayVideoThumbnailConverter liferayVideoThumbnailConverter =
+					new LiferayVideoThumbnailConverter(
+						file.getCanonicalPath(), thumbnailTempFile,
+						THUMBNAIL_TYPE, height, width);
+
+				liferayVideoThumbnailConverter.convert();
 			}
 			catch (Exception e) {
 				_log.error(e, e);
@@ -279,29 +244,13 @@ public class VideoProcessor extends DefaultPreviewableProcessor {
 			int width)
 		throws Exception {
 
-		IMediaReader iMediaReader = ToolFactory.makeReader(
-			srcFile.getCanonicalPath());
-
-		VideoResizer videoResizer = new VideoResizer(height, width);
-
-		iMediaReader.addListener(videoResizer);
-
-		AudioListener audioListener = new AudioListener();
-
-		videoResizer.addListener(audioListener);
-
-		IMediaWriter iMediaWriter = ToolFactory.makeWriter(
-			destFile.getCanonicalPath(), iMediaReader);
-
-		audioListener.addListener(iMediaWriter);
-
-		VideoListener videoListener = new VideoListener(height, width);
-
-		iMediaWriter.addListener(videoListener);
-
 		try {
-			while (iMediaReader.readPacket() == null) {
-			}
+			LiferayVideoConverter liferayVideoConverter =
+				new LiferayVideoConverter(
+					srcFile.getCanonicalPath(), destFile.getCanonicalPath(),
+					height, width, _SAMPLE_RATE);
+
+			liferayVideoConverter.convert();
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -344,6 +293,10 @@ public class VideoProcessor extends DefaultPreviewableProcessor {
 	}
 
 	private boolean _hasVideo(FileVersion fileVersion) throws Exception {
+		if (!_isSupportedVideo(fileVersion)) {
+			return false;
+		}
+
 		boolean previewExists = DLStoreUtil.hasFile(
 			fileVersion.getCompanyId(), REPOSITORY_ID,
 			getPreviewFilePath(fileVersion));
@@ -426,6 +379,8 @@ public class VideoProcessor extends DefaultPreviewableProcessor {
 		MessageBusUtil.sendMessage(
 			DestinationNames.DOCUMENT_LIBRARY_VIDEO_PROCESSOR, fileVersion);
 	}
+
+	private static int _SAMPLE_RATE = 44100;
 
 	private static Log _log = LogFactoryUtil.getLog(VideoProcessor.class);
 

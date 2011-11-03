@@ -18,6 +18,15 @@
 
 <%
 FileEntry fileEntry = (FileEntry)request.getAttribute("view_entries.jsp-fileEntry");
+
+FileVersion fileVersion = fileEntry.getFileVersion();
+
+FileVersion latestFileVersion = fileVersion;
+
+if ((user.getUserId() == fileEntry.getUserId()) || permissionChecker.isCompanyAdmin() || permissionChecker.isGroupAdmin(scopeGroupId) || DLFileEntryPermission.contains(permissionChecker, fileEntry, ActionKeys.UPDATE)) {
+	latestFileVersion = fileEntry.getLatestFileVersion();
+}
+
 DLFileShortcut fileShortcut = (DLFileShortcut)request.getAttribute("view_entries.jsp-fileShortcut");
 
 PortletURL tempRowURL = (PortletURL)request.getAttribute("view_entries.jsp-tempRowURL");
@@ -31,6 +40,10 @@ boolean showCheckBox = DLFileEntryPermission.contains(permissionChecker, fileEnt
 	<c:if test="<%= showCheckBox %>">
 		<aui:input cssClass="overlay document-selector" label="" name="<%= RowChecker.ROW_IDS + FileEntry.class.getSimpleName() %>" type="checkbox" value="<%= fileEntry.getFileEntryId() %>" />
 	</c:if>
+
+	<%
+	request.removeAttribute(WebKeys.SEARCH_CONTAINER_RESULT_ROW);
+	%>
 
 	<liferay-util:include page="/html/portlet/document_library/file_entry_action.jsp" />
 
@@ -49,6 +62,12 @@ boolean showCheckBox = DLFileEntryPermission.contains(permissionChecker, fileEnt
 
 		<span class="entry-title">
 			<%= StringUtil.shorten(fileEntry.getTitle(), 60) %>
+
+			<c:if test="<%= latestFileVersion.isPending() %>">
+				<span class="workflow-status-pending">
+					(<liferay-ui:message key="pending" />)
+				</span>
+			</c:if>
 		</span>
 	</a>
 </div>

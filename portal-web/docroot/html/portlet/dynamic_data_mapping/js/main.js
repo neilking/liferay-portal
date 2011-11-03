@@ -27,11 +27,35 @@ AUI().add(
 
 		var TPL_ELEMENT = '<{nodeName}{attributeList}></{nodeName}>';
 
+		var XML_ATTRIBUTES_FIELD_ATTRS = {
+			dataType: 1,
+			name: 1,
+			options: 1,
+			type: 1
+		};
+
 		DEFAULTS_FORM_VALIDATOR.STRINGS.structureFieldName = Liferay.Language.get('please-enter-only-alphanumeric-characters');
 
 		DEFAULTS_FORM_VALIDATOR.RULES.structureFieldName = function(value) {
 			return (/^[\w\-]+$/).test(value);
 		};
+
+		var LiferayAvailableField = A.Component.create(
+			{
+				ATTRS: {
+					localizationMap: {
+						validator: isObject,
+						value: {}
+					}
+				},
+
+				NAME: 'availableField',
+
+				EXTENDS: A.FormBuilderAvailableField
+			}
+		);
+
+		A.LiferayAvailableField = LiferayAvailableField;
 
 		var LiferayFormBuilder = A.Component.create(
 			{
@@ -332,24 +356,26 @@ AUI().add(
 									function(item2, index2, collection2) {
 										var attributeName = item2.attributeName;
 
-										var attributeTag = instance._createDynamicNode(
-											'entry',
-											{
-												name: attributeName
+										if (!XML_ATTRIBUTES_FIELD_ATTRS[attributeName]) {
+											var attributeTag = instance._createDynamicNode(
+												'entry',
+												{
+													name: attributeName
+												}
+											);
+
+											var attributeValue = instance.getFieldLocalizedValue(field, attributeName, item1);
+
+											if (attributeName === 'folder') {
+												attributeValue = A.JSON.stringify(attributeValue);
 											}
-										);
 
-										var attributeValue = instance.getFieldLocalizedValue(field, attributeName, item1);
-
-										if (attributeName === 'folder') {
-											attributeValue = A.JSON.stringify(attributeValue);
+											buffer.push(
+												attributeTag.openTag,
+												STR_CDATA_OPEN + attributeValue + STR_CDATA_CLOSE,
+												attributeTag.closeTag
+											);
 										}
-
-										buffer.push(
-											attributeTag.openTag,
-											STR_CDATA_OPEN + attributeValue + STR_CDATA_CLOSE,
-											attributeTag.closeTag
-										);
 									}
 								);
 
@@ -445,6 +471,23 @@ AUI().add(
 						return str.replace(/ /g, '_');
 					},
 
+					_setAvailableFields: function(val) {
+						var instance = this;
+
+						var fields = [];
+
+						AArray.each(
+							val,
+							function(item, index, collection) {
+								fields.push(
+									A.instanceOf(item, A.AvailableField) ? item : new A.LiferayAvailableField(item)
+								);
+							}
+						);
+
+						return fields;
+					},
+
 					_syncFieldOptionsLocaleUI: function(field, locale) {
 						var instance = this;
 
@@ -533,29 +576,24 @@ AUI().add(
 						fields = fields || instance.get('fields');
 
 						fields.each(
-							function(field, index, fields) {
-								var localizationMap = field.get('localizationMap');
+							function(item, index, collection) {
+								var localizationMap = {};
 
-								if (!isObject(localizationMap)) {
-									localizationMap = {};
-								}
+								localizationMap[locale] = item.getAttrs(LOCALIZABLE_FIELD_ATTRS);
 
-								var localeMap = localizationMap[locale] = {};
-
-								if (instanceOf(field, A.FormBuilderMultipleChoiceField)) {
-									instance._updateFieldOptionsLocalizationMap(field, locale);
-								}
-
-								AArray.each(
-									LOCALIZABLE_FIELD_ATTRS,
-									function(item, index, collection) {
-										localeMap[item] = field.get(item);
-									}
+								item.set(
+									'localizationMap',
+									A.mix(
+										localizationMap,
+										item.get('localizationMap')
+									)
 								);
 
-								field.set('localizationMap', localizationMap);
+								if (instanceOf(item, A.FormBuilderMultipleChoiceField)) {
+									instance._updateFieldOptionsLocalizationMap(item, locale);
+								}
 
-								instance._updateFieldsLocalizationMap(locale, field.get('fields'));
+								instance._updateFieldsLocalizationMap(locale, item.get('fields'));
 							}
 						);
 					}
@@ -652,11 +690,6 @@ AUI().add(
 					iconClass: LiferayFormBuilder.DEFAULT_ICON_CLASS,
 					label: Liferay.Language.get('number'),
 					type: 'ddm-number'
-				},
-				{
-					iconClass: LiferayFormBuilder.DEFAULT_ICON_CLASS,
-					label: Liferay.Language.get('password'),
-					type: 'ddm-password'
 				},
 				{
 					iconClass: 'aui-form-builder-field-icon aui-form-builder-field-icon-radio',

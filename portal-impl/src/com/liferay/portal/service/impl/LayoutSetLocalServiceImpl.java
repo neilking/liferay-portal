@@ -61,15 +61,38 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 		layoutSet.setGroupId(groupId);
 		layoutSet.setCompanyId(group.getCompanyId());
 		layoutSet.setPrivateLayout(privateLayout);
-		layoutSet.setThemeId(
-			ThemeImpl.getDefaultRegularThemeId(group.getCompanyId()));
-		layoutSet.setColorSchemeId(
-			ColorSchemeImpl.getDefaultRegularColorSchemeId());
-		layoutSet.setWapThemeId(
-			ThemeImpl.getDefaultWapThemeId(group.getCompanyId()));
-		layoutSet.setWapColorSchemeId(
-			ColorSchemeImpl.getDefaultWapColorSchemeId());
-		layoutSet.setCss(StringPool.BLANK);
+
+		if (group.isStagingGroup()) {
+			LayoutSet liveLayoutSet = null;
+
+			Group liveGroup = group.getLiveGroup();
+
+			if (privateLayout) {
+				liveLayoutSet = liveGroup.getPrivateLayoutSet();
+			}
+			else {
+				liveLayoutSet = liveGroup.getPublicLayoutSet();
+			}
+
+			layoutSet.setLogo(liveLayoutSet.getLogo());
+			layoutSet.setLogoId(liveLayoutSet.getLogoId());
+			layoutSet.setThemeId(liveLayoutSet.getThemeId());
+			layoutSet.setColorSchemeId(liveLayoutSet.getColorSchemeId());
+			layoutSet.setWapThemeId(liveLayoutSet.getWapThemeId());
+			layoutSet.setWapColorSchemeId(liveLayoutSet.getWapColorSchemeId());
+			layoutSet.setCss(liveLayoutSet.getCss());
+		}
+		else {
+			layoutSet.setThemeId(
+				ThemeImpl.getDefaultRegularThemeId(group.getCompanyId()));
+			layoutSet.setColorSchemeId(
+				ColorSchemeImpl.getDefaultRegularColorSchemeId());
+			layoutSet.setWapThemeId(
+				ThemeImpl.getDefaultWapThemeId(group.getCompanyId()));
+			layoutSet.setWapColorSchemeId(
+				ColorSchemeImpl.getDefaultWapColorSchemeId());
+			layoutSet.setCss(StringPool.BLANK);
+		}
 
 		layoutSetPersistence.update(layoutSet, false);
 
@@ -198,6 +221,14 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 			long groupId, boolean privateLayout, boolean logo, InputStream is)
 		throws PortalException, SystemException {
 
+		updateLogo(groupId, privateLayout, logo, is, true);
+	}
+
+	public void updateLogo(
+			long groupId, boolean privateLayout, boolean logo, InputStream is,
+			boolean cleanUpStream)
+		throws PortalException, SystemException {
+
 		LayoutSet layoutSet = layoutSetPersistence.findByG_P(
 			groupId, privateLayout);
 
@@ -216,7 +247,8 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 		layoutSetPersistence.update(layoutSet, false);
 
 		if (logo) {
-			imageLocalService.updateImage(layoutSet.getLogoId(), is);
+			imageLocalService.updateImage(
+				layoutSet.getLogoId(), is, cleanUpStream);
 		}
 		else {
 			imageLocalService.deleteImage(layoutSet.getLogoId());

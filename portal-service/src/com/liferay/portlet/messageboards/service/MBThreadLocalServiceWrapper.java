@@ -152,6 +152,12 @@ public class MBThreadLocalServiceWrapper implements MBThreadLocalService,
 		return _mbThreadLocalService.dynamicQueryCount(dynamicQuery);
 	}
 
+	public com.liferay.portlet.messageboards.model.MBThread fetchMBThread(
+		long threadId)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _mbThreadLocalService.fetchMBThread(threadId);
+	}
+
 	/**
 	* Returns the message boards thread with the primary key.
 	*
@@ -273,6 +279,12 @@ public class MBThreadLocalServiceWrapper implements MBThreadLocalService,
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		_mbThreadLocalService.deleteThreads(groupId, categoryId);
+	}
+
+	public com.liferay.portlet.messageboards.model.MBThread fetchThread(
+		long threadId)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _mbThreadLocalService.fetchThread(threadId);
 	}
 
 	public int getCategoryThreadsCount(long groupId, long categoryId, int status)

@@ -70,7 +70,6 @@ page import="com.liferay.portlet.documentlibrary.service.DLAppServiceUtil" %><%@
 page import="com.liferay.portlet.documentlibrary.service.DLFileEntryMetadataLocalServiceUtil" %><%@
 page import="com.liferay.portlet.documentlibrary.service.DLFileEntryTypeLocalServiceUtil" %><%@
 page import="com.liferay.portlet.documentlibrary.service.DLFileEntryTypeServiceUtil" %><%@
-page import="com.liferay.portlet.documentlibrary.service.DLFolderLocalServiceUtil" %><%@
 page import="com.liferay.portlet.documentlibrary.service.permission.DLFileEntryPermission" %><%@
 page import="com.liferay.portlet.documentlibrary.service.permission.DLFileEntryTypePermission" %><%@
 page import="com.liferay.portlet.documentlibrary.service.permission.DLFileShortcutPermission" %><%@
@@ -171,16 +170,4 @@ boolean enableCommentRatings = GetterUtil.getBoolean(preferences.getValue("enabl
 Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZone);
 %>
 
-<%!
-private static final String _getFileEntryImage(FileEntry fileEntry, ThemeDisplay themeDisplay) {
-	StringBundler sb = new StringBundler(5);
-
-	sb.append("<img style=\"border-width: 0; text-align: left;\" src=\"");
-	sb.append(themeDisplay.getPathThemeImages());
-	sb.append("/file_system/small/");
-	sb.append(fileEntry.getIcon());
-	sb.append(".png\">");
-
-	return sb.toString();
-}
-%>
+<%@ include file="/html/portlet/document_library/util.jspf" %>
