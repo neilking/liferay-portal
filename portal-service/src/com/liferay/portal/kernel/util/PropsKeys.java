@@ -1471,6 +1471,8 @@ public interface PropsKeys {
 
 	public static final String ORGANIZATIONS_USER_GROUP_MEMBERSHIP_ENABLED = "organizations.user.group.membership.enabled";
 
+	public static final String OSGI_ENABLED = "osgi.enabled";
+
 	public static final String OSGI_FRAMEWORK_BEGINNING_START_LEVEL = "osgi.framework.beginning.start.level";
 
 	public static final String OSGI_FRAMEWORK_STORAGE = "osgi.framework.storage";
@@ -1567,7 +1569,7 @@ public interface PropsKeys {
 
 	public static final String PORTAL_PROXY_PATH = "portal.proxy.path";
 
-	public static final String PORTAL_SECURITY_MANAGER_ENABLE = "portal.security.manager.enable";
+	public static final String PORTAL_SECURITY_MANAGER_STRATEGY = "portal.security.manager.strategy";
 
 	public static final String PORTLET_ADD_DEFAULT_RESOURCE_CHECK_ENABLED = "portlet.add.default.resource.check.enabled";
 
@@ -1588,6 +1590,8 @@ public interface PropsKeys {
 	public static final String PORTLET_URL_APPEND_PARAMETERS = "portlet.url.append.parameters";
 
 	public static final String PORTLET_URL_ESCAPE_XML = "portlet.url.escape.xml";
+
+	public static final String PORTLET_URL_REFRESH_URL_RESERVED_PARAMETERS = "portlet.url.refresh.url.reserved.parameters";
 
 	public static final String PORTLET_VIRTUAL_PATH = "portlet.virtual.path";
 
@@ -2060,6 +2064,8 @@ public interface PropsKeys {
 	public static final String WEB_SERVER_PROTOCOL = "web.server.protocol";
 
 	public static final String WEB_SERVER_PROXY_LEGACY_MODE = "web.server.proxy.legacy.mode";
+
+	public static final String WEB_SERVER_SERVLET_DIRECTORY_INDEXING_ENABLED = "web.server.servlet.directory.indexing.enabled";
 
 	public static final String WEBDAV_IGNORE = "webdav.ignore";
 
