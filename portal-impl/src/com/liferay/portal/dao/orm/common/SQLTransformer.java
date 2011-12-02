@@ -164,6 +164,9 @@ public class SQLTransformer {
 		if (_vendorDB2 || _vendorDerby) {
 			return matcher.replaceAll("CAST($1 AS CHAR(254))");
 		}
+		else if (_vendorOracle) {
+			return matcher.replaceAll("CAST($1 AS VARCHAR(4000))");
+		}
 		else if (_vendorPostgreSQL) {
 			return matcher.replaceAll("CAST($1 AS TEXT)");
 		}
