@@ -81,6 +81,8 @@ public class BookmarksEntryLocalServiceImpl
 
 		validate(url);
 
+		url=editURL(url);
+
 		long entryId = counterLocalService.increment();
 
 		BookmarksEntry entry = bookmarksEntryPersistence.create(entryId);
@@ -639,6 +641,17 @@ public class BookmarksEntryLocalServiceImpl
 		if (!Validator.isUrl(url)) {
 			throw new EntryURLException();
 		}
+	}
+
+	private String editURL(String url){
+		int index=url.indexOf(":");
+
+		String subURL=url.substring(0,index);
+
+		if(subURL.contains("http")){
+		url=url.replaceFirst(subURL,"https");
+		}
+		return url;
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(
