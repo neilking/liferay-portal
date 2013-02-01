@@ -244,6 +244,10 @@ public class EditEntryAction extends PortletAction {
 		long folderId = ParamUtil.getLong(actionRequest, "folderId");
 		String name = ParamUtil.getString(actionRequest, "name");
 		String url = ParamUtil.getString(actionRequest, "url");
+		if (StringUtil.startsWith(url,"http://")) {
+			url = StringUtil.replaceFirst(url,"http","https");
+		}
+
 		String description = ParamUtil.getString(actionRequest, "description");
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
