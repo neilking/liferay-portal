@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.ResourceConstants;
@@ -81,7 +82,7 @@ public class BookmarksEntryLocalServiceImpl
 
 		validate(url);
 
-		url=editURL(url);
+		url = editURL(url);
 
 		long entryId = counterLocalService.increment();
 
@@ -644,13 +645,12 @@ public class BookmarksEntryLocalServiceImpl
 	}
 
 	private String editURL(String url){
-		int index=url.indexOf(":");
+		String subURL = StringUtil.extractFirst(url,":");
 
-		String subURL=url.substring(0,index);
-
-		if(subURL.contains("http")){
-		url=url.replaceFirst(subURL,"https");
+		if(StringUtil.contains(subURL, "http")){
+			url = StringUtil.replaceFirst(url,subURL,"https");
 		}
+
 		return url;
 	}
 
