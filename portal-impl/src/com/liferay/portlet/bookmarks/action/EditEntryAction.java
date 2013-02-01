@@ -244,6 +244,7 @@ public class EditEntryAction extends PortletAction {
 		long folderId = ParamUtil.getLong(actionRequest, "folderId");
 		String name = ParamUtil.getString(actionRequest, "name");
 		String url = ParamUtil.getString(actionRequest, "url");
+		url = updateURL(url);
 		String description = ParamUtil.getString(actionRequest, "description");
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
@@ -271,6 +272,14 @@ public class EditEntryAction extends PortletAction {
 
 		AssetPublisherUtil.addRecentFolderId(
 			actionRequest, BookmarksEntry.class.getName(), folderId);
+	}
+
+	protected String updateURL(String url) {
+		if (StringUtil.startsWith(url,"http://")) {
+			url = StringUtil.replaceFirst(url,"http","https");
+		}
+
+		return url;
 	}
 
 }
