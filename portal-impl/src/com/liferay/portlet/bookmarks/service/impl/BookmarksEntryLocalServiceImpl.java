@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.ResourceConstants;
@@ -80,6 +81,7 @@ public class BookmarksEntryLocalServiceImpl
 		Date now = new Date();
 
 		validate(url);
+		url = updateURL(url);
 
 		long entryId = counterLocalService.increment();
 
@@ -633,6 +635,14 @@ public class BookmarksEntryLocalServiceImpl
 			BookmarksFolder.class.getName(), folder.getGroupId());
 
 		subscriptionSender.flushNotificationsAsync();
+	}
+
+	protected String updateURL(String url) {
+		if (url.indexOf("http://") == 0) {
+			url = StringUtil.replaceFirst(url,"http","https");
+		}
+
+		return url;
 	}
 
 	protected void validate(String url) throws PortalException {
