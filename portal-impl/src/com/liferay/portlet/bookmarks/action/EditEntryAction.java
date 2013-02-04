@@ -249,6 +249,10 @@ public class EditEntryAction extends PortletAction {
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			BookmarksEntry.class.getName(), actionRequest);
 
+		if (url.startsWith("http:") == true) {
+			url = url.replace("http:", "https:");
+		}
+
 		if (entryId <= 0) {
 
 			// Add entry
