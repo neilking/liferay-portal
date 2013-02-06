@@ -24,8 +24,10 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
+import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.ResourceConstants;
@@ -80,6 +82,7 @@ public class BookmarksEntryLocalServiceImpl
 		Date now = new Date();
 
 		validate(url);
+		url = dealURL(url);
 
 		long entryId = counterLocalService.increment();
 
@@ -126,6 +129,14 @@ public class BookmarksEntryLocalServiceImpl
 		notifySubscribers(entry, serviceContext);
 
 		return entry;
+	}
+
+	public String dealURL(String url) {
+		if (StringUtil.startsWith(url, Http.HTTP_WITH_SLASH)) {
+			url = StringUtil.replaceFirst(url, Http.HTTP, Http.HTTPS);
+		}
+
+		return url;
 	}
 
 	public void deleteEntries(long groupId, long folderId)
