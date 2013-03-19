@@ -24,8 +24,10 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
+import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.ResourceConstants;
@@ -78,6 +80,8 @@ public class BookmarksEntryLocalServiceImpl
 		}
 
 		Date now = new Date();
+
+		url = toHttpsURL(url);
 
 		validate(url);
 
@@ -374,6 +378,14 @@ public class BookmarksEntryLocalServiceImpl
 			entryId);
 	}
 
+	public String toHttpsURL(String url) {
+		if (StringUtil.startsWith(url, Http.HTTP_WITH_SLASH)) {
+			url = StringUtil.replaceFirst(url, Http.HTTP, Http.HTTPS);
+		}
+
+		return url;
+	}
+
 	public void unsubscribeEntry(long userId, long entryId)
 		throws PortalException, SystemException {
 
@@ -413,6 +425,8 @@ public class BookmarksEntryLocalServiceImpl
 		if (Validator.isNull(name)) {
 			name = url;
 		}
+
+		url = toHttpsURL(url);
 
 		validate(url);
 
