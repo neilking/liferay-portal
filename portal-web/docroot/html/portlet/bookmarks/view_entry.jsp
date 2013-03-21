@@ -54,7 +54,7 @@ request.setAttribute("view_entry.jsp-entry", entry);
 		<liferay-ui:header
 			backURL="<%= redirect %>"
 			localizeTitle="<%= false %>"
-			title="<%= entry.getName() %>"
+			title="<%= HtmlUtil.unescape(entry.getName()) %>"
 		/>
 	</c:otherwise>
 </c:choose>
