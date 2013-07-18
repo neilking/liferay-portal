@@ -103,7 +103,7 @@ if (Validator.isNotNull(script)) {
 	</portlet:renderURL>
 
 	<liferay-ui:header
-		backURL="<%= viewRecordsURL %>"
+		backURL="<%= redirect %>"
 		localizeTitle="<%= localizeTitle %>"
 		title="<%= title %>"
 	/>
