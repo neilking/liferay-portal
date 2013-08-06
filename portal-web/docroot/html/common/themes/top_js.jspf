@@ -338,24 +338,37 @@
 
 <script type="text/javascript">
 	// <![CDATA[
-		<c:if test="<%= (layoutTypePortlet != null) %>">
+		<c:if test="<%= (layoutTypePortlet != null) && !layoutTypePortlet.hasStateMax() %>">
 
 			<%
 			List<Portlet> allPortlets = layoutTypePortlet.getAllPortlets(false);
 
-			Iterator<Portlet> itr = allPortlets.iterator();
-
-			while (itr.hasNext()) {
-				Portlet portlet = itr.next();
-
+			for (Portlet portlet:allPortlets) {
 				if (!portlet.isActive() || !portlet.isReady() || portlet.isUndeployedPortlet()) {
-					itr.remove();
+					allPortlets.remove(portlet);
 				}
 			}
 			%>
 
-			<c:if test="<%= !allPortlets.isEmpty() && !layoutTypePortlet.hasStateMax() %>">
-				Liferay.Portlet.list = ['<%= ListUtil.toString(allPortlets, Portlet.PORTLET_ID_ACCESSOR, "','") %>'];
+			<c:if test="<%= !allPortlets.isEmpty()%>">
+
+				<%
+				StringBundler sb = new StringBundler(2 * allPortlets.size() - 1);
+
+				for (int i = 0; i < allPortlets.size(); i++) {
+					Portlet portlet = allPortlets.get(i);
+
+					String portletId = Portlet.PORTLET_ID_ACCESSOR.get(portlet);
+
+					sb.append(HtmlUtil.escapeJS(portletId));
+
+					if ((i + 1) != allPortlets.size()) {
+						sb.append("','");
+					}
+				}
+				%>
+
+				Liferay.Portlet.list = ['<%= sb.toString() %>'];
 			</c:if>
 		</c:if>
 
