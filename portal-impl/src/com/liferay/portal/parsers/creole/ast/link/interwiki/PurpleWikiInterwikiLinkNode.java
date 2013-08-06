@@ -12,20 +12,23 @@
  * details.
  */
 
-package com.liferay.portal.tools;
+package com.liferay.portal.parsers.creole.ast.link.interwiki;
 
-import com.liferay.portal.tools.sourceformatter.SourceFormatter;
-
-import org.junit.Test;
+import com.liferay.portal.parsers.creole.visitor.ASTVisitor;
 
 /**
- * @author Hugo Huijser
+ * @author Miguel Pastor
  */
-public class SourceFormatterTest {
+public class PurpleWikiInterwikiLinkNode extends InterwikiLinkNode {
 
-	@Test
-	public void testSourceFormatter() throws Exception {
-		new SourceFormatter(false, true);
+	@Override
+	public void accept(ASTVisitor astVisitor) {
+		astVisitor.visit(this);
+	}
+
+	@Override
+	public String getBaseURL() {
+		return "http://purplewiki.blueoxen.net/cgi-bin/wiki.pl?";
 	}
 
 }

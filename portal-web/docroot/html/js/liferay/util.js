@@ -723,6 +723,20 @@
 			return str.replace(regex, A.bind('_unescapeHTML', Util, entitiesMap));
 		},
 
+		_defaultPreviewArticleFn: function(event) {
+			var instance = this;
+
+			event.preventDefault();
+
+			Liferay.Util.openWindow(
+				{
+					cache: false,
+					title: event.title,
+					uri: event.uri
+				}
+			);
+		},
+
 		_defaultSubmitFormFn: function(event) {
 			var form = event.form;
 
@@ -2039,6 +2053,13 @@
 		}
 	);
 
+	Liferay.publish(
+		'previewArticle',
+		{
+			defaultFn: Util._defaultPreviewArticleFn
+		}
+	);
+
 	Liferay.provide(
 		Util,
 		'_openWindowProvider',
@@ -2092,6 +2113,11 @@
 	Util.Window = Window;
 
 	Liferay.Util = Util;
+
+	Liferay.BREAKPOINTS = {
+		PHONE: 768,
+		TABLET: 980
+	};
 
 	Liferay.STATUS_CODE = {
 		BAD_REQUEST: 400,

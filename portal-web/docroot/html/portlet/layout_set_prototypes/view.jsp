@@ -24,9 +24,7 @@ portletURL.setParameter("struts_action", "/layout_set_prototypes/view");
 
 <liferay-ui:error exception="<%= RequiredLayoutSetPrototypeException.class %>" message="you-cannot-delete-site-templates-that-are-used-by-a-site" />
 
-<liferay-util:include page="/html/portlet/layout_set_prototypes/toolbar.jsp">
-	<liferay-util:param name="toolbarItem" value="view-all" />
-</liferay-util:include>
+<liferay-util:include page="/html/portlet/layout_set_prototypes/toolbar.jsp" />
 
 <aui:form action="<%= portletURL.toString() %>" method="get" name="fm">
 	<liferay-portlet:renderURLParams varImpl="portletURL" />
@@ -50,12 +48,20 @@ portletURL.setParameter("struts_action", "/layout_set_prototypes/view");
 			keyProperty="layoutSetPrototypeId"
 			modelVar="layoutSetPrototype"
 		>
-			<liferay-portlet:renderURL varImpl="rowURL">
-				<portlet:param name="struts_action" value="/layout_set_prototypes/edit_layout_set_prototype" />
-				<portlet:param name="redirect" value="<%= searchContainer.getIteratorURL().toString() %>" />
-				<portlet:param name="backURL" value="<%= searchContainer.getIteratorURL().toString() %>" />
-				<portlet:param name="layoutSetPrototypeId" value="<%= String.valueOf(layoutSetPrototype.getLayoutSetPrototypeId()) %>" />
-			</liferay-portlet:renderURL>
+
+			<%
+			String rowURL = null;
+
+			ThemeDisplay siteThemeDisplay = (ThemeDisplay)themeDisplay.clone();
+
+			siteThemeDisplay.setScopeGroupId(layoutSetPrototype.getGroupId());
+
+			PortletURL siteAdministrationURL = PortalUtil.getSiteAdministrationURL(renderResponse, siteThemeDisplay);
+
+			if (siteAdministrationURL != null) {
+				rowURL = siteAdministrationURL.toString();
+			}
+			%>
 
 			<liferay-ui:search-container-column-text
 				name="name"

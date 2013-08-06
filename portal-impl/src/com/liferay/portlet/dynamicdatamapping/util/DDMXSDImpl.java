@@ -299,6 +299,7 @@ public class DDMXSDImpl implements DDMXSD {
 			locale);
 	}
 
+	@Override
 	public String getHTML(
 			PageContext pageContext, String xml, Fields fields,
 			String portletNamespace, String namespace, String mode,
@@ -350,7 +351,7 @@ public class DDMXSDImpl implements DDMXSD {
 
 		Document document = element.getDocument();
 
-		String defaultLocale = LocalizationUtil.getDefaultLocale(
+		String defaultLanguageId = LocalizationUtil.getDefaultLanguageId(
 			document.asXML());
 
 		List<Element> dynamicElementElements = element.elements(
@@ -392,7 +393,7 @@ public class DDMXSDImpl implements DDMXSD {
 					putMetadataValue(
 						localeMap, attributeName, attributeValue, type);
 
-					if (defaultLocale.equals(locale)) {
+					if (defaultLanguageId.equals(locale)) {
 						putMetadataValue(
 							jsonObject, attributeName, attributeValue, type);
 					}
@@ -608,15 +609,15 @@ public class DDMXSDImpl implements DDMXSD {
 
 		Document document = dynamicElementElement.getDocument();
 
-		String xml = document.asXML();
+		String[] availableLanguageIds =
+			LocalizationUtil.getAvailableLanguageIds(document);
 
-		String[] availableLocales = LocalizationUtil.getAvailableLocales(xml);
-
-		String defaultLanguageId = LocalizationUtil.getDefaultLocale(xml);
+		String defaultLanguageId = LocalizationUtil.getDefaultLanguageId(
+			document);
 
 		String languageId = LocaleUtil.toLanguageId(locale);
 
-		if (!ArrayUtil.contains(availableLocales, languageId)) {
+		if (!ArrayUtil.contains(availableLanguageIds, languageId)) {
 			languageId = defaultLanguageId;
 		}
 

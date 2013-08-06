@@ -47,6 +47,7 @@ import org.apache.tools.ant.DirectoryScanner;
 /**
  * @author Brian Wing Shun Chan
  * @author Raymond Augé
+ * @author Eduardo Lundgren
  */
 public class SassToCssBuilder {
 
@@ -65,6 +66,8 @@ public class SassToCssBuilder {
 
 	public static void main(String[] args) {
 		Map<String, String> arguments = ArgumentsUtil.parseArguments(args);
+
+		String docrootDirName = arguments.get("saas.docroot.dir");
 
 		List<String> dirNames = new ArrayList<String>();
 
@@ -87,7 +90,7 @@ public class SassToCssBuilder {
 		}
 
 		try {
-			new SassToCssBuilder(dirNames);
+			new SassToCssBuilder(docrootDirName, dirNames);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -111,7 +114,9 @@ public class SassToCssBuilder {
 			});
 	}
 
-	public SassToCssBuilder(List<String> dirNames) throws Exception {
+	public SassToCssBuilder(String docrootDirName, List<String> dirNames)
+		throws Exception {
+
 		Class<?> clazz = getClass();
 
 		ClassLoader classLoader = clazz.getClassLoader();
@@ -133,15 +138,21 @@ public class SassToCssBuilder {
 
 			_rubyExecutor.setExecuteInSeparateThread(false);
 
-			_parseSassDirectory(dirName);
+			_parseSassDirectory(docrootDirName, dirName);
 		}
 	}
 
-	private String _getContent(File file) throws Exception {
+	private String _getContent(String docrootDirName, String resourcePath)
+		throws Exception {
+
+		String filePath = docrootDirName.concat(resourcePath);
+
+		File file = new File(filePath);
+
 		String content = FileUtil.read(file);
 
 		content = AggregateFilter.aggregateCss(
-			new FileAggregateContext(file), content);
+			new FileAggregateContext(docrootDirName, resourcePath), content);
 
 		return parseStaticTokens(content);
 	}
@@ -191,14 +202,25 @@ public class SassToCssBuilder {
 
 	private String _normalizeFileName(String dirName, String fileName) {
 		return StringUtil.replace(
-			dirName + StringPool.SLASH + fileName, StringPool.BACK_SLASH,
-			StringPool.SLASH);
+			dirName + StringPool.SLASH + fileName,
+			new String[] {
+				StringPool.BACK_SLASH, StringPool.DOUBLE_SLASH
+			},
+			new String[] {
+				StringPool.SLASH, StringPool.SLASH
+			}
+		);
 	}
 
-	private void _parseSassDirectory(String dirName) throws Exception {
+	private void _parseSassDirectory(String docrootDirName, String dirName)
+		throws Exception {
+
 		DirectoryScanner directoryScanner = new DirectoryScanner();
 
-		directoryScanner.setBasedir(dirName);
+		String basedir = docrootDirName.concat(dirName);
+
+		directoryScanner.setBasedir(basedir);
+
 		directoryScanner.setExcludes(
 			new String[] {
 				"**\\_diffs\\**", "**\\.sass-cache*\\**",
@@ -211,7 +233,7 @@ public class SassToCssBuilder {
 
 		String[] fileNames = directoryScanner.getIncludedFiles();
 
-		if (!_isModified(dirName, fileNames)) {
+		if (!_isModified(basedir, fileNames)) {
 			return;
 		}
 
@@ -221,12 +243,13 @@ public class SassToCssBuilder {
 			try {
 				long start = System.currentTimeMillis();
 
-				_parseSassFile(fileName);
+				_parseSassFile(docrootDirName, fileName);
 
 				long end = System.currentTimeMillis();
 
 				System.out.println(
-					"Parsed " + fileName + " in " + (end - start) + " ms");
+					"Parsed " + docrootDirName + fileName + " in " +
+						(end - start) + " ms");
 			}
 			catch (Exception e) {
 				System.out.println("Unable to parse " + fileName);
@@ -236,15 +259,19 @@ public class SassToCssBuilder {
 		}
 	}
 
-	private void _parseSassFile(String fileName) throws Exception {
-		File file = new File(fileName);
-		File cacheFile = getCacheFile(fileName);
+	private void _parseSassFile(String docrootDirName, String resourcePath)
+		throws Exception {
+
+		String filePath = docrootDirName.concat(resourcePath);
+
+		File file = new File(filePath);
+		File cacheFile = getCacheFile(filePath);
 
 		Map<String, Object> inputObjects = new HashMap<String, Object>();
 
-		inputObjects.put("content", _getContent(file));
-		inputObjects.put("cssRealPath", fileName);
-		inputObjects.put("cssThemePath", _getCssThemePath(fileName));
+		inputObjects.put("content", _getContent(docrootDirName, resourcePath));
+		inputObjects.put("cssRealPath", filePath);
+		inputObjects.put("cssThemePath", _getCssThemePath(filePath));
 		inputObjects.put("sassCachePath", _tempDir);
 
 		UnsyncByteArrayOutputStream unsyncByteArrayOutputStream =
