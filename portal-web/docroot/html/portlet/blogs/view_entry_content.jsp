@@ -101,11 +101,14 @@ AssetEntry assetEntry = (AssetEntry)request.getAttribute("view_entry_content.jsp
 									modelResourceDescription="<%= entry.getTitle() %>"
 									resourcePrimKey="<%= String.valueOf(entry.getEntryId()) %>"
 									var="permissionsEntryURL"
+									windowState="<%= LiferayWindowState.POP_UP.toString() %>"
 								/>
 
 								<liferay-ui:icon
 									image="permissions"
 									label="<%= true %>"
+									linkCssClass="use-dialog"
+									method="get"
 									url="<%= permissionsEntryURL %>"
 								/>
 							</td>
@@ -164,7 +167,7 @@ AssetEntry assetEntry = (AssetEntry)request.getAttribute("view_entry_content.jsp
 						<%
 						String entryContentId = "blogs-entry-content-" + entry.getEntryId();
 
-						boolean inlineEditEnabled = BlogsEntryPermission.contains(permissionChecker, entry, ActionKeys.UPDATE) && !WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(themeDisplay.getCompanyId(), scopeGroupId, BlogsEntry.class.getName());
+						boolean inlineEditEnabled = BlogsEntryPermission.contains(permissionChecker, entry, ActionKeys.UPDATE) && BrowserSnifferUtil.isRtf(request) && !WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(themeDisplay.getCompanyId(), scopeGroupId, BlogsEntry.class.getName());
 						%>
 
 						<div <%= inlineEditEnabled ? "class=\"lfr-editable\" contenteditable=\"true\" id=\"" + entryContentId + "\" spellcheck=\"false\"" : StringPool.BLANK %>>

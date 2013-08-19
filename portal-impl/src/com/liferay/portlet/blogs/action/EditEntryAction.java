@@ -307,9 +307,18 @@ public class EditEntryAction extends PortletAction {
 				ParamUtil.getString(actionRequest, "deleteEntryIds"), 0L);
 		}
 
-		for (long deleteEntryId : deleteEntryIds) {
+		String deleteEntryTitle = null;
+
+		for (int i = 0; i < deleteEntryIds.length; i++) {
+			long deleteEntryId = deleteEntryIds[i];
+
 			if (moveToTrash) {
-				BlogsEntryServiceUtil.moveEntryToTrash(deleteEntryId);
+				BlogsEntry entry = BlogsEntryServiceUtil.moveEntryToTrash(
+					deleteEntryId);
+
+				if (i == 0) {
+					deleteEntryTitle = entry.getTitle();
+				}
 			}
 			else {
 				BlogsEntryServiceUtil.deleteEntry(deleteEntryId);
@@ -318,6 +327,14 @@ public class EditEntryAction extends PortletAction {
 
 		if (moveToTrash && (deleteEntryIds.length > 0)) {
 			Map<String, String[]> data = new HashMap<String, String[]>();
+
+			data.put(
+				"deleteEntryClassName",
+				new String[] {BlogsEntry.class.getName()});
+
+			if (Validator.isNotNull(deleteEntryTitle)) {
+				data.put("deleteEntryTitle", new String[] {deleteEntryTitle});
+			}
 
 			data.put(
 				"restoreEntryIds", ArrayUtil.toStringArray(deleteEntryIds));

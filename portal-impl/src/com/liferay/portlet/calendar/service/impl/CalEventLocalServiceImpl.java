@@ -1014,10 +1014,11 @@ public class CalEventLocalServiceImpl extends CalEventLocalServiceBaseImpl {
 
 		String title = StringPool.BLANK;
 
-		if (event.getSummary() != null) {
+		Summary summary = event.getSummary();
+
+		if ((summary != null) && Validator.isNotNull(summary.getValue())) {
 			title = ModelHintsUtil.trimString(
-				CalEvent.class.getName(), "title",
-				event.getSummary().getValue());
+				CalEvent.class.getName(), "title", summary.getValue());
 		}
 		else {
 			title =
@@ -1126,10 +1127,10 @@ public class CalEventLocalServiceImpl extends CalEventLocalServiceBaseImpl {
 			recurrence = new TZSRecurrence(
 				recStartCal, duration, Recurrence.DAILY);
 
-			Calendar until = CalendarFactoryUtil.getCalendar(
-				TimeZoneUtil.getTimeZone(StringPool.UTC));
+			Calendar until = (Calendar)recStartCal.clone();
 
-			until.setTimeInMillis(until.getTimeInMillis() + diffMillis);
+			until.setTimeInMillis(
+				until.getTimeInMillis() + diffMillis - Time.DAY);
 
 			recurrence.setUntil(until);
 		}

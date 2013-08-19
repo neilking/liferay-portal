@@ -308,6 +308,9 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 				addImportDataRootElement(portletDataContext, data);
 			}
 
+			portletDataContext.addDeletionSystemEventStagedModelTypes(
+				getDeletionSystemEventStagedModelTypes());
+
 			return doImportData(
 				portletDataContext, portletId, portletPreferences, data);
 		}
@@ -484,7 +487,6 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 					String.valueOf(importedDisplayStyleGroupId));
 			}
 			else {
-				portletPreferences.setValue("displayStyle", StringPool.BLANK);
 				portletPreferences.setValue(
 					"displayStyleGroupId", StringPool.BLANK);
 			}

@@ -495,6 +495,8 @@ public interface PropsKeys {
 
 	public static final String COUNTER_INCREMENT_PREFIX = "counter.increment.";
 
+	public static final String CUSTOM_SQL_AUTO_ESCAPE_WILDCARDS_ENABLED = "custom.sql.auto.escape.wildcards.enabled";
+
 	public static final String CUSTOM_SQL_FUNCTION_ISNOTNULL = "custom.sql.function.isnotnull";
 
 	public static final String CUSTOM_SQL_FUNCTION_ISNULL = "custom.sql.function.isnull";
@@ -880,6 +882,8 @@ public interface PropsKeys {
 	public static final String GOOGLE_APPS_USERNAME = "google.apps.username";
 
 	public static final String GOOGLE_GADGET_SERVLET_MAPPING = "google.gadget.servlet.mapping";
+
+	public static final String GROUPS_COMPLEX_SQL_CLASS_NAMES = "groups.complex.sql.class.names";
 
 	public static final String GZIP_COMPRESSION_LEVEL = "gzip.compression.level";
 
@@ -1424,6 +1428,14 @@ public interface PropsKeys {
 	public static final String LOCALES_ENABLED = "locales.enabled";
 
 	public static final String LOCK_LISTENERS = "lock.listeners";
+
+	public static final String LOG_SANITIZER_ENABLED = "log.sanitizer.enabled";
+
+	public static final String LOG_SANITIZER_ESCAPE_HTML_ENABLED = "log.sanitizer.escape.html.enabled";
+
+	public static final String LOG_SANITIZER_REPLACEMENT_CHARACTER = "log.sanitizer.replacement.character";
+
+	public static final String LOG_SANITIZER_WHITELIST_CHARACTERS = "log.sanitizer.whitelist.characters";
 
 	public static final String LOGIN_CREATE_ACCOUNT_ALLOW_CUSTOM_PASSWORD = "login.create.account.allow.custom.password";
 

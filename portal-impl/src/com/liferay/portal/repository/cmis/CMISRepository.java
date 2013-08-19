@@ -1188,6 +1188,19 @@ public class CMISRepository extends BaseCmisRepository {
 	}
 
 	@Override
+	public Hits search(long creatorUserId, int status, int start, int end) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Hits search(
+		long creatorUserId, long folderId, String[] mimeTypes, int status,
+		int start, int end) {
+
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public Hits search(SearchContext searchContext, Query query)
 		throws SearchException {
 
@@ -2149,12 +2162,7 @@ public class CMISRepository extends BaseCmisRepository {
 			list = ListUtil.sort(list, obc);
 		}
 
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS)) {
-			return list;
-		}
-		else {
-			return ListUtil.subList(list, start, end);
-		}
+		return ListUtil.subList(list, start, end);
 	}
 
 	protected FileEntry toFileEntry(Document document, boolean strict)

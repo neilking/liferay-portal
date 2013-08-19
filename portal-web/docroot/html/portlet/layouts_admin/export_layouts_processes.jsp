@@ -22,7 +22,7 @@ long groupId = ParamUtil.getLong(request, "groupId");
 PortletURL portletURL = liferayPortletResponse.createRenderURL();
 
 portletURL.setParameter("struts_action", "/layouts_admin/export_layouts");
-portletURL.setParameter("tabs2", "all-export-processes");
+portletURL.setParameter("tabs2", "current-and-previous");
 portletURL.setParameter("groupId", String.valueOf(groupId));
 
 String orderByCol = ParamUtil.getString(request, "orderByCol");
@@ -95,11 +95,11 @@ OrderByComparator orderByComparator = BackgroundTaskUtil.getBackgroundTaskOrderB
 					for (FileEntry fileEntry : attachmentsFileEntries) {
 					%>
 
-						<portlet:actionURL var="attachmentURL" windowState="<%= LiferayWindowState.EXCLUSIVE.toString() %>">
+						<portlet:resourceURL var="attachmentURL">
 							<portlet:param name="struts_action" value="/group_pages/get_background_task_attachment" />
 							<portlet:param name="backgroundTaskId" value="<%= String.valueOf(backgroundTask.getBackgroundTaskId()) %>" />
 							<portlet:param name="attachment" value="<%= fileEntry.getTitle() %>" />
-						</portlet:actionURL>
+						</portlet:resourceURL>
 
 						<%
 						StringBundler sb = new StringBundler(4);

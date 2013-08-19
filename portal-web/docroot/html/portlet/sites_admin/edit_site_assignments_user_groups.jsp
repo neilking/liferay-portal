@@ -22,8 +22,6 @@ String tabs2 = (String)request.getAttribute("edit_site_assignments.jsp-tabs2");
 
 int cur = (Integer)request.getAttribute("edit_site_assignments.jsp-cur");
 
-String redirect = ParamUtil.getString(request, "redirect");
-
 Group group = (Group)request.getAttribute("edit_site_assignments.jsp-group");
 
 PortletURL portletURL = (PortletURL)request.getAttribute("edit_site_assignments.jsp-portletURL");
@@ -33,7 +31,7 @@ PortletURL viewUserGroupsURL = renderResponse.createRenderURL();
 viewUserGroupsURL.setParameter("struts_action", "/sites_admin/edit_site_assignments");
 viewUserGroupsURL.setParameter("tabs1", "user-groups");
 viewUserGroupsURL.setParameter("tabs2", tabs2);
-viewUserGroupsURL.setParameter("redirect", redirect);
+viewUserGroupsURL.setParameter("redirect", currentURL);
 viewUserGroupsURL.setParameter("groupId", String.valueOf(group.getGroupId()));
 
 UserGroupGroupChecker userGroupGroupChecker = null;
@@ -77,11 +75,14 @@ userGroupSearch.setEmptyResultsMessage(emptyResultsMessage);
 	if (tabs1.equals("summary") || tabs2.equals("current")) {
 		userGroupParams.put("userGroupsGroups", new Long(group.getGroupId()));
 	}
+
+	total = UserGroupLocalServiceUtil.searchCount(company.getCompanyId(), searchTerms.getKeywords(), userGroupParams);
+
+	searchContainer.setTotal(total);
 	%>
 
 	<liferay-ui:search-container-results
 		results="<%= UserGroupLocalServiceUtil.search(company.getCompanyId(), searchTerms.getKeywords(), userGroupParams, searchContainer.getStart(), searchContainer.getEnd(), searchContainer.getOrderByComparator()) %>"
-		total="<%= UserGroupLocalServiceUtil.searchCount(company.getCompanyId(), searchTerms.getKeywords(), userGroupParams) %>"
 	/>
 
 	<liferay-ui:search-container-row

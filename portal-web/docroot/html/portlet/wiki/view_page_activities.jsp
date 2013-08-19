@@ -87,7 +87,7 @@ iteratorURL.setParameter("nodeId", String.valueOf(node.getNodeId()));
 						catch (NoSuchModelException nsme) {
 						}
 
-						String title = extraDataJSONObject.getString("title");
+						String title = extraDataJSONObject.getString("fileEntryTitle");
 
 						if (fileEntry != null) {
 							fileVersion = fileEntry.getFileVersion();
@@ -97,14 +97,14 @@ iteratorURL.setParameter("nodeId", String.valueOf(node.getNodeId()));
 						<liferay-util:buffer var="attachmentTitle">
 							<c:choose>
 								<c:when test="<%= fileVersion != null %>">
-									<portlet:actionURL var="getPateAttachmentURL" windowState="<%= LiferayWindowState.EXCLUSIVE.toString() %>">
+									<portlet:resourceURL var="getPateAttachmentURL">
 										<portlet:param name="struts_action" value="/wiki/get_page_attachment" />
 										<portlet:param name="redirect" value="<%= currentURL %>" />
 										<portlet:param name="nodeId" value="<%= String.valueOf(node.getNodeId()) %>" />
 										<portlet:param name="title" value="<%= wikiPage.getTitle() %>" />
 										<portlet:param name="fileName" value="<%= fileEntry.getTitle() %>" />
 										<portlet:param name="status" value="<%= String.valueOf(fileVersion.getStatus()) %>" />
-									</portlet:actionURL>
+									</portlet:resourceURL>
 
 									<aui:a href="<%= getPateAttachmentURL %>"><%= title %></aui:a>
 								</c:when>
@@ -137,6 +137,24 @@ iteratorURL.setParameter("nodeId", String.valueOf(node.getNodeId()));
 								/>
 							</c:when>
 						</c:choose>
+					</c:when>
+
+					<c:when test="<%= socialActivity.getType() == SocialActivityConstants.TYPE_ADD_COMMENT %>">
+
+						<%
+						WikiPage socialActivityWikiPage = WikiPageLocalServiceUtil.getPage(node.getNodeId(), wikiPage.getTitle());
+						%>
+
+						<portlet:renderURL var="viewPageURL">
+							<portlet:param name="struts_action" value="/wiki/view" />
+							<portlet:param name="nodeName" value="<%= node.getName() %>" />
+							<portlet:param name="title" value="<%= socialActivityWikiPage.getTitle() %>" />
+						</portlet:renderURL>
+
+						<liferay-ui:icon
+							label="<%= true %>"
+							message='<%= LanguageUtil.format(pageContext, "x-added-a-comment", new Object[] {socialActivityUser.getFullName(), viewPageURL + "#wikiCommentsPanel"}) %>'
+						/>
 					</c:when>
 
 					<c:when test="<%= (socialActivity.getType() == SocialActivityConstants.TYPE_MOVE_TO_TRASH) || (socialActivity.getType() == SocialActivityConstants.TYPE_RESTORE_FROM_TRASH) || (socialActivity.getType() == WikiActivityKeys.ADD_PAGE) || (socialActivity.getType() == WikiActivityKeys.UPDATE_PAGE) %>">
@@ -248,3 +266,47 @@ iteratorURL.setParameter("nodeId", String.valueOf(node.getNodeId()));
 		restoreEntryAction="/wiki/restore_page_attachment"
 	/>
 </div>
+
+<%
+PortletURL compareVersionsURL = renderResponse.createRenderURL();
+
+compareVersionsURL.setParameter("struts_action", "/wiki/compare_versions");
+%>
+
+<aui:form action="<%= compareVersionsURL %>" method="post" name="compareVersionsForm" onSubmit="event.preventDefault();">
+	<aui:input name="tabs3" type="hidden" value="activities" />
+	<aui:input name="backURL" type="hidden" value="<%= currentURL %>" />
+	<aui:input name="nodeId" type="hidden" value="<%= node.getNodeId() %>" />
+	<aui:input name="title" type="hidden" value="<%= wikiPage.getTitle() %>" />
+	<aui:input name="sourceVersion" type="hidden" value="" />
+	<aui:input name="targetVersion" type="hidden" value="" />
+	<aui:input name="type" type="hidden" value="html" />
+</aui:form>
+
+<aui:script use="aui-base,escape">
+	A.getBody().delegate(
+		'click',
+		function(event) {
+			Liferay.Util.selectEntity(
+				{
+					dialog: {
+						constrain: true,
+						modal: true,
+						width: 680
+					},
+					eventName: '<portlet:namespace />selectVersion',
+					id: '<portlet:namespace />selectVersion' + event.currentTarget.attr('id'),
+					title: '<%= UnicodeLanguageUtil.get(pageContext, "select-version") %>',
+					uri: event.currentTarget.attr('data-uri')
+				},
+				function(event) {
+					document.<portlet:namespace />compareVersionsForm.<portlet:namespace />sourceVersion.value = event.sourceversion;
+					document.<portlet:namespace />compareVersionsForm.<portlet:namespace />targetVersion.value = event.targetversion;
+
+					submitForm(document.<portlet:namespace />compareVersionsForm);
+				}
+			);
+		},
+		'.compare-to-link a'
+	);
+</aui:script>

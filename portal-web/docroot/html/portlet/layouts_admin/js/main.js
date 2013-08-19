@@ -28,7 +28,9 @@ AUI.add(
 					commentsNode: defaultConfig,
 					deleteMissingLayoutsNode: defaultConfig,
 					deletePortletDataNode: defaultConfig,
+					deletionsNode: defaultConfig,
 					form: defaultConfig,
+					incompleteProcessMessageNode: defaultConfig,
 					layoutSetSettingsNode: defaultConfig,
 					logoNode: defaultConfig,
 					processesNode: defaultConfig,
@@ -71,8 +73,8 @@ AUI.add(
 					destructor: function() {
 						var instance = this;
 
-						if (instance._commentsAndRatingsDialog) {
-							instance._commentsAndRatingsDialog.destroy();
+						if (instance._contentOptionsDialog) {
+							instance._contentOptionsDialog.destroy();
 						}
 
 						if (instance._globalConfigurationDialog) {
@@ -139,15 +141,15 @@ AUI.add(
 							'.content-link'
 						);
 
-						var commentsAndRatingsLink = instance.byId('commentsAndRatingsLink');
+						var contentOptionsLink = instance.byId('contentOptionsLink');
 
-						if (commentsAndRatingsLink) {
-							commentsAndRatingsLink.on(
+						if (contentOptionsLink) {
+							contentOptionsLink.on(
 								STR_CLICK,
 								function(event) {
-									var commentsAndRatingsDialog = instance._getCommentsAndRatingsDialog();
+									var contentOptionsDialog = instance._getContentOptionsDialog();
 
-									commentsAndRatingsDialog.show();
+									contentOptionsDialog.show();
 								}
 							);
 						}
@@ -229,63 +231,6 @@ AUI.add(
 								}
 							);
 						}
-					},
-
-					_getCommentsAndRatingsDialog: function() {
-						var instance = this;
-
-						var commentsAndRatingsDialog = instance._commentsAndRatingsDialog;
-
-						if (!commentsAndRatingsDialog) {
-							var commentsAndRatingsNode = instance.byId('commentsAndRatings');
-
-							commentsAndRatingsNode.show();
-
-							commentsAndRatingsDialog = Liferay.Util.Window.getWindow(
-								{
-									dialog: {
-										bodyContent: commentsAndRatingsNode,
-										centered: true,
-										height: 300,
-										modal: true,
-										render: instance.get('form'),
-										toolbars: {
-											footer: [
-												{
-													on: {
-														click: function(event) {
-															event.domEvent.preventDefault();
-
-															instance._setCommentsAndRatingsLabels();
-
-															commentsAndRatingsDialog.hide();
-														}
-													},
-													label: Liferay.Language.get('ok'),
-													primary: true
-												},
-												{
-													on: {
-														click: function(event) {
-															event.domEvent.preventDefault();
-
-															commentsAndRatingsDialog.hide();
-														}
-													},
-													label: Liferay.Language.get('cancel')
-												}
-											]
-										},
-										width: 400
-									},
-									title: Liferay.Language.get('comments-and-ratings')
-								}
-							);
-
-							instance._commentsAndRatingsDialog = commentsAndRatingsDialog;
-						}
-
-						return commentsAndRatingsDialog;
 					},
 
 					_getConfigurationDialog: function(portletId, portletTitle) {
@@ -400,6 +345,63 @@ AUI.add(
 						}
 
 						return contentDialog;
+					},
+
+					_getContentOptionsDialog: function() {
+						var instance = this;
+
+						var contentOptionsDialog = instance._contentOptionsDialog;
+
+						if (!contentOptionsDialog) {
+							var contentOptionsNode = instance.byId('contentOptions');
+
+							contentOptionsNode.show();
+
+							contentOptionsDialog = Liferay.Util.Window.getWindow(
+								{
+									dialog: {
+										bodyContent: contentOptionsNode,
+										centered: true,
+										height: 300,
+										modal: true,
+										render: instance.get('form'),
+										toolbars: {
+											footer: [
+												{
+													on: {
+														click: function(event) {
+															event.domEvent.preventDefault();
+
+															instance._setContentOptionsLabels();
+
+															contentOptionsDialog.hide();
+														}
+													},
+													label: Liferay.Language.get('ok'),
+													primary: true
+												},
+												{
+													on: {
+														click: function(event) {
+															event.domEvent.preventDefault();
+
+															contentOptionsDialog.hide();
+														}
+													},
+													label: Liferay.Language.get('cancel')
+												}
+											]
+										},
+										width: 400
+									},
+									title: Liferay.Language.get('comments,-ratings-and-deletions')
+								}
+							);
+
+							instance._contentOptionsDialog = contentOptionsDialog;
+						}
+
+						return contentOptionsDialog;
 					},
 
 					_getGlobalConfigurationDialog: function() {
@@ -760,7 +762,7 @@ AUI.add(
 							}
 						);
 
-						instance._setCommentsAndRatingsLabels();
+						instance._setContentOptionsLabels();
 						instance._setGlobalConfigurationLabels();
 						instance._setGlobalContentLabels();
 						instance._setPageLabels();
@@ -849,9 +851,13 @@ AUI.add(
 
 											var renderInterval = RENDER_INTERVAL_IDLE;
 
-											if (processesNode.one(".background-task-status-in-progress")) {
+											var inProgress = !!processesNode.one('.background-task-status-in-progress');
+
+											if (inProgress) {
 												renderInterval = RENDER_INTERVAL_IN_PROGRESS;
 											}
+
+											instance._updateincompleteProcessMessage(inProgress, processesNode.one('.incomplete-process-message'));
 
 											A.later(renderInterval, instance, instance._renderProcesses);
 										}
@@ -859,22 +865,6 @@ AUI.add(
 								}
 							);
 						}
-					},
-
-					_setCommentsAndRatingsLabels: function() {
-						var instance = this;
-
-						var selectedCommentsAndRatings = [];
-
-						if (instance._isChecked('commentsNode')) {
-							selectedCommentsAndRatings.push(Liferay.Language.get('comments'));
-						}
-
-						if (instance._isChecked('ratingsNode')) {
-							selectedCommentsAndRatings.push(Liferay.Language.get('ratings'));
-						}
-
-						instance._setLabels('commentsAndRatingsLink', 'selectedCommentsAndRatings', selectedCommentsAndRatings.join(', '));
 					},
 
 					_setConfigurationLabels: function(portletId) {
@@ -931,6 +921,41 @@ AUI.add(
 						}
 
 						instance._setLabels('contentLink_' + portletId, 'selectedContent_' + portletId, selectedContent.join(', '));
+					},
+
+					_setContentOptionsLabels: function() {
+						var instance = this;
+
+						var selectedContentOptions = [];
+
+						if (instance._isChecked('commentsNode')) {
+							selectedContentOptions.push(Liferay.Language.get('comments'));
+						}
+
+						if (instance._isChecked('deletionsNode')) {
+							var deletionsNode = instance.get('deletionsNode');
+
+							selectedContentOptions.push(deletionsNode.attr('data-name'));
+
+							instance.all('.deletions').each(
+								function(item, index, collection) {
+									item.show();
+								}
+							);
+						}
+						else {
+							instance.all('.deletions').each(
+								function(item, index, collection) {
+									item.hide();
+								}
+							);
+						}
+
+						if (instance._isChecked('ratingsNode')) {
+							selectedContentOptions.push(Liferay.Language.get('ratings'));
+						}
+
+						instance._setLabels('contentOptionsLink', 'selectedContentOptions', selectedContentOptions.join(', '));
 					},
 
 					_setGlobalConfigurationLabels: function() {
@@ -1129,6 +1154,26 @@ AUI.add(
 						}
 
 						instance._setLabels('remoteLink', 'selectedRemote', selectedRemote.join(', '));
+					},
+
+					_updateincompleteProcessMessage: function(inProgress, content) {
+						var instance = this;
+
+						var incompleteProcessMessageNode = instance.get('incompleteProcessMessageNode');
+
+						if (incompleteProcessMessageNode) {
+							content.show();
+
+							if (inProgress || incompleteProcessMessageNode.hasClass('in-progress')) {
+								incompleteProcessMessageNode.setContent(content);
+
+								if (inProgress) {
+									incompleteProcessMessageNode.addClass('in-progress');
+
+									incompleteProcessMessageNode.show();
+								}
+							}
+						}
 					}
 				}
 			}

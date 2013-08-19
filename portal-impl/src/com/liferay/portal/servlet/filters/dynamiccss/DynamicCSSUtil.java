@@ -19,6 +19,8 @@ import com.liferay.portal.kernel.io.unsync.UnsyncPrintWriter;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.CharPool;
+import com.liferay.portal.kernel.util.ContextPathUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.SessionParamUtil;
@@ -171,13 +173,28 @@ public class DynamicCSSUtil {
 			return content;
 		}
 
+		String portalContextPath = PortalUtil.getPathContext();
+
+		String baseURL = portalContextPath;
+
+		String contextPath = ContextPathUtil.getContextPath(servletContext);
+
+		if (!contextPath.equals(portalContextPath)) {
+			baseURL = StringPool.SLASH.concat(
+				GetterUtil.getString(servletContext.getServletContextName()));
+		}
+
+		if (baseURL.endsWith(StringPool.SLASH)) {
+			baseURL = baseURL.substring(0, baseURL.length() - 1);
+		}
+
 		parsedContent = StringUtil.replace(
 			parsedContent,
 			new String[] {
-				"@portal_ctx@", "@theme_image_path@"
+				"@base_url@", "@portal_ctx@", "@theme_image_path@"
 			},
 			new String[] {
-				PortalUtil.getPathContext(),
+				baseURL, portalContextPath,
 				_getThemeImagesPath(request, themeDisplay, theme)
 			});
 
