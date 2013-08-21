@@ -480,9 +480,10 @@
 			newenvironment="true"
 		>
 			<jvmarg value="-Dliferay.lib.portal.dir=${basedir}/../lib/portal" />
-			<arg value="sass.dir.0=${basedir}/docroot/html/css" />
-			<arg value="sass.dir.1=${basedir}/docroot/html/portlet" />
-			<arg value="sass.dir.2=${basedir}/docroot/html/themes" />
+			<arg value="sass.dir.0=/html/css" />
+			<arg value="sass.dir.1=/html/portlet" />
+			<arg value="sass.dir.2=/html/themes" />
+			<arg value="saas.docroot.dir=${basedir}/docroot" />
 		</java>
 	</target>
 
@@ -797,6 +798,16 @@
 
 				<replace file="docroot/html/js/editor/ckeditor/editor/filemanager/browser/liferay/browser.html">
 					<replacefilter token="FCKeditor" value="CKeditor" />
+				</replace>
+
+				<replace file="docroot/html/js/editor/ckeditor/editor/filemanager/browser/liferay/browser.html">
+					<replacetoken><![CDATA[<meta http-equiv="Content-Type" content="text/html; charset=utf-8">]]></replacetoken>
+					<replacevalue>
+						<![CDATA[
+							<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+							<meta content="IE=EmulateIE9" http-equiv="X-UA-Compatible">
+						]]>
+					</replacevalue>
 				</replace>
 
 				<replace file="docroot/html/js/editor/ckeditor/editor/filemanager/browser/liferay/frmresourceslist.html">

@@ -258,7 +258,7 @@ if (Validator.isNotNull(content)) {
 										<c:when test="<%= ddmTemplates.isEmpty() %>">
 											<aui:input name="templateId" type="hidden" value="<%= templateId %>" />
 
-											<div id="selectTemplateMessage"></div>
+											<div id="<portlet:namespace />selectTemplateMessage"></div>
 
 											<span class="template-name-label">
 												<liferay-ui:message key="none" />
@@ -402,7 +402,7 @@ if (Validator.isNotNull(content)) {
 										Locale[] locales = LanguageUtil.getAvailableLocales(themeDisplay.getSiteGroupId());
 
 										for (int i = 0; i < locales.length; i++) {
-											if (ArrayUtil.contains(article.getAvailableLocales(), LocaleUtil.toLanguageId(locales[i]))) {
+											if (ArrayUtil.contains(article.getAvailableLanguageIds(), LocaleUtil.toLanguageId(locales[i]))) {
 												continue;
 											}
 
@@ -433,7 +433,7 @@ if (Validator.isNotNull(content)) {
 				<c:if test="<%= article != null %>">
 
 					<%
-					String[] translations = article.getAvailableLocales();
+					String[] translations = article.getAvailableLanguageIds();
 					%>
 
 					<div class='<%= (Validator.isNull(toLanguageId) && (translations.length > 1)) ? "contains-translations" :"" %>' id="<portlet:namespace />availableTranslationContainer">
