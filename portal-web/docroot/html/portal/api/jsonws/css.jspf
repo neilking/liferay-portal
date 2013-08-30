@@ -14,6 +14,8 @@
  */
 --%>
 
+<%@ page import="com.liferay.taglib.aui.AUIUtil" %>
+
 body {
 	background: #EEF0F2 !important;
 	margin: 0 auto;
@@ -63,7 +65,7 @@ h3 {
 }
 
 .loading-results {
-	background: url(<%= themeDisplay.getPathThemeImages() %>/aui/loading_indicator.gif) no-repeat 50%;
+	background: url(<%= HttpUtil.encodeURL(themeDisplay.getPathThemeImages()) %>/aui/loading_indicator.gif) no-repeat 50%;
 	min-height: 2em;
 }
 
@@ -136,23 +138,23 @@ h3 {
 }
 
 .lfr-api-method h2 {
-	background-image: url(<%= themeDisplay.getPathThemeImages() %>/api/method.png);
+	background-image: url(<%= HttpUtil.encodeURL(themeDisplay.getPathThemeImages()) %>/api/method.png);
 }
 
 .lfr-api-parameters h3 {
-	background-image: url(<%= themeDisplay.getPathThemeImages() %>/api/property.png);
+	background-image: url(<%= HttpUtil.encodeURL(themeDisplay.getPathThemeImages()) %>/api/property.png);
 }
 
 .lfr-api-return-type h3 {
-	background-image: url(<%= themeDisplay.getPathThemeImages() %>/api/return_type.png);
+	background-image: url(<%= HttpUtil.encodeURL(themeDisplay.getPathThemeImages()) %>/api/return_type.png);
 }
 
 .lfr-api-exception h3 {
-	background-image: url(<%= themeDisplay.getPathThemeImages() %>/api/exception.png);
+	background-image: url(<%= HttpUtil.encodeURL(themeDisplay.getPathThemeImages()) %>/api/exception.png);
 }
 
 .lfr-api-execute h3 {
-	background-image: url(<%= themeDisplay.getPathThemeImages() %>/api/execute.png);
+	background-image: url(<%= HttpUtil.encodeURL(themeDisplay.getPathThemeImages()) %>/api/execute.png);
 }
 
 .lfr-api-section {

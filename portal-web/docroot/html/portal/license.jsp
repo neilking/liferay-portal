@@ -367,7 +367,7 @@ dateFormatDateTime.setTimeZone(timeZone);
 
 					<div id="<%= clusterNode.getClusterNodeId() %>_serverInfo">
 						<div style="text-align: center;">
-							<img src="<%= themeDisplay.getPathThemeImages() %>/aui/loading_indicator.gif" />
+							<img src="<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) %>/aui/loading_indicator.gif" />
 						</div>
 					</div>
 				</td>
@@ -403,7 +403,7 @@ dateFormatDateTime.setTimeZone(timeZone);
 
 					<div id="<%= clusterNode.getClusterNodeId() %>_licenseProperties">
 						<div style="text-align: center;">
-							<img src="<%= themeDisplay.getPathThemeImages() %>/aui/loading_indicator.gif" />
+							<img src="<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) %>/aui/loading_indicator.gif" />
 						</div>
 					</div>
 				</td>

@@ -363,7 +363,7 @@ if (Validator.isNotNull(content)) {
 
 							<span class="lfr-translation-manager-selector nobr">
 								<span class="article-default-language lfr-token lfr-token-primary" id="<portlet:namespace />textLanguageId">
-									<img alt="" src='<%= HtmlUtil.escapeAttribute(themeDisplay.getPathThemeImages() + "/language/" + defaultLanguageId + ".png") %>' />
+									<img alt="" src='<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages() + "/language/" + defaultLanguageId + ".png") %>' />
 
 									<%= LocaleUtil.fromLanguageId(defaultLanguageId).getDisplayName(locale) %>
 								</span>
@@ -394,7 +394,7 @@ if (Validator.isNotNull(content)) {
 									<liferay-ui:icon-menu
 										cssClass="add-translations-menu"
 										direction="down"
-										icon='<%= themeDisplay.getPathThemeImages() + "/common/add.png" %>'
+										icon='<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) + "/common/add.png" %>'
 										message='<%= LanguageUtil.get(pageContext, "add-translation") %>'
 										showArrow="<%= true %>"
 										showWhenSingleIcon="<%= true %>"
@@ -444,7 +444,7 @@ if (Validator.isNotNull(content)) {
 								<liferay-util:buffer var="languageLabel">
 									<%= LocaleUtil.fromLanguageId(toLanguageId).getDisplayName(locale) %>
 
-									<img alt="" src='<%= HtmlUtil.escapeAttribute(themeDisplay.getPathThemeImages() + "/language/" + toLanguageId + ".png") %>' />
+									<img alt="" src='<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages() + "/language/" + toLanguageId + ".png") %>' />
 								</liferay-util:buffer>
 
 								<%= LanguageUtil.format(pageContext, "translating-web-content-to-x", languageLabel) %>
@@ -465,7 +465,7 @@ if (Validator.isNotNull(content)) {
 										%>
 
 										<a class="lfr-token journal-article-translation-<%= translations[i] %>" href="javascript:;" onClick="Liferay.Util.openWindow({cache: false, id: '<portlet:namespace /><%= translations[i] %>', title: '<%= UnicodeLanguageUtil.get(pageContext, "web-content-translation") %>', uri: '<%= editTranslationURL %>'});">
-											<img alt="" src='<%= themeDisplay.getPathThemeImages() + "/language/" + translations[i] + ".png" %>' />
+											<img alt="" src='<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) + "/language/" + translations[i] + ".png" %>' />
 
 											<%= LocaleUtil.fromLanguageId(translations[i]).getDisplayName(locale) %>
 										</a>
@@ -619,7 +619,7 @@ if (Validator.isNotNull(content)) {
 				availableTranslationsLinks.show();
 				translationsMessage.show();
 
-				var TPL_TRANSLATION = '<a class="lfr-token journal-article-translation-{newLanguageId}" href="javascript:;"><img alt="" src="<%= themeDisplay.getPathThemeImages() %>/language/{newLanguageId}.png" />{newLanguage}</a>';
+				var TPL_TRANSLATION = '<a class="lfr-token journal-article-translation-{newLanguageId}" href="javascript:;"><img alt="" src="<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) %>/language/{newLanguageId}.png" />{newLanguage}</a>';
 
 				translationLinkTpl = A.Lang.sub(
 					TPL_TRANSLATION,

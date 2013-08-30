@@ -44,7 +44,7 @@ List<String> versions = (List<String>)request.getAttribute("liferay-ui:app-view-
 				<img alt="" border="no" class="img-polaroid" src="<%= thumbnailSrc %>" />
 
 				<c:if test="<%= locked %>">
-					<img alt="<liferay-ui:message key="locked" />" class="locked-icon" src="<%= themeDisplay.getPathThemeImages() %>/file_system/large/overlay_lock.png" />
+					<img alt="<liferay-ui:message key="locked" />" class="locked-icon" src="<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) %>/file_system/large/overlay_lock.png" />
 				</c:if>
 			</div>
 		</c:if>

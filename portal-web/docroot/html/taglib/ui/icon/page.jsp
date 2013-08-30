@@ -110,10 +110,10 @@ boolean urlIsNotNull = Validator.isNotNull(url);
 			<c:if test="<%= Validator.isNotNull(src) %>">
 				<c:choose>
 					<c:when test="<%= urlIsNotNull %>">
-						<img src="<%= src %>" <%= details %> />
+						<img src="<%= HtmlUtil.escapeHREF(src) %>" <%= details %> />
 					</c:when>
 					<c:otherwise>
-						<img id="<%= id %>" src="<%= src %>" <%= details %> />
+						<img id="<%= id %>" src="<%= HtmlUtil.escapeHREF(src) %>" <%= details %> />
 					</c:otherwise>
 				</c:choose>
 			</c:if>
@@ -192,8 +192,8 @@ boolean forcePost = method.equals("post") && (url.startsWith(Http.HTTP_WITH_SLAS
 				id: '<portlet:namespace /><%= id %>'
 
 				<c:if test="<%= Validator.isNotNull(srcHover) %>">
-					, src: '<%= src %>',
-					srcHover: '<%= srcHover %>'
+					, src: '<%= HtmlUtil.escapeJS(src) %>',
+					srcHover: '<%= HtmlUtil.escapeJS(srcHover) %>'
 				</c:if>
 
 				, useDialog: <%= useDialog %>

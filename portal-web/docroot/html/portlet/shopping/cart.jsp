@@ -485,7 +485,7 @@ boolean minQuantityMultiple = PrefsPropsUtil.getBoolean(company.getCompanyId(), 
 	if (shoppingPrefs.usePayPal()) {
 	%>
 
-		<img alt="paypal" src="<%= themeDisplay.getPathThemeImages() %>/shopping/cc_paypal.png" />
+		<img alt="paypal" src="<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) %>/shopping/cc_paypal.png" />
 
 		<br /><br />
 
@@ -495,7 +495,7 @@ boolean minQuantityMultiple = PrefsPropsUtil.getBoolean(company.getCompanyId(), 
 		for (int i = 0; i < ccTypes.length; i++) {
 	%>
 
-			<img alt="<%= ccTypes[i] %>" src="<%= themeDisplay.getPathThemeImages() %>/shopping/cc_<%= ccTypes[i] %>.png" />
+			<img alt="<%= ccTypes[i] %>" src="<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) %>/shopping/cc_<%= ccTypes[i] %>.png" />
 
 	<%
 		}

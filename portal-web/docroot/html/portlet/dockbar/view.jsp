@@ -250,7 +250,7 @@ List<LayoutPrototype> layoutPrototypes = LayoutPrototypeServiceUtil.search(compa
 
 <c:if test="<%= (layoutSet != null) && layoutSet.isLayoutSetPrototypeLinkActive() && SitesUtil.isLayoutModifiedSinceLastMerge(layout) && hasLayoutUpdatePermission %>">
 	<div class="page-customization-bar">
-		<img alt="" class="customized-icon" src="<%= themeDisplay.getPathThemeImages() %>/common/edit.png" />
+		<img alt="" class="customized-icon" src="<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) %>/common/edit.png" />
 
 		<liferay-ui:message key="this-page-has-been-changed-since-the-last-update-from-the-site-template" />
 
@@ -270,7 +270,7 @@ List<LayoutPrototype> layoutPrototypes = LayoutPrototypeServiceUtil.search(compa
 
 <c:if test="<%= (!SitesUtil.isLayoutUpdateable(layout) || (layout.isLayoutPrototypeLinkActive() && !group.hasStagingGroup())) && LayoutPermissionUtil.containsWithoutViewableGroup(themeDisplay.getPermissionChecker(), layout, false, ActionKeys.UPDATE) %>">
 	<div class="page-customization-bar">
-		<img alt="" class="customized-icon" src="<%= themeDisplay.getPathThemeImages() %>/common/site_icon.png" />
+		<img alt="" class="customized-icon" src="<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) %>/common/site_icon.png" />
 
 		<c:choose>
 			<c:when test="<%= layout.isLayoutPrototypeLinkActive() && !group.hasStagingGroup() %>">
@@ -288,7 +288,7 @@ List<LayoutPrototype> layoutPrototypes = LayoutPrototypeServiceUtil.search(compa
 
 <c:if test="<%= !(group.isLayoutPrototype() || group.isLayoutSetPrototype() || group.isUserGroup()) && layoutTypePortlet.isCustomizable() && LayoutPermissionUtil.containsWithoutViewableGroup(permissionChecker, layout, false, ActionKeys.CUSTOMIZE) %>">
 	<div class="page-customization-bar">
-		<img alt="" class="customized-icon" src="<%= themeDisplay.getPathThemeImages() %>/common/guest_icon.png" />
+		<img alt="" class="customized-icon" src="<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) %>/common/guest_icon.png" />
 
 		<c:choose>
 			<c:when test="<%= layoutTypePortlet.isCustomizedView() %>">

@@ -70,7 +70,7 @@ PortletURL portletURL = (PortletURL)request.getAttribute("view.jsp-portletURL");
 			buffer.append("<img alt=\"");
 			buffer.append(LanguageUtil.get(pageContext, "folder"));
 			buffer.append("\" class=\"label-icon\" src=\"");
-			buffer.append(themeDisplay.getPathThemeImages());
+			buffer.append(HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()));
 			buffer.append("/common/folder.png\">");
 			buffer.append("<strong>");
 			buffer.append(curFolder.getName());

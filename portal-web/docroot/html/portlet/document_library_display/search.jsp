@@ -229,7 +229,7 @@ int mountFoldersCount = DLAppServiceUtil.getMountFoldersCount(scopeGroupId, DLFo
 						cssClass='<%= MathUtil.isEven(index) ? "search" : "search alt" %>'
 						description="<%= (summary != null) ? HtmlUtil.escape(summary.getContent()) : folder.getDescription() %>"
 						queryTerms="<%= hits.getQueryTerms() %>"
-						thumbnailSrc='<%= themeDisplay.getPathThemeImages() + "/file_system/large/" + folderImage + ".png" %>'
+						thumbnailSrc='<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) + "/file_system/large/" + folderImage + ".png" %>'
 						title="<%= (summary != null) ? HtmlUtil.escape(summary.getTitle()) : folder.getName() %>"
 						url="<%= rowURL %>"
 					/>

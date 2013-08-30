@@ -41,7 +41,7 @@ boolean last = (assetEntryOrder == (searchContainer.getTotal() - 1));
 
 		<liferay-ui:icon
 			message="down"
-			src='<%= themeDisplay.getPathThemeImages() + "/arrows/02_down.png" %>'
+			src='<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) + "/arrows/02_down.png" %>'
 			url="<%= taglibDownURL %>"
 		/>
 
@@ -51,7 +51,7 @@ boolean last = (assetEntryOrder == (searchContainer.getTotal() - 1));
 
 		<liferay-ui:icon
 			message="up"
-			src='<%= themeDisplay.getPathThemeImages() + "/arrows/02_up.png" %>'
+			src='<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) + "/arrows/02_up.png" %>'
 			url="<%= taglibUpURL %>"
 		/>
 	</c:when>
@@ -63,7 +63,7 @@ boolean last = (assetEntryOrder == (searchContainer.getTotal() - 1));
 
 		<liferay-ui:icon
 			message="down"
-			src='<%= themeDisplay.getPathThemeImages() + "/arrows/02_down.png" %>'
+			src='<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) + "/arrows/02_down.png" %>'
 			url="<%= taglibDownURL %>"
 		/>
 	</c:when>
@@ -75,7 +75,7 @@ boolean last = (assetEntryOrder == (searchContainer.getTotal() - 1));
 
 		<liferay-ui:icon
 			message="up"
-			src='<%= themeDisplay.getPathThemeImages() + "/arrows/02_up.png" %>'
+			src='<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) + "/arrows/02_up.png" %>'
 			url="<%= taglibUpURL %>"
 		/>
 	</c:when>

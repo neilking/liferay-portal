@@ -170,7 +170,7 @@ if (layout != null) {
 
 				<c:if test="<%= layoutSetBranches.size() > _MAX_INLINE_BRANCHES %>">
 					<li class="tab go-to-layout-set-branches-tab">
-						<liferay-ui:icon-menu cssClass="layoutset-branches-menu" direction="down" extended="<%= false %>" icon='<%= themeDisplay.getPathThemeImages() + "/common/staging.png" %>' message='<%= LanguageUtil.format(pageContext, "site-pages-variations-x", layoutSetBranches.size()) %>'>
+						<liferay-ui:icon-menu cssClass="layoutset-branches-menu" direction="down" extended="<%= false %>" icon='<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) + "/common/staging.png" %>' message='<%= LanguageUtil.format(pageContext, "site-pages-variations-x", layoutSetBranches.size()) %>'>
 
 							<%
 							for (int i = 0; i < layoutSetBranches.size(); i++) {
@@ -339,7 +339,7 @@ if (layout != null) {
 
 											<c:if test="<%= layoutRevisions.size() > _MAX_INLINE_BRANCHES %>">
 												<li class="tab go-to-layout-branches-tab">
-													<liferay-ui:icon-menu cssClass="layoutset-branches-menu" direction="down" extended="<%= false %>" icon='<%= themeDisplay.getPathThemeImages() + "/common/signal_instance.png" %>' message="page-variations">
+													<liferay-ui:icon-menu cssClass="layoutset-branches-menu" direction="down" extended="<%= false %>" icon='<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) + "/common/signal_instance.png" %>' message="page-variations">
 
 														<%
 														for (int i = 0; i < layoutRevisions.size(); i ++) {

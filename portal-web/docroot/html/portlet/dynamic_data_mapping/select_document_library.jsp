@@ -95,7 +95,7 @@ portletURL.setParameter("folderId", String.valueOf(folderId));
 		<liferay-ui:breadcrumb showGuestGroup="<%= false %>" showLayout="<%= false %>" showParentGroups="<%= false %>" />
 
 		<div class="helper-clearfix">
-			<liferay-ui:icon-menu cssClass="lfr-document-library-add-menu" icon='<%= themeDisplay.getPathThemeImages() + "/common/add.png" %>' message="add">
+			<liferay-ui:icon-menu cssClass="lfr-document-library-add-menu" icon='<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) + "/common/add.png" %>' message="add">
 				<c:if test="<%= DLFolderPermission.contains(permissionChecker, scopeGroupId, folderId, ActionKeys.ADD_FOLDER) %>">
 					<liferay-portlet:renderURL portletName="<%= PortletKeys.DOCUMENT_LIBRARY %>" var="addFolderURL">
 						<portlet:param name="struts_action" value="/document_library/edit_folder" />
@@ -188,7 +188,7 @@ portletURL.setParameter("folderId", String.valueOf(folderId));
 			StringBundler sb = new StringBundler(4);
 
 			sb.append("<img align=\"left\" border=\"0\" src=\"");
-			sb.append(themeDisplay.getPathThemeImages());
+			sb.append(HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()));
 			sb.append("/common/folder.png\">");
 			sb.append(curFolder.getName());
 

@@ -175,7 +175,7 @@
 					return "<%= themeDisplay.getPathMain() %>";
 				},
 				getPathThemeImages: function() {
-					return "<%= themeDisplay.getPathThemeImages() %>";
+					return "<%= HtmlUtil.escapeJS(themeDisplay.getPathThemeImages()) %>";
 				},
 				getPathThemeRoot: function() {
 					return "<%= themeDisplay.getPathThemeRoot() %>";

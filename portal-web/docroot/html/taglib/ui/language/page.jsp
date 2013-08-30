@@ -99,7 +99,7 @@ for (int i = 0; i < locales.length; i++) {
 			for (int i = 0; i < locales.length; i++) {
 			%>
 
-				document.<%= namespace + formName %>.<%= namespace + name %>.options[<%= i %>].style.backgroundImage = "url(<%= themeDisplay.getPathThemeImages() %>/language/<%= LocaleUtil.toLanguageId(locales[i]) %>.png)";
+				document.<%= namespace + formName %>.<%= namespace + name %>.options[<%= i %>].style.backgroundImage = "url(<%= HtmlUtil.escapeJS(themeDisplay.getPathThemeImages()) %>/language/<%= LocaleUtil.toLanguageId(locales[i]) %>.png)";
 
 			<%
 			}

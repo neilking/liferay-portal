@@ -382,7 +382,7 @@ for (int i = 0; i < results.size(); i++) {
 
 						<c:otherwise>
 							<div style="float: left; margin: 100px 10px 0px;">
-								<img alt="<liferay-ui:message key="image" />" border="no" src="<%= themeDisplay.getPathThemeImages() %>/application/forbidden_action.png" />
+								<img alt="<liferay-ui:message key="image" />" border="no" src="<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) %>/application/forbidden_action.png" />
 							</div>
 						</c:otherwise>
 					</c:choose>
@@ -412,7 +412,7 @@ for (int i = 0; i < results.size(); i++) {
 							displayStyle="list"
 							locked="<%= fileEntry.isCheckedOut() %>"
 							showCheckbox="<%= true %>"
-							thumbnailSrc='<%= themeDisplay.getPathThemeImages() + "/file_system/small/" + DLUtil.getFileIcon(fileEntry.getExtension()) + ".png" %>'
+							thumbnailSrc='<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) + "/file_system/small/" + DLUtil.getFileIcon(fileEntry.getExtension()) + ".png" %>'
 							title="<%= latestFileVersion.getTitle() %>"
 							url="<%= rowURL.toString() %>"
 						/>
@@ -543,7 +543,7 @@ for (int i = 0; i < results.size(); i++) {
 							displayStyle="list"
 							folder="<%= true %>"
 							showCheckbox="<%= false %>"
-							thumbnailSrc='<%= themeDisplay.getPathThemeImages() + "/common/" + folderImage + ".png" %>'
+							thumbnailSrc='<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) + "/common/" + folderImage + ".png" %>'
 							title="<%= curFolder.getName() %>"
 							url="<%= rowURL.toString() %>"
 						/>

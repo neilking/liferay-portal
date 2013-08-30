@@ -31,10 +31,10 @@ int depth = ((Integer)request.getAttribute(WebKeys.MESSAGE_BOARDS_TREE_WALKER_DE
 		<c:if test="<%= !message.isRoot() %>">
 			<c:choose>
 				<c:when test="<%= !lastNode %>">
-					<img alt="" src="<%= themeDisplay.getPathThemeImages() %>/message_boards/t.png" />
+					<img alt="" src="<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) %>/message_boards/t.png" />
 				</c:when>
 				<c:otherwise>
-					<img alt="" src="<%= themeDisplay.getPathThemeImages() %>/message_boards/l.png" />
+					<img alt="" src="<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) %>/message_boards/l.png" />
 				</c:otherwise>
 			</c:choose>
 		</c:if>

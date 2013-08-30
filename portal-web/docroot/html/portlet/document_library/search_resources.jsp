@@ -294,7 +294,7 @@ else if ((searchType == DLSearchConstants.SINGLE) && !ajaxRequest) {
 								rowCheckerId="<%= String.valueOf(curFolder.getFolderId()) %>"
 								rowCheckerName="<%= Folder.class.getSimpleName() %>"
 								showCheckbox="<%= DLFolderPermission.contains(permissionChecker, curFolder, ActionKeys.DELETE) || DLFolderPermission.contains(permissionChecker, curFolder, ActionKeys.UPDATE) %>"
-								thumbnailSrc='<%= themeDisplay.getPathThemeImages() + "/file_system/large/" + folderImage + ".png" %>'
+								thumbnailSrc='<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) + "/file_system/large/" + folderImage + ".png" %>'
 								title="<%= (summary != null) ? HtmlUtil.escape(summary.getTitle()) : curFolder.getName() %>"
 								url="<%= tempRowURL.toString() %>"
 							/>
@@ -302,7 +302,7 @@ else if ((searchType == DLSearchConstants.SINGLE) && !ajaxRequest) {
 
 						<c:otherwise>
 							<div style="float: left; margin: 100px 10px 0px;">
-								<img alt="<liferay-ui:message key="image" />" border="no" src="<%= themeDisplay.getPathThemeImages() %>/application/forbidden_action.png" />
+								<img alt="<liferay-ui:message key="image" />" border="no" src="<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) %>/application/forbidden_action.png" />
 							</div>
 						</c:otherwise>
 					</c:choose>

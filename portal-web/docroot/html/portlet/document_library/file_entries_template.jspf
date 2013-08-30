@@ -23,7 +23,7 @@
 	<liferay-ui:app-view-entry
 		displayStyle="icon"
 		showCheckbox="<%= Boolean.FALSE %>"
-		thumbnailSrc="<%= thumbnailSrc %>"
+		thumbnailSrc="<%= HtmlUtil.escapeHREF(thumbnailSrc) %>"
 		thumbnailStyle="<%= DLUtil.getThumbnailStyle() %>"
 		title="{title}"
 		url="<%= uploadURL %>"
@@ -32,7 +32,7 @@
 	<liferay-ui:app-view-entry
 		displayStyle="descriptive"
 		showCheckbox="<%= Boolean.FALSE %>"
-		thumbnailSrc="<%= thumbnailSrc %>"
+		thumbnailSrc="<%= HtmlUtil.escapeHREF(thumbnailSrc) %>"
 		thumbnailStyle="<%= DLUtil.getThumbnailStyle() %>"
 		title="{title}"
 		url="<%= uploadURL %>"

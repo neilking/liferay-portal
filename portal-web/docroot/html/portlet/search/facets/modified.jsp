@@ -44,7 +44,7 @@ int firstDayOfWeek = localeCal.getFirstDayOfWeek() - 1;
 		<ul class="modified unstyled">
 			<li class="facet-value default<%= (fieldParamSelection.equals("0") ? " current-term" : StringPool.BLANK) %>">
 				<aui:a href="javascript:;" onClick='<%= renderResponse.getNamespace() + facet.getFieldId() + "clearFacet(0);" %>'>
-					<img alt="" src='<%= themeDisplay.getPathThemeImages() + "/common/time.png" %>' /><liferay-ui:message key="any-time" />
+					<img alt="" src='<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) + "/common/time.png" %>' /><liferay-ui:message key="any-time" />
 				</aui:a>
 			</li>
 

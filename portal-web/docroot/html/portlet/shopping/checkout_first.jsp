@@ -243,7 +243,7 @@ List addresses = AddressServiceUtil.getAddresses(Contact.class.getName(), contac
 					for (int i = 0; i < ccTypes.length; i++) {
 					%>
 
-						<img alt="<%= ccTypes[i] %>" src="<%= themeDisplay.getPathThemeImages() %>/shopping/cc_<%= ccTypes[i] %>.png" />
+						<img alt="<%= ccTypes[i] %>" src="<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) %>/shopping/cc_<%= ccTypes[i] %>.png" />
 
 					<%
 					}
@@ -305,7 +305,7 @@ List addresses = AddressServiceUtil.getAddresses(Contact.class.getName(), contac
 						</aui:col>
 					</aui:field-wrapper>
 
-					<img alt="" src="<%= themeDisplay.getPathThemeImages() %>/shopping/cc_ver_number.png" />
+					<img alt="" src="<%= HtmlUtil.escapeHREF(themeDisplay.getPathThemeImages()) %>/shopping/cc_ver_number.png" />
 
 					<aui:input bean="<%= null %>" label="verification-number" name="ccVerNumber" />
 				</aui:fieldset>
