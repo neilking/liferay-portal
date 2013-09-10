@@ -42,6 +42,7 @@ if (viewResults && !PollsQuestionPermission.contains(permissionChecker, question
 	<portlet:renderURL var="viewQuestionRenderURL">
 		<portlet:param name="struts_action" value="/polls/view_question" />
 		<portlet:param name="questionId" value="<%= String.valueOf(question.getQuestionId()) %>" />
+		<portlet:param name="redirect" value="<%= redirect %>" />
 	</portlet:renderURL>
 
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.VOTE %>" />
