@@ -2543,8 +2543,10 @@ public class JournalArticleLocalServiceImpl
 	public JournalArticle getDisplayArticle(long groupId, String articleId)
 		throws PortalException, SystemException {
 
-		List<JournalArticle> articles = journalArticlePersistence.findByG_A_ST(
-			groupId, articleId, WorkflowConstants.STATUS_APPROVED);
+		OrderByComparator orderByComparator = new ArticleVersionComparator();
+
+		List<JournalArticle> articles = journalArticlePersistence.findByG_A(
+			groupId, articleId, 0, 1, orderByComparator);
 
 		if (articles.isEmpty()) {
 			throw new NoSuchArticleException(
