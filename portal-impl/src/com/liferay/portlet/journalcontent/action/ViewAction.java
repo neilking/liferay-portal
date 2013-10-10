@@ -85,16 +85,7 @@ public class ViewAction extends WebContentAction {
 		if ((groupId > 0) && Validator.isNotNull(articleId)) {
 			try {
 				article = JournalArticleLocalServiceUtil.getLatestArticle(
-					groupId, articleId, WorkflowConstants.STATUS_APPROVED);
-			}
-			catch (NoSuchArticleException nsae) {
-			}
-
-			try {
-				if (article == null) {
-					article = JournalArticleLocalServiceUtil.getLatestArticle(
-						groupId, articleId, WorkflowConstants.STATUS_ANY);
-				}
+					groupId, articleId, WorkflowConstants.STATUS_ANY);
 
 				double version = article.getVersion();
 
