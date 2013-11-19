@@ -47,6 +47,10 @@ int mdrRuleGroupInstancesCount = MDRRuleGroupInstanceServiceUtil.getRuleGroupIns
 	</c:choose>
 </liferay-util:buffer>
 
+<%
+rootNodeNameLink = rootNodeNameLink.replaceAll(StringPool.TAB + StringPool.PIPE + StringPool.NEW_LINE, StringPool.BLANK);
+%>
+
 <aui:input checked="<%= mdrRuleGroupInstancesCount == 0 %>" disabled="<%= mdrRuleGroupInstancesCount > 0 %>" id="inheritRuleGroupInstances" label='<%= LanguageUtil.format(pageContext, "use-the-same-mobile-device-rules-of-the-x", rootNodeNameLink) %>' name="inheritRuleGroupInstances" type="radio" value="<%= true %>" />
 
 <aui:input checked="<%= mdrRuleGroupInstancesCount > 0 %>" id="uniqueRuleGroupInstances" label="define-specific-mobile-device-rules-for-this-page" name="inheritRuleGroupInstances" type="radio" value="<%= false %>" />

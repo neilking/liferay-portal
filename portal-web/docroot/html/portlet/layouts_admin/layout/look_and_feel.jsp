@@ -83,6 +83,8 @@ else {
 	</liferay-util:buffer>
 
 	<%
+	rootNodeNameLink = rootNodeNameLink.replaceAll(StringPool.TAB + StringPool.PIPE + StringPool.NEW_LINE, StringPool.BLANK);
+
 	String taglibLabel = null;
 
 	if (group.isLayoutPrototype()) {
