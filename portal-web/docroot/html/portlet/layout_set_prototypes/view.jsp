@@ -31,16 +31,35 @@ portletURL.setParameter("struts_action", "/layout_set_prototypes/view");
 	<aui:input name="<%= Constants.CMD %>" type="hidden" />
 	<aui:input name="redirect" type="hidden" value="<%= portletURL.toString() %>" />
 
+	<%
+	String orderByCol = ParamUtil.getString(request, "orderByCol");
+	String orderByType = ParamUtil.getString(request, "orderByType");
+
+	if (Validator.isNotNull(orderByCol) && Validator.isNotNull(orderByType)) {
+		portalPreferences.setValue(PortletKeys.LAYOUT_SET_PROTOTYPE, "entries-order-by-col", orderByCol);
+		portalPreferences.setValue(PortletKeys.LAYOUT_SET_PROTOTYPE, "entries-order-by-type", orderByType);
+	}
+	else {
+		orderByCol = portalPreferences.getValue(PortletKeys.LAYOUT_SET_PROTOTYPE, "entries-order-by-col", "name");
+		orderByType = portalPreferences.getValue(PortletKeys.LAYOUT_SET_PROTOTYPE, "entries-order-by-type", "asc");
+	}
+
+	OrderByComparator orderByComparator = LayoutSetPrototypeUtil.getSiteTemplatesOrderByComparator(orderByCol, orderByType);
+	%>
+
 	<liferay-ui:search-container
 		emptyResultsMessage="no-site-templates-were-found"
 		headerNames="name"
 		iteratorURL="<%= portletURL %>"
+		orderByCol="<%= orderByCol %>"
+		orderByComparator="<%= orderByComparator %>"
+		orderByType="<%= orderByType %>"
 		total="<%= LayoutSetPrototypeLocalServiceUtil.searchCount(company.getCompanyId(), null) %>"
 	>
 		<aui:input name="deleteLayoutSetPrototypesIds" type="hidden" />
 
 		<liferay-ui:search-container-results
-			results="<%= LayoutSetPrototypeLocalServiceUtil.search(company.getCompanyId(), null, searchContainer.getStart(), searchContainer.getEnd(), null) %>"
+			results="<%= LayoutSetPrototypeLocalServiceUtil.search(company.getCompanyId(), null, searchContainer.getStart(), searchContainer.getEnd(), searchContainer.getOrderByComparator()) %>"
 		/>
 
 		<liferay-ui:search-container-row
