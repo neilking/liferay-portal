@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ReferenceRegistry;
 import com.liferay.portal.model.LayoutPrototype;
 import com.liferay.portal.service.ServiceContext;
+import com.liferay.portlet.layoutsadmin.util.PageTemplatesNameComparator;
 
 import java.util.List;
 
@@ -1304,6 +1305,24 @@ public class LayoutPrototypeUtil {
 
 		return _persistence;
 	}
+
+	public static OrderByComparator getPageTemplatesOrderByComparator(
+			String orderByCol, String orderByType) {
+
+		boolean orderByAsc = false;
+
+		if (orderByType.equals("asc")) {
+			orderByAsc = true;
+		}
+
+		OrderByComparator orderByComparator = null;
+
+		if (orderByCol.equals("name")) {
+			orderByComparator = new PageTemplatesNameComparator(orderByAsc);
+		}
+
+		return orderByComparator;
+		}
 
 	/**
 	 * @deprecated As of 6.2.0
