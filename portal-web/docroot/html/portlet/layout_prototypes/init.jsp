@@ -18,6 +18,11 @@
 
 <%@ page import="com.liferay.portal.NoSuchLayoutPrototypeException" %><%@
 page import="com.liferay.portal.RequiredLayoutPrototypeException" %><%@
-page import="com.liferay.portal.service.LayoutPrototypeLocalServiceUtil" %>
+page import="com.liferay.portal.service.LayoutPrototypeLocalServiceUtil" %><%@
+page import="com.liferay.portal.service.persistence.LayoutPrototypeUtil" %>
 
 <%@ include file="/html/portlet/layout_prototypes/init-ext.jsp" %>
+
+<%
+PortalPreferences portalPreferences = PortletPreferencesFactoryUtil.getPortalPreferences(request);
+%>
