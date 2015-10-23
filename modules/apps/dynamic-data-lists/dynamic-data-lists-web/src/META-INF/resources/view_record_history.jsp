@@ -19,6 +19,16 @@
 <%
 String redirect = ParamUtil.getString(request, "redirect");
 
+if (Validator.isNull(redirect)) {
+	PortletURL redirectURL = renderResponse.createRenderURL();
+
+	redirectURL.setParameter("mvcPath", "/edit_record.jsp");
+	redirectURL.setParameter("recordSetId", String.valueOf(recordSet.getRecordSetId()));
+	redirectURL.setParameter("formDDMTemplateId", String.valueOf(formDDMTemplateId));
+
+	redirect = redirectURL.toString();
+}
+
 DDLRecord record = (DDLRecord)request.getAttribute(DDLWebKeys.DYNAMIC_DATA_LISTS_RECORD);
 
 DDLRecordSet recordSet = record.getRecordSet();
