@@ -1694,6 +1694,13 @@
 			<type>java.util.Map</type>
 		</attribute>
 		<attribute>
+			<description>Whether to escape the language key value so that it is safe to use in HTML.</description>
+			<name>escape</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+			<type>boolean</type>
+		</attribute>
+		<attribute>
 			<name>icon</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>

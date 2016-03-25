@@ -57,6 +57,7 @@ if (Validator.isNotNull(languageId)) {
 
 							<liferay-ui:icon
 								data="<%= data %>"
+								escape="<%= false %>"
 								label="<%= true %>"
 								linkCssClass="source-version"
 								message='<%= LanguageUtil.format(request, "version-x", diffVersion.getVersion()) %>'
@@ -90,6 +91,7 @@ if (Validator.isNotNull(languageId)) {
 
 							<liferay-ui:icon
 								data="<%= data %>"
+								escape="<%= false %>"
 								label="<%= true %>"
 								linkCssClass="target-version"
 								message='<%= LanguageUtil.format(request, "version-x", diffVersion.getVersion()) %>'

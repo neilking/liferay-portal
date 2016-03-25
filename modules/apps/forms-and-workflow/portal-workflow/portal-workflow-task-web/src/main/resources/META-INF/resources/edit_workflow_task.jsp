@@ -170,6 +170,7 @@ renderResponse.setTitle(headerTitle);
 
 						<h3 class="task-content-title">
 							<liferay-ui:icon
+								escape="<%= false %>"
 								icon="<%= workflowHandler.getIconCssClass() %>"
 								label="<%= true %>"
 								markupView="lexicon"

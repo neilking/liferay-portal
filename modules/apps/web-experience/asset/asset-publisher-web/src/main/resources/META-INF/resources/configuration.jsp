@@ -170,6 +170,7 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = new ArrayList<>
 						<liferay-ui:icon
 							cssClass="highlited scope-selector"
 							data="<%= data %>"
+							escape="<%= false %>"
 							id="selectGroup"
 							message='<%= LanguageUtil.get(request, "pages") + StringPool.TRIPLE_PERIOD %>'
 							method="get"
@@ -219,6 +220,7 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = new ArrayList<>
 						<liferay-ui:icon
 							cssClass="highlited scope-selector"
 							data="<%= data %>"
+							escape="<%= false %>"
 							id="selectManageableGroup"
 							message='<%= LanguageUtil.get(request, "other-site") + StringPool.TRIPLE_PERIOD %>'
 							method="get"

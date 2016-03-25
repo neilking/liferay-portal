@@ -53,6 +53,7 @@ String viewMode = ParamUtil.getString(request, "viewMode");
 		</portlet:resourceURL>
 
 		<liferay-ui:icon
+			escape="<%= false %>"
 			iconCssClass="<%= DLUtil.getFileIconCssClass(extension) %>"
 			label="<%= true %>"
 			message='<%= LanguageUtil.format(resourceBundle, "x-download-x-as-x", new Object[] {"hide-accessible", HtmlUtil.escape(articleDisplay.getTitle()), StringUtil.toUpperCase(HtmlUtil.escape(extension))}) %>'

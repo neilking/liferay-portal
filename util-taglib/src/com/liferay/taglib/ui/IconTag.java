@@ -77,6 +77,10 @@ public class IconTag extends IncludeTag {
 		_data = data;
 	}
 
+	public void setEscape(boolean escape) {
+		_escape = escape;
+	}
+
 	public void setIcon(String icon) {
 		_icon = icon;
 	}
@@ -159,6 +163,7 @@ public class IconTag extends IncludeTag {
 		_ariaRole = null;
 		_cssClass = null;
 		_data = null;
+		_escape = true;
 		_icon = null;
 		_iconCssClass = null;
 		_id = null;
@@ -571,6 +576,7 @@ public class IconTag extends IncludeTag {
 		request.setAttribute("liferay-ui:icon:cssClass", _cssClass);
 		request.setAttribute("liferay-ui:icon:data", getData());
 		request.setAttribute("liferay-ui:icon:details", getDetails());
+		request.setAttribute("liferay-ui:icon:escape", String.valueOf(_escape));
 		request.setAttribute("liferay-ui:icon:icon", _icon);
 		request.setAttribute("liferay-ui:icon:iconCssClass", _iconCssClass);
 		request.setAttribute("liferay-ui:icon:id", getId());
@@ -607,6 +613,7 @@ public class IconTag extends IncludeTag {
 	private String _ariaRole;
 	private String _cssClass;
 	private Map<String, Object> _data;
+	private boolean _escape = true;
 	private String _icon;
 	private String _iconCssClass;
 	private String _id;

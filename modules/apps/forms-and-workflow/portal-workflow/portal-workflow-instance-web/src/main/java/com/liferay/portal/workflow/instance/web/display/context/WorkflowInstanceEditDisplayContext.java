@@ -179,9 +179,8 @@ public class WorkflowInstanceEditDisplayContext
 
 		long classPK = getWorkflowContextEntryClassPK();
 
-		return HtmlUtil.escape(
-			workflowHandler.getTitle(
-				classPK, workflowInstanceRequestHelper.getLocale()));
+		return workflowHandler.getTitle(
+			classPK, workflowInstanceRequestHelper.getLocale());
 	}
 
 	public String getTaskDueDate(WorkflowTask workflowTask) {

@@ -158,7 +158,7 @@ serverURL.setParameter("tabs2", tabs2);
 				>
 					<liferay-ui:icon
 						iconCssClass='<%= overriddenPropertyValue ? "icon-hdd" : "icon-file-alt" %>'
-						message='<%= LanguageUtil.get(request, overriddenPropertyValue ? "the-value-of-this-property-was-overridden-using-the-control-panel-and-is-stored-in-the-database" : "the-value-of-this-property-is-read-from-a-portal.properties-file-or-one-of-its-extension-files") %>'
+						message='<%= overriddenPropertyValue ? "the-value-of-this-property-was-overridden-using-the-control-panel-and-is-stored-in-the-database" : "the-value-of-this-property-is-read-from-a-portal.properties-file-or-one-of-its-extension-files" %>'
 					/>
 				</liferay-ui:search-container-column-text>
 			</c:if>

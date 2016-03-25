@@ -82,6 +82,7 @@ iteratorURL.setParameter("title", wikiPage.getTitle());
 				<c:choose>
 					<c:when test="<%= socialActivity.getType() == SocialActivityConstants.TYPE_ADD_COMMENT %>">
 						<liferay-ui:icon
+							escape="<%= false %>"
 							label="<%= true %>"
 							message="<%= wikiSocialActivityHelper.getSocialActivityDescription(wikiPage, socialActivity, extraDataJSONObject, resourceBundle) %>"
 						/>
@@ -89,6 +90,7 @@ iteratorURL.setParameter("title", wikiPage.getTitle());
 
 					<c:when test="<%= wikiSocialActivityHelper.isSocialActivitySupported(socialActivity) %>">
 						<liferay-ui:icon
+							escape="<%= false %>"
 							iconCssClass="<%= wikiSocialActivityHelper.getSocialActivityIcon(socialActivity) %>"
 							label="<%= true %>"
 							message="<%= wikiSocialActivityHelper.getSocialActivityDescription(wikiPage, socialActivity, extraDataJSONObject, resourceBundle) %>"
@@ -98,7 +100,7 @@ iteratorURL.setParameter("title", wikiPage.getTitle());
 
 				<c:if test="<%= socialActivity.getType() == WikiActivityKeys.UPDATE_PAGE %>">
 					<c:if test="<%= (socialActivityWikiPage != null) && (socialActivityWikiPage.getStatus() != WorkflowConstants.STATUS_APPROVED) %>">
-						<span class="activity-status"><liferay-ui:message key="<%= WorkflowConstants.getStatusLabel(socialActivityWikiPage.getStatus()) %>" /></span>
+						<span class="activity-status"><liferay-ui:message escape="<%=false %>" key="<%= WorkflowConstants.getStatusLabel(socialActivityWikiPage.getStatus()) %>" /></span>
 					</c:if>
 
 					<c:if test="<%= (socialActivityWikiPage != null) && Validator.isNotNull(socialActivityWikiPage.getSummary()) %>">

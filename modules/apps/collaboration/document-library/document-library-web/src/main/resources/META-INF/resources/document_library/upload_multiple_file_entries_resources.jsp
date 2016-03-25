@@ -137,7 +137,7 @@ else {
 								<liferay-ui:icon
 									cssClass="upload-multiple-document-types"
 									id='<%= "fileEntryType_" + String.valueOf(curFileEntryType.getFileEntryTypeId()) %>'
-									message="<%= HtmlUtil.escape(curFileEntryType.getName(locale)) %>"
+									message="<%= curFileEntryType.getName(locale) %>"
 									method="get"
 									url="<%= viewFileEntryTypeURL %>"
 								/>

@@ -197,7 +197,7 @@ TemplateSearchTerms templateSearchTerms = (TemplateSearchTerms)templateSearch.ge
 						cssClass="structure-column text-column"
 						href="<%= rowHREF %>"
 						name="structure"
-						value="<%= structureName %>"
+						value="<%= HtmlUtil.escape(structureName) %>"
 					/>
 				</c:if>
 

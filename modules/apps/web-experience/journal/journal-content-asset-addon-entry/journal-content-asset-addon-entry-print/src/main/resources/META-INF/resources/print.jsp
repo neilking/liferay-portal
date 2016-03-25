@@ -53,6 +53,7 @@ String viewMode = ParamUtil.getString(request, "viewMode");
 
 		<div class="print-action user-tool-asset-addon-entry">
 			<liferay-ui:icon
+				escape="<%= false %>"
 				icon="print"
 				label="<%= true %>"
 				markupView="lexicon"

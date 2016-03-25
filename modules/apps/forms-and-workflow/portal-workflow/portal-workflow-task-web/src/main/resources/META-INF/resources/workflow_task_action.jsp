@@ -51,6 +51,7 @@ WorkflowTask workflowTask = workflowTaskDisplayContext.getWorkflowTask();
 			<liferay-ui:icon
 				cssClass='<%= "workflow-task-" + randomId + " task-change-status-link" %>'
 				data="<%= workflowTaskDisplayContext.getWorkflowTaskActionLinkData() %>"
+				escape = "<%= false %>"
 				id='<%= randomId + HtmlUtil.escapeAttribute(transitionName) + "taskChangeStatusLink" %>'
 				message="<%= message %>"
 				method="get"

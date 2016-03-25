@@ -99,6 +99,7 @@ renderResponse.setTitle(workflowInstanceEditDisplayContext.getHeaderTitle());
 
 						<h3 class="task-content-title">
 							<liferay-ui:icon
+								escape="<%= false %>"
 								icon="<%= workflowInstanceEditDisplayContext.getIconCssClass() %>"
 								label="<%= true %>"
 								markupView="lexicon"

@@ -31,6 +31,7 @@ WorkflowDefinition workflowDefinition = (WorkflowDefinition)row.getObject();
 	</portlet:renderURL>
 
 	<liferay-ui:icon
+		escape="<%= false %>"
 		message='<%= LanguageUtil.format(request, "add-new-x", "file") %>'
 		url="<%= editURL %>"
 	/>

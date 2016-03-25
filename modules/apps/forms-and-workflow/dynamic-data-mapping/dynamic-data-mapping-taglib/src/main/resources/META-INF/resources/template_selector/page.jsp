@@ -69,6 +69,7 @@ Group ddmTemplateGroup = GroupLocalServiceUtil.getGroup(ddmTemplateGroupId);
 </aui:select>
 
 <liferay-ui:icon
+	escape="<%= false %>"
 	iconCssClass="<%= icon %>"
 	id="selectDDMTemplate"
 	label="<%= true %>"

@@ -163,6 +163,7 @@ if (row == null) {
 				</portlet:renderURL>
 
 				<liferay-ui:icon
+					escpae="<%= false %>"
 					message='<%= LanguageUtil.format(request, "add-x", childrenType) %>'
 					url="<%= addSuborganizationURL %>"
 				/>
